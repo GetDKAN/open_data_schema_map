@@ -1,0 +1,59 @@
+{
+  "help" : "Dataset fields for CKAN",
+  "fields": {
+    "license_title": {
+      "title": "License Title",
+      "type": "string"
+    },
+    "maintainer": {
+      "title": "Maintainer",
+      "type": "string"
+    },
+    "relationships_as_object": {
+      "title": "Relationships",
+      "type": "object"
+    },
+    "private": {
+      "title": "Private",
+      "private": "boolean"
+    },
+    "maintainer_email": {
+      "title": "Maintainer Email",
+      "type": "string"
+    },
+    "revision_timestamp": {
+      "title": "Revision Date",
+      "type": "string"
+    },
+    "id": {
+      "title": "UUID",
+      "type": "string"
+    },
+    "metadata_created": {
+      "title": "Created",
+      "type": "string"
+    },
+    "metadata_modified": {
+      "title": "Modified",
+      "type": "string"
+    },
+    "state": {
+      "title": "State",
+      "type": "string",
+      "description": "Active or not"
+    },
+    "version": {
+      "title": "Version",
+      "type": "string"
+    },
+    "creator_user_id": {
+      "title": "Creator User ID",
+      "type": "string"
+    },
+    "type": {
+      "title": "Type",
+      "type": "string",
+      "default": "Dataset"
+    }
+ }
+}

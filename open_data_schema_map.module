@@ -1,0 +1,14 @@
+<?php
+
+/**
+ * @file
+ * Maps entity types to Open Data schemas.
+ */
+
+/**
+ * TODO:
+ *
+ * register schema
+ * add table
+ * create form
+ * render output
