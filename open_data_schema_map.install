@@ -1,0 +1,52 @@
+<?php
+
+/**
+ * @file
+ * Schemas for schemas, open data style.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function open_data_schema_map_schema() {
+  $schema['open_data_schema_map'] = array(
+    'open_data_schema_map' => array(
+      'description' => 'Stores open data schema mappings',
+      'fields' => array(
+        'type' => array(
+          'type' => 'varchar',
+          'length' => 128,
+          'not null' => TRUE,
+          'description' => 'The name of the entity type a mapping applies to (node, user, comment, etc.).',
+        ),
+        'bundle' => array(
+          'type' => 'varchar',
+          'length' => 128,
+          'not null' => TRUE,
+          'description' => 'The name of the bundle a mapping applies to.',
+        ),
+        'mapping' => array(
+          'description' => 'The serialized mapping of the schema to fields..',
+          'type' => 'blob',
+          'not null' => FALSE,
+          'size' => 'big',
+          'serialize' => TRUE,
+        ),
+        'endpoint' => array(
+          'type' => 'varchar',
+          'length' => 256,
+          'not null' => TRUE,
+          'description' => 'The name of the endpoint for the new API.',
+        ),
+        'arguments' => array(
+          'type' => 'varchar',
+          'length' => 256,
+          'not null' => FALSE,
+          'description' => 'Comma separated list of arguments for the API. Must be schema items.',
+        ),
+      ),
+      'primary key' => array('type', 'bundle'),
+    ),
+  );
+  return $schema;
+}

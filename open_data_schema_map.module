@@ -12,3 +12,206 @@
  * add table
  * create form
  * render output
+ * featurize
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function open_data_schema_map_menu() {
+  $items = array();
+  $pre = 'admin/config/services/odsm';
+
+  $items[$pre] = array(
+    'title' => 'Open Data Schema Mapper',
+    'description' => 'Map Drupal structures to Open Data specfications',
+    'page callback' => 'open_data_schema_mapper_page_overview',
+    'access arguments' => array('administer open data schema mapper.'),
+  );
+  $items[$pre . '/overview'] = array(
+    'title' => 'Overview',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  $items[$pre . '/add/api'] = array(
+    'title' => 'Add API',
+    'description' => 'Add a new API Endpoint',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('open_data_schema_map_add_api'),
+    'access arguments' => array('administer open data schema mapper.'),
+    'type' => MENU_LOCAL_ACTION,
+  );
+  $items[$pre . '/api/%open_data_schema_map_api'] = array(
+    'title' => 'Edit API',
+    'description' => 'Edit an existing API Endpoint',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('open_data_schema_map_add_edit', 5),
+    'access arguments' => array('administer open data schema mapper.'),
+    'type' => MENU_LOCAL_ACTION,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function open_data_schema_map_permission() {
+  return array(
+    'administer open data schema mapper' => array(
+      'title' => t('Administer Open Data Schema Mapper'),
+      'description' => t('Make and update open data schema maps'),
+      'restrict access' => TRUE,
+    ));
+}
+
+/**
+ * Registers declared schemas.
+ */
+function open_data_schema_map_register() {
+  static $schemas = array();
+  if ($schemas) {
+    return $schemas;
+  }
+  foreach (module_implements('open_data_schema') as $module) {
+    $data = module_invoke($module, 'open_data_schema');
+    $schemas[$data['short_name']] = $data;
+  }
+  return $schemas;
+}
+
+/**
+ * Implements hook_help().
+ */
+function open_data_schema_map_help($path, $arg) {
+  switch ($path) {
+    case 'admin/config/services/odsm':
+      return t('Create APIs using Drupal entities that map to Open Data specifications.');
+  }
+}
+
+
+/**
+ * Callback for ODSM overiew page.
+ */
+function open_data_schema_mapper_page_overview() {
+  $form = array();
+  $apis = open_data_schema_map_apis();
+  $list = array();
+  foreach ($apis as $name => $data) {
+    $list[] = $data;
+  }
+  $header = array();
+  $header[] = t('title');
+  $header[] = t('Endpoint');
+  $header[] = t('Schema');
+  $header[] = t('Entity');
+  $header[] = t('Bundle');
+  $header[] = t('Edit');
+  $header[] = t('Delete');
+  $rows = $list;
+  return array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#attributes' => array('class' => array('search-api-overview')),
+    '#empty' => t('There are no search servers or indexes defined yet.'),
+  );
+}
+
+/**
+ * Callback for primary menu page.
+ */
+function open_data_schema_map_add_api() {
+  drupal_set_title(t('Add API'));
+  $form = array();
+  $apis = open_data_schema_map_apis();
+  dpm($apis);
+  $schemas = open_data_schema_map_register();
+  if (!$schemas) {
+    $form['empty'] = array(
+      '#type' => 'item',
+      '#title' => 'No Available Schemas',
+      '#markup' => t('You must enable an Open Data schema to add an endpoint.'),
+    );
+    return $form;
+  }
+  $list = array();
+  foreach ($schemas as $name => $data) {
+    $list[$name] = $data['title'];
+  }
+  $markup = t('No APIs created.');
+  if ($list) {
+    $markup = t('Choose from the available APIs:') . theme('item_list', $list);
+  }
+  $form['name'] = array(
+    '#title' => 'Title',
+    '#type' => 'textfield',
+    '#description' => t('Add an administrative title.'),
+    '#required' => TRUE,
+  );
+  $form['machine_name'] = array(
+    '#type' => 'machine_name',
+    '#maxlength' => 50,
+  );
+  $form['schema'] = array(
+    '#title' => 'Schema',
+    '#type' => 'select',
+    '#description' => t('Select from the available schemas.'),
+    '#options' => $list,
+    '#required' => TRUE,
+  );
+  $form['endpoint'] = array(
+    '#title' => 'Endpoint',
+    '#type' => 'textfield',
+    '#description' => t('Add and enpoint ie "api/3/action/package_show".'),
+    '#required' => TRUE,
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Create API'),
+  );
+  return $form;
+}
+
+function open_data_schema_map_add_api_submit($form, $form_state) {
+  dpm($form);
+}
+
+/**
+ * Lists APIs created with this module.
+ */
+function open_data_schema_map_apis() {
+  return array(
+    'none' => array(
+      'title' => 'Title',
+      'endpoint' => 'Endpoint',
+      'schema' => 'Schema',
+      'entity' => 'Entity',
+      'bundle' => 'bun',
+      'args' => 'arge',
+    ),
+  );
+}
+
+function open_data_schema_map_api_load($machine_name) {
+  dpm($machine_name);
+  return array(
+    'none' => array(
+      'title' => 'Title',
+      'endpoint' => 'Endpoint',
+      'schema' => 'Schema',
+      'entity' => 'Entity',
+      'bundle' => 'bun',
+      'args' => 'arge',
+    ),
+  );
+}
+
+function open_data_schema_map_add_edit($api) {
+  $form['empty'] = array(
+    '#type' => 'item',
+    '#title' => 'o Available Schemas',
+    '#markup' => t('You must enable an Open Data schema to add an endpoint.'),
+  );
+  return $form;
+}
