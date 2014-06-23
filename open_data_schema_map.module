@@ -40,13 +40,12 @@ function open_data_schema_map_menu() {
     'access arguments' => array('administer open data schema mapper.'),
     'type' => MENU_LOCAL_ACTION,
   );
-  $items[$pre . '/api/%open_data_schema_map_api'] = array(
+  $items[$pre . '/edit/%open_data_schema_map_api'] = array(
     'title' => 'Edit API',
     'description' => 'Edit an existing API Endpoint',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('open_data_schema_map_add_edit', 5),
+    'page arguments' => array('open_data_schema_map_add_api', 5),
     'access arguments' => array('administer open data schema mapper.'),
-    'type' => MENU_LOCAL_ACTION,
   );
 
   return $items;
@@ -121,11 +120,10 @@ function open_data_schema_mapper_page_overview() {
 /**
  * Callback for primary menu page.
  */
-function open_data_schema_map_add_api() {
+function open_data_schema_map_add_api(array $form, array &$form_state, $api= NULL) {
+  dpm($api);
   drupal_set_title(t('Add API'));
-  $form = array();
   $apis = open_data_schema_map_apis();
-  dpm($apis);
   $schemas = open_data_schema_map_register();
   if (!$schemas) {
     $form['empty'] = array(
@@ -143,6 +141,20 @@ function open_data_schema_map_add_api() {
   if ($list) {
     $markup = t('Choose from the available APIs:') . theme('item_list', $list);
   }
+  $entity_types = entity_get_info();
+  foreach ($entity_types as $entity_name => $entity_info) {
+    $entity_list[$entity_name] = $entity_info['label'];
+  }
+  $selected_entity = '';
+  $selected_schema = '';
+  if (isset($form_state['triggering_element']['#name']) && $name = $form_state['triggering_element']['#name']) {
+    if ($name == 'schema') {
+      $selected_schema = $form_state['triggering_element']['#value'];
+    }
+    elseif ($name == 'type') {
+      $selected_entity = $form_state['triggering_element']['#value'];
+    }
+  }
   $form['name'] = array(
     '#title' => 'Title',
     '#type' => 'textfield',
@@ -152,6 +164,49 @@ function open_data_schema_map_add_api() {
   $form['machine_name'] = array(
     '#type' => 'machine_name',
     '#maxlength' => 50,
+    '#machine_name' => array(
+      'exists' => 'open_data_schema_map_api_exist',
+    ),
+  );
+  $form['type'] = array(
+    '#title' => 'Entity Type',
+    '#type' => 'select',
+    '#description' => t('Entity type.'),
+    '#options' => $entity_list,
+    '#required' => TRUE,
+    '#ajax' => array(
+      'callback' => 'open_data_schema_map_bundle_ajax_callback',
+      'wrapper' => 'open-data-schema-map-bundle-options',
+    ),
+  );
+  $bundle_list = array();
+  if ($selected_entity) {
+    foreach ($entity_types[$selected_entity]['bundles'] as $bundle_name => $bundle_data) {
+      $bundle_list[$bundle_name] = $bundle_data['label'];
+    }
+    $form['bundle'] = array(
+      '#title' => 'Bundle',
+      '#type' => 'select',
+      '#description' => t('Entity type bundle.'),
+      '#options' => $bundle_list,
+      '#required' => TRUE,
+    );
+  }
+  else {
+    $form['bundle'] = array(
+      '#title' => 'Bundle',
+      '#type' => 'item',
+      '#markup' => t('Select an entity type'),
+      '#required' => TRUE,
+    );
+  }
+  $form['bundle']['#prefix'] = '<div id="open-data-schema-map-bundle-options">';
+  $form['bundle']['#suffix'] = '</div>';
+  $form['endpoint'] = array(
+    '#title' => 'Endpoint',
+    '#type' => 'textfield',
+    '#description' => t('Add and enpoint ie "api/3/action/package_show".'),
+    '#required' => TRUE,
   );
   $form['schema'] = array(
     '#title' => 'Schema',
@@ -159,13 +214,32 @@ function open_data_schema_map_add_api() {
     '#description' => t('Select from the available schemas.'),
     '#options' => $list,
     '#required' => TRUE,
+    '#ajax' => array(
+      'callback' => 'open_data_schema_map_mapping_ajax_callback',
+      'wrapper' => 'open-data-schema-map-mapping-options',
+    ),
   );
-  $form['endpoint'] = array(
-    '#title' => 'Endpoint',
-    '#type' => 'textfield',
-    '#description' => t('Add and enpoint ie "api/3/action/package_show".'),
-    '#required' => TRUE,
-  );
+  if ($selected_schema) {
+    foreach ($entity_types[$selected_entity]['bundles'] as $bundle_name => $bundle_data) {
+      $bundle_list[$bundle_name] = $bundle_data['label'];
+    }
+    $form['mapping'] = array(
+      '#title' => 'Mapping',
+      '#type' => 'item',
+      '#markup' => t('You selected a schema.'),
+      '#required' => TRUE,
+    );
+  }
+  else {
+    $form['mapping'] = array(
+      '#title' => 'Mapping',
+      '#type' => 'item',
+      '#markup' => t('Select a schema.'),
+      '#required' => TRUE,
+    );
+  }
+  $form['mapping']['#prefix'] = '<div id="open-data-schema-map-mapping-options">';
+  $form['mapping']['#suffix'] = '</div>';
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Create API'),
@@ -173,8 +247,33 @@ function open_data_schema_map_add_api() {
   return $form;
 }
 
+/**
+ * Form AJAX handler for search_api_admin_add_server().
+ *
+ * Just returns the "options" array of the already built form array.
+ */
+function open_data_schema_map_bundle_ajax_callback(array $form, array &$form_state) {
+  return $form['bundle'];
+}
+
+/**
+ * Form AJAX handler for search_api_admin_add_server().
+ *
+ * Just returns the "options" array of the already built form array.
+ */
+function open_data_schema_map_mapping_ajax_callback(array $form, array &$form_state) {
+  return $form['mapping'];
+}
+
 function open_data_schema_map_add_api_submit($form, $form_state) {
-  dpm($form);
+  $values = $form_state['values'];
+  unset($values['submit']);
+  unset($values['form_build_id']);
+  unset($values['form_id']);
+  unset($values['form_token']);
+  unset($values['op']);
+  drupal_write_record('open_data_schema_map', $values);
+  drupal_goto('admin/config/services/odsm/edit/' . $values['machine_name']);
 }
 
 /**
@@ -193,7 +292,27 @@ function open_data_schema_map_apis() {
   );
 }
 
+/**
+ * Determines whether a machine name exists.
+ *
+ * @param string $machine_name
+ *   API machine name.
+ */
+function open_data_schema_map_api_exist($machine_name) {
+  return FALSE;
+}
+
+/**
+ * Loads API.
+ *
+ * @param string $machine_name
+ *   API machine name.
+ *
+ * @return object
+ *   API object.
+ */
 function open_data_schema_map_api_load($machine_name) {
+  dpm('load');
   dpm($machine_name);
   return array(
     'none' => array(
@@ -208,6 +327,7 @@ function open_data_schema_map_api_load($machine_name) {
 }
 
 function open_data_schema_map_add_edit($api) {
+  $form = 
   $form['empty'] = array(
     '#type' => 'item',
     '#title' => 'o Available Schemas',

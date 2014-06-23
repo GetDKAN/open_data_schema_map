@@ -10,43 +10,64 @@
  */
 function open_data_schema_map_schema() {
   $schema['open_data_schema_map'] = array(
-    'open_data_schema_map' => array(
-      'description' => 'Stores open data schema mappings',
-      'fields' => array(
-        'type' => array(
-          'type' => 'varchar',
-          'length' => 128,
-          'not null' => TRUE,
-          'description' => 'The name of the entity type a mapping applies to (node, user, comment, etc.).',
-        ),
-        'bundle' => array(
-          'type' => 'varchar',
-          'length' => 128,
-          'not null' => TRUE,
-          'description' => 'The name of the bundle a mapping applies to.',
-        ),
-        'mapping' => array(
-          'description' => 'The serialized mapping of the schema to fields..',
-          'type' => 'blob',
-          'not null' => FALSE,
-          'size' => 'big',
-          'serialize' => TRUE,
-        ),
-        'endpoint' => array(
-          'type' => 'varchar',
-          'length' => 256,
-          'not null' => TRUE,
-          'description' => 'The name of the endpoint for the new API.',
-        ),
-        'arguments' => array(
-          'type' => 'varchar',
-          'length' => 256,
-          'not null' => FALSE,
-          'description' => 'Comma separated list of arguments for the API. Must be schema items.',
-        ),
+    'description' => 'Stores open data schema mappings',
+    'fields' => array(
+      'id' => array(
+        'description' => 'The primary identifier for a api.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
       ),
-      'primary key' => array('type', 'bundle'),
+      'name' => array(
+        'description' => 'The displayed name for a api.',
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+      ),
+      'machine_name' => array(
+        'description' => 'The machine name for a api.',
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+      ),
+      'description' => array(
+        'description' => 'The displayed description for a api.',
+        'type' => 'text',
+        'not null' => FALSE,
+      ),
+      'type' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'description' => 'The name of the entity type a mapping applies to (node, user, comment, etc.).',
+      ),
+      'bundle' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'description' => 'The name of the bundle a mapping applies to.',
+      ),
+      'mapping' => array(
+        'description' => 'The serialized mapping of the schema to fields..',
+        'type' => 'blob',
+        'not null' => FALSE,
+        'size' => 'big',
+        'serialize' => TRUE,
+      ),
+      'endpoint' => array(
+        'type' => 'varchar',
+        'length' => 256,
+        'not null' => TRUE,
+        'description' => 'The name of the endpoint for the new API.',
+      ),
+      'arguments' => array(
+        'type' => 'varchar',
+        'length' => 256,
+        'not null' => FALSE,
+        'description' => 'Comma separated list of arguments for the API. Must be schema items.',
+      ),
     ),
+    'primary key' => array('id'),
   );
   return $schema;
 }
