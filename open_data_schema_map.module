@@ -12,7 +12,7 @@
  * add table
  * create form
  * render output
- * featurize
+ * featurize.
  */
 
 /**
@@ -120,8 +120,7 @@ function open_data_schema_mapper_page_overview() {
 /**
  * Callback for primary menu page.
  */
-function open_data_schema_map_add_api(array $form, array &$form_state, $api= NULL) {
-  dpm($api);
+function open_data_schema_map_add_api(array $form, array &$form_state, $api = NULL) {
   drupal_set_title(t('Add API'));
   $apis = open_data_schema_map_apis();
   $schemas = open_data_schema_map_register();
@@ -219,20 +218,32 @@ function open_data_schema_map_add_api(array $form, array &$form_state, $api= NUL
       'wrapper' => 'open-data-schema-map-mapping-options',
     ),
   );
-  if ($selected_schema) {
-    foreach ($entity_types[$selected_entity]['bundles'] as $bundle_name => $bundle_data) {
-      $bundle_list[$bundle_name] = $bundle_data['label'];
-    }
-    $form['mapping'] = array(
-      '#title' => 'Mapping',
-      '#type' => 'item',
-      '#markup' => t('You selected a schema.'),
-      '#required' => TRUE,
+  $form['mapping'] = array(
+    '#title' => 'Mapping',
+    '#description' => t('Fields for selected schema.'),
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#required' => TRUE,
+  );
+  if (module_exists('token')) {
+    $form['mapping']['token_help'] = array(
+      '#title' => t('Replacement patterns'),
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#description' => t('Prefer raw-text replacements for text to avoid problems with HTML entities!'),
+    );
+    $form['mapping']['token_help']['help'] = array(
+      '#theme' => 'token_tree',
+      '#token_types' => array('node'),
     );
   }
+  if ($selected_schema) {
+    $schema = open_data_schema_map_schema_load($selected_schema);
+    $form['mapping']['fields'] = open_data_schema_map_schema_form($schema['fields']);
+  }
   else {
-    $form['mapping'] = array(
-      '#title' => 'Mapping',
+    $form['mapping']['fields'] = array(
       '#type' => 'item',
       '#markup' => t('Select a schema.'),
       '#required' => TRUE,
@@ -244,6 +255,22 @@ function open_data_schema_map_add_api(array $form, array &$form_state, $api= NUL
     '#type' => 'submit',
     '#value' => t('Create API'),
   );
+  return $form;
+}
+
+/**
+ * Creates form for schema fields.
+ */
+function open_data_schema_map_schema_form($fields) {
+  $form = array();
+  foreach ($fields as $machine_name => $data) {
+    $desc = isset($data['description']) ? $data['description'] : '';
+    $form[$machine_name] = array(
+      '#title' => $data['title'],
+      '#type' => 'textfield',
+      '#description' => $desc,
+    );
+  }
   return $form;
 }
 
@@ -265,6 +292,9 @@ function open_data_schema_map_mapping_ajax_callback(array $form, array &$form_st
   return $form['mapping'];
 }
 
+/**
+ * Submit function for api map.
+ */
 function open_data_schema_map_add_api_submit($form, $form_state) {
   $values = $form_state['values'];
   unset($values['submit']);
@@ -272,6 +302,13 @@ function open_data_schema_map_add_api_submit($form, $form_state) {
   unset($values['form_id']);
   unset($values['form_token']);
   unset($values['op']);
+  $schema = open_data_schema_map_schema_load($values['schema']);
+  $map = array();
+  foreach ($schema['fields'] as $field => $data) {
+    $map[$field] = $values[$field];
+  }
+  $values['mapping'] = serialize($map);
+dpm($values);
   drupal_write_record('open_data_schema_map', $values);
   drupal_goto('admin/config/services/odsm/edit/' . $values['machine_name']);
 }
@@ -312,8 +349,6 @@ function open_data_schema_map_api_exist($machine_name) {
  *   API object.
  */
 function open_data_schema_map_api_load($machine_name) {
-  dpm('load');
-  dpm($machine_name);
   return array(
     'none' => array(
       'title' => 'Title',
@@ -326,12 +361,14 @@ function open_data_schema_map_api_load($machine_name) {
   );
 }
 
-function open_data_schema_map_add_edit($api) {
-  $form = 
-  $form['empty'] = array(
-    '#type' => 'item',
-    '#title' => 'o Available Schemas',
-    '#markup' => t('You must enable an Open Data schema to add an endpoint.'),
-  );
-  return $form;
+/**
+ * Loads schema from file.
+ */
+function open_data_schema_map_schema_load($schema_name) {
+  $schemas = open_data_schema_map_register();
+  $loaded_schema = $schemas[$schema_name];
+  $json_file = $loaded_schema['schema_file'];
+  $json = file_get_contents($json_file);
+  $schema = drupal_json_decode($json);
+  return $schema;
 }

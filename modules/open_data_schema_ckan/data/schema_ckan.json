@@ -3,6 +3,7 @@
   "fields": {
     "license_title": {
       "title": "License Title",
+      "description": "License Title",
       "type": "string"
     },
     "maintainer": {
