@@ -22,10 +22,21 @@ function open_data_schema_map_menu() {
   $items = array();
   $pre = 'admin/config/services/odsm';
 
+  $apis = open_data_schema_map_api_load_all();
+  foreach ($apis as $num => $api) {
+    $description = $api['description'] ? $api['description'] : '';
+    $items[$api['endpoint']] = array(
+      'title' => $api['name'],
+      'description' => $description,
+      'page callback' => 'open_data_schema_map_endpoint',
+      'page arguments' => array($api),
+      'access arguments' => array('administer open data schema mapper.'),
+    );
+  }
   $items[$pre] = array(
     'title' => 'Open Data Schema Mapper',
     'description' => 'Map Drupal structures to Open Data specfications',
-    'page callback' => 'open_data_schema_mapper_page_overview',
+    'page callback' => 'open_data_schema_map_page_overview',
     'access arguments' => array('administer open data schema mapper.'),
   );
   $items[$pre . '/overview'] = array(
@@ -92,19 +103,19 @@ function open_data_schema_map_help($path, $arg) {
 /**
  * Callback for ODSM overiew page.
  */
-function open_data_schema_mapper_page_overview() {
+function open_data_schema_map_page_overview() {
   $form = array();
-  $apis = open_data_schema_map_apis();
+  $apis = open_data_schema_map_api_table();
   $list = array();
   foreach ($apis as $name => $data) {
     $list[] = $data;
   }
   $header = array();
   $header[] = t('title');
-  $header[] = t('Endpoint');
   $header[] = t('Schema');
   $header[] = t('Entity');
   $header[] = t('Bundle');
+  $header[] = t('Endpoint');
   $header[] = t('Edit');
   $header[] = t('Delete');
   $rows = $list;
@@ -122,7 +133,6 @@ function open_data_schema_mapper_page_overview() {
  */
 function open_data_schema_map_add_api(array $form, array &$form_state, $api = NULL) {
   drupal_set_title(t('Add API'));
-  $apis = open_data_schema_map_apis();
   $schemas = open_data_schema_map_register();
   if (!$schemas) {
     $form['empty'] = array(
@@ -147,12 +157,10 @@ function open_data_schema_map_add_api(array $form, array &$form_state, $api = NU
   $selected_entity = '';
   $selected_schema = '';
   if (isset($form_state['triggering_element']['#name']) && $name = $form_state['triggering_element']['#name']) {
-    if ($name == 'schema') {
-      $selected_schema = $form_state['triggering_element']['#value'];
-    }
-    elseif ($name == 'type') {
-      $selected_entity = $form_state['triggering_element']['#value'];
-    }
+    $selected_entity = $form_state['triggering_element']['#value'];
+  }
+  elseif ($api) {
+    $selected_entity = $api->type;
   }
   $form['name'] = array(
     '#title' => 'Title',
@@ -173,11 +181,16 @@ function open_data_schema_map_add_api(array $form, array &$form_state, $api = NU
     '#description' => t('Entity type.'),
     '#options' => $entity_list,
     '#required' => TRUE,
-    '#ajax' => array(
+  );
+  if ($api) {
+    $form['type']['#disabled'] = TRUE;
+  }
+  else {
+    $form['type']['#ajax'] = array(
       'callback' => 'open_data_schema_map_bundle_ajax_callback',
       'wrapper' => 'open-data-schema-map-bundle-options',
-    ),
-  );
+    );
+  }
   $bundle_list = array();
   if ($selected_entity) {
     foreach ($entity_types[$selected_entity]['bundles'] as $bundle_name => $bundle_data) {
@@ -190,6 +203,9 @@ function open_data_schema_map_add_api(array $form, array &$form_state, $api = NU
       '#options' => $bundle_list,
       '#required' => TRUE,
     );
+    if ($api) {
+      $form['bundle']['#disabled'] = TRUE;
+    }
   }
   else {
     $form['bundle'] = array(
@@ -207,50 +223,54 @@ function open_data_schema_map_add_api(array $form, array &$form_state, $api = NU
     '#description' => t('Add and enpoint ie "api/3/action/package_show".'),
     '#required' => TRUE,
   );
-  $form['schema'] = array(
+  $form['api_schema'] = array(
     '#title' => 'Schema',
     '#type' => 'select',
     '#description' => t('Select from the available schemas.'),
     '#options' => $list,
     '#required' => TRUE,
-    '#ajax' => array(
-      'callback' => 'open_data_schema_map_mapping_ajax_callback',
-      'wrapper' => 'open-data-schema-map-mapping-options',
-    ),
   );
-  $form['mapping'] = array(
-    '#title' => 'Mapping',
-    '#description' => t('Fields for selected schema.'),
-    '#type' => 'fieldset',
-    '#collapsible' => TRUE,
-    '#required' => TRUE,
-  );
-  if (module_exists('token')) {
-    $form['mapping']['token_help'] = array(
-      '#title' => t('Replacement patterns'),
+  // Only add Schema if we've already saved the initial config.
+  if ($api) {
+    $form['api_schema']['#disabled'] = TRUE;
+    $selected_schema = $api->api_schema;
+    $form['mapping'] = array(
+      '#title' => 'Mapping',
+      '#description' => t('Fields for selected schema.'),
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
-      '#description' => t('Prefer raw-text replacements for text to avoid problems with HTML entities!'),
-    );
-    $form['mapping']['token_help']['help'] = array(
-      '#theme' => 'token_tree',
-      '#token_types' => array('node'),
-    );
-  }
-  if ($selected_schema) {
-    $schema = open_data_schema_map_schema_load($selected_schema);
-    $form['mapping']['fields'] = open_data_schema_map_schema_form($schema['fields']);
-  }
-  else {
-    $form['mapping']['fields'] = array(
-      '#type' => 'item',
-      '#markup' => t('Select a schema.'),
       '#required' => TRUE,
     );
+    if (module_exists('token')) {
+      $form['mapping']['token_help'] = array(
+        '#title' => t('Replacement patterns'),
+        '#type' => 'fieldset',
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+        '#description' => t('Prefer raw-text replacements for text to avoid problems with HTML entities!'),
+      );
+      $form['mapping']['token_help']['help'] = array(
+        '#theme' => 'token_tree',
+        '#token_types' => array('node'),
+      );
+    }
+    $schema = open_data_schema_map_schema_load($selected_schema);
+    $form['mapping']['mapping'] = open_data_schema_map_schema_form($schema['fields'], $api);
+
+    // Load defaults.
+    $form['name']['#default_value'] = $api->name;
+    $form['machine_name']['#default_value'] = $api->machine_name;
+    $form['type']['#default_value'] = $api->type;
+    $form['bundle']['#default_value'] = $api->bundle;
+    $form['endpoint']['#default_value'] = $api->endpoint;
+    $form['api_schema']['#default_value'] = $api->api_schema;
+
+    $form['id'] = array(
+      '#type' => 'hidden',
+      '#value' => $api->id,
+    );
+
   }
-  $form['mapping']['#prefix'] = '<div id="open-data-schema-map-mapping-options">';
-  $form['mapping']['#suffix'] = '</div>';
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Create API'),
@@ -261,15 +281,21 @@ function open_data_schema_map_add_api(array $form, array &$form_state, $api = NU
 /**
  * Creates form for schema fields.
  */
-function open_data_schema_map_schema_form($fields) {
+function open_data_schema_map_schema_form($fields, $api) {
   $form = array();
+  if (isset($api->mapping)) {
+    $defaults = unserialize($api->mapping);
+  }
   foreach ($fields as $machine_name => $data) {
     $desc = isset($data['description']) ? $data['description'] : '';
+    $default = isset($defaults[$machine_name]) ? $defaults[$machine_name] : '';
     $form[$machine_name] = array(
       '#title' => $data['title'],
       '#type' => 'textfield',
       '#description' => $desc,
+      '#default_value' => $default,
     );
+    $form['#tree'] = TRUE;
   }
   return $form;
 }
@@ -284,49 +310,44 @@ function open_data_schema_map_bundle_ajax_callback(array $form, array &$form_sta
 }
 
 /**
- * Form AJAX handler for search_api_admin_add_server().
- *
- * Just returns the "options" array of the already built form array.
- */
-function open_data_schema_map_mapping_ajax_callback(array $form, array &$form_state) {
-  return $form['mapping'];
-}
-
-/**
  * Submit function for api map.
  */
 function open_data_schema_map_add_api_submit($form, $form_state) {
+  $db_schema = drupal_get_schema('open_data_schema_map');
   $values = $form_state['values'];
-  unset($values['submit']);
-  unset($values['form_build_id']);
-  unset($values['form_id']);
-  unset($values['form_token']);
-  unset($values['op']);
-  $schema = open_data_schema_map_schema_load($values['schema']);
-  $map = array();
-  foreach ($schema['fields'] as $field => $data) {
-    $map[$field] = $values[$field];
+  $record = array();
+  // Prepare values for insertion.
+  foreach ($db_schema['fields'] as $name => $data) {
+    if (isset($values[$name])) {
+      $record[$name] = $values[$name];
+    }
   }
-  $values['mapping'] = serialize($map);
-dpm($values);
-  drupal_write_record('open_data_schema_map', $values);
+  // Decide if we are updating or inserting.
+  if (isset($record['id']) && $record['id']) {
+    $update = array('id');
+  }
+  else {
+    $update = array();
+  }
+  drupal_static_reset('open_data_schema_map_api_load_all');
+  drupal_write_record('open_data_schema_map', $record, $update);
   drupal_goto('admin/config/services/odsm/edit/' . $values['machine_name']);
 }
 
 /**
  * Lists APIs created with this module.
  */
-function open_data_schema_map_apis() {
-  return array(
-    'none' => array(
-      'title' => 'Title',
-      'endpoint' => 'Endpoint',
-      'schema' => 'Schema',
-      'entity' => 'Entity',
-      'bundle' => 'bun',
-      'args' => 'arge',
-    ),
-  );
+function open_data_schema_map_api_table() {
+  $apis = open_data_schema_map_api_load_all();
+  foreach ($apis as $num => $api) {
+    unset($apis[$num]['id']);
+    unset($apis[$num]['machine_name']);
+    unset($apis[$num]['description']);
+    unset($apis[$num]['mapping']);
+    unset($apis[$num]['arguments']);
+    $apis[$num]['edit'] = l(t('edit'), 'admin/config/services/odsm/edit/' . $api['machine_name']);
+  }
+  return $apis;
 }
 
 /**
@@ -340,6 +361,20 @@ function open_data_schema_map_api_exist($machine_name) {
 }
 
 /**
+ * Loads all APIs.
+ */
+function open_data_schema_map_api_load_all() {
+  $record = &drupal_static(__FUNCTION__, array());
+  if ($record) {
+    return $record;
+  }
+  $results = db_query("select * from {open_data_schema_map}")->fetchAllAssoc('machine_name');
+  foreach ($results as $result) {
+    $record[] = (array) $result;
+  }
+  return $record;
+}
+/**
  * Loads API.
  *
  * @param string $machine_name
@@ -349,16 +384,8 @@ function open_data_schema_map_api_exist($machine_name) {
  *   API object.
  */
 function open_data_schema_map_api_load($machine_name) {
-  return array(
-    'none' => array(
-      'title' => 'Title',
-      'endpoint' => 'Endpoint',
-      'schema' => 'Schema',
-      'entity' => 'Entity',
-      'bundle' => 'bun',
-      'args' => 'arge',
-    ),
-  );
+  $record = db_query("select * from {open_data_schema_map} where machine_name = :machine_name", array(':machine_name' => $machine_name))->fetchObject();
+  return $record;
 }
 
 /**
@@ -371,4 +398,12 @@ function open_data_schema_map_schema_load($schema_name) {
   $json = file_get_contents($json_file);
   $schema = drupal_json_decode($json);
   return $schema;
+}
+
+/**
+ * Creates endpoint.
+ */
+function open_data_schema_map_endpoint($api) {
+  $api['mapping'] = unserialize($api['mapping']);
+  return drupal_json_output($api);
 }

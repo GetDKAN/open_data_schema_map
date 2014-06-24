@@ -13,25 +13,31 @@ function open_data_schema_map_schema() {
     'description' => 'Stores open data schema mappings',
     'fields' => array(
       'id' => array(
-        'description' => 'The primary identifier for a api.',
+        'description' => 'The primary identifier for an api.',
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       'name' => array(
-        'description' => 'The displayed name for a api.',
+        'description' => 'The displayed name for an api.',
         'type' => 'varchar',
         'length' => 50,
         'not null' => TRUE,
       ),
       'machine_name' => array(
-        'description' => 'The machine name for a api.',
+        'description' => 'The machine name for an api.',
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+      ),
+      'api_schema' => array(
+        'description' => 'The schema for an api.',
         'type' => 'varchar',
         'length' => 50,
         'not null' => TRUE,
       ),
       'description' => array(
-        'description' => 'The displayed description for a api.',
+        'description' => 'The displayed description for an api.',
         'type' => 'text',
         'not null' => FALSE,
       ),
