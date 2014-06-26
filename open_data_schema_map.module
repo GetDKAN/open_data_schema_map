@@ -58,6 +58,13 @@ function open_data_schema_map_menu() {
     'page arguments' => array('open_data_schema_map_add_api', 5),
     'access arguments' => array('administer open data schema mapper.'),
   );
+  $items[$pre . '/delete/%open_data_schema_map_api'] = array(
+    'title' => 'Delete API',
+    'description' => 'Delete an existing API Endpoint',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('open_data_schema_map_delete', 5),
+    'access arguments' => array('administer open data schema mapper.'),
+  );
 
   return $items;
 }
@@ -107,7 +114,10 @@ function open_data_schema_map_page_overview() {
   $form = array();
   $apis = open_data_schema_map_api_table();
   $list = array();
-  foreach ($apis as $name => $data) {
+  foreach ($apis as $num => $data) {
+    $data['endpoint'] = isset($data['endpoint']) ? l($data['endpoint'], $data['endpoint']) : '';
+    $data['delete'] = l(t('delete'), 'admin/config/services/odsm/delete/' . $data['machine_name']);
+    unset($data['machine_name']);
     $list[] = $data;
   }
   $header = array();
@@ -126,6 +136,28 @@ function open_data_schema_map_page_overview() {
     '#attributes' => array('class' => array('search-api-overview')),
     '#empty' => t('There are no search servers or indexes defined yet.'),
   );
+}
+
+/**
+ * Callback for delete page.
+ */
+function open_data_schema_map_delete(array $form, array &$form_state, $api = NULL) {
+  $form = confirm_form($form, t('Delete this API?'), 'admin/config/services/odsm', '', t('Delete'), t('Cancel'), 'administer open data schema mapper.');
+  $form['#api'] = $api;
+  return $form;
+}
+
+/**
+ * Submit function for deleting an API.
+ */
+function open_data_schema_map_delete_submit(array $form, array &$form_state) {
+  $api = $form['#api'];
+  $id = $api->id;
+  db_delete('open_data_schema_map')
+  ->condition('id', $id)
+    ->execute();
+  drupal_set_message(t('API %name has been deleted', array('%name' => $api->name)));
+  drupal_goto('admin/config/services/odsm');
 }
 
 /**
@@ -341,7 +373,6 @@ function open_data_schema_map_api_table() {
   $apis = open_data_schema_map_api_load_all();
   foreach ($apis as $num => $api) {
     unset($apis[$num]['id']);
-    unset($apis[$num]['machine_name']);
     unset($apis[$num]['description']);
     unset($apis[$num]['mapping']);
     unset($apis[$num]['arguments']);
