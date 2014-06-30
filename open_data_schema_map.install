@@ -54,7 +54,7 @@ function open_data_schema_map_schema() {
         'description' => 'The name of the bundle a mapping applies to.',
       ),
       'mapping' => array(
-        'description' => 'The serialized mapping of the schema to fields..',
+        'description' => 'The serialized mapping of the schema to fields.',
         'type' => 'blob',
         'not null' => FALSE,
         'size' => 'big',
@@ -67,10 +67,11 @@ function open_data_schema_map_schema() {
         'description' => 'The name of the endpoint for the new API.',
       ),
       'arguments' => array(
-        'type' => 'varchar',
-        'length' => 256,
+        'description' => 'The serialized mapping of the arguments to fields.',
+        'type' => 'blob',
         'not null' => FALSE,
-        'description' => 'Comma separated list of arguments for the API. Must be schema items.',
+        'size' => 'big',
+        'serialize' => TRUE,
       ),
     ),
     'primary key' => array('id'),

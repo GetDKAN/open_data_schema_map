@@ -6,16 +6,6 @@
  */
 
 /**
- * TODO:
- *
- * register schema
- * add table
- * create form
- * render output
- * featurize.
- */
-
-/**
  * Implements hook_menu().
  */
 function open_data_schema_map_menu() {
@@ -23,15 +13,17 @@ function open_data_schema_map_menu() {
   $pre = 'admin/config/services/odsm';
 
   $apis = open_data_schema_map_api_load_all();
-  foreach ($apis as $num => $api) {
-    $description = $api['description'] ? $api['description'] : '';
-    $items[$api['endpoint']] = array(
-      'title' => $api['name'],
-      'description' => $description,
-      'page callback' => 'open_data_schema_map_endpoint',
-      'page arguments' => array($api),
-      'access arguments' => array('administer open data schema mapper.'),
-    );
+  if ($apis) {
+    foreach ($apis as $num => $api) {
+      $description = $api['description'] ? $api['description'] : '';
+      $items[$api['endpoint']] = array(
+        'title' => $api['name'],
+        'description' => $description,
+        'page callback' => 'open_data_schema_map_endpoint',
+        'page arguments' => array($api),
+        'access arguments' => array('administer open data schema mapper.'),
+      );
+    }
   }
   $items[$pre] = array(
     'title' => 'Open Data Schema Mapper',
@@ -47,7 +39,7 @@ function open_data_schema_map_menu() {
     'title' => 'Add API',
     'description' => 'Add a new API Endpoint',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('open_data_schema_map_add_api'),
+    'page arguments' => array('open_data_schema_map_manage'),
     'access arguments' => array('administer open data schema mapper.'),
     'type' => MENU_LOCAL_ACTION,
   );
@@ -55,7 +47,7 @@ function open_data_schema_map_menu() {
     'title' => 'Edit API',
     'description' => 'Edit an existing API Endpoint',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('open_data_schema_map_add_api', 5),
+    'page arguments' => array('open_data_schema_map_manage', 5),
     'access arguments' => array('administer open data schema mapper.'),
   );
   $items[$pre . '/delete/%open_data_schema_map_api'] = array(
@@ -163,8 +155,7 @@ function open_data_schema_map_delete_submit(array $form, array &$form_state) {
 /**
  * Callback for primary menu page.
  */
-function open_data_schema_map_add_api(array $form, array &$form_state, $api = NULL) {
-  drupal_set_title(t('Add API'));
+function open_data_schema_map_manage(array $form, array &$form_state, $api = NULL) {
   $schemas = open_data_schema_map_register();
   if (!$schemas) {
     $form['empty'] = array(
@@ -264,8 +255,35 @@ function open_data_schema_map_add_api(array $form, array &$form_state, $api = NU
   );
   // Only add Schema if we've already saved the initial config.
   if ($api) {
-    $form['api_schema']['#disabled'] = TRUE;
     $selected_schema = $api->api_schema;
+    $schema = open_data_schema_map_schema_load($selected_schema);
+
+    // Arguments!
+    $form['arg_id_options'] = array(
+      '#type' => 'hidden',
+      '#value' => array('' => t('-- none --')) + open_data_schema_mapper_args_options($schema),
+    );
+    $form['arguments'] = array(
+      '#title' => 'Arguments',
+      '#type' => 'fieldset',
+      '#description' => t('Add an argument to the API. Must be one of the fields from the bundle.'),
+      '#collapsible' => TRUE,
+    );
+    $form['arguments']['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Add another argument'),
+      '#submit' => array('open_data_schema_mapper_args_ajax_callback'),
+      '#ajax' => array(
+        'callback' => 'open_data_schema_mapper_args_ajax_callback',
+        'wrapper' => 'edit-arguments',
+        'method' => 'replace',
+        'effect' => 'fade',
+      ),
+    );
+    $form_state['num_args'] = $num_args = isset($form_state['num_args']) ? $form_state['num_args'] : 1;
+    $form['arguments'] = $form['arguments'] + open_data_schema_map_args_form($num_args, $form['arg_id_options']['#value'], unserialize($api->arguments));
+
+    $form['api_schema']['#disabled'] = TRUE;
     $form['mapping'] = array(
       '#title' => 'Mapping',
       '#description' => t('Fields for selected schema.'),
@@ -286,8 +304,7 @@ function open_data_schema_map_add_api(array $form, array &$form_state, $api = NU
         '#token_types' => array('node'),
       );
     }
-    $schema = open_data_schema_map_schema_load($selected_schema);
-    $form['mapping']['mapping'] = open_data_schema_map_schema_form($schema['fields'], $api);
+    $form['mapping'] = $form['mapping'] + open_data_schema_map_schema_form($schema, $api);
 
     // Load defaults.
     $form['name']['#default_value'] = $api->name;
@@ -296,6 +313,7 @@ function open_data_schema_map_add_api(array $form, array &$form_state, $api = NU
     $form['bundle']['#default_value'] = $api->bundle;
     $form['endpoint']['#default_value'] = $api->endpoint;
     $form['api_schema']['#default_value'] = $api->api_schema;
+    $form['arguments']['#default_value'] = $api->arguments;
 
     $form['id'] = array(
       '#type' => 'hidden',
@@ -307,27 +325,71 @@ function open_data_schema_map_add_api(array $form, array &$form_state, $api = NU
     '#type' => 'submit',
     '#value' => t('Create API'),
   );
+  $form['#tree'] = TRUE;
   return $form;
 }
 
 /**
  * Creates form for schema fields.
  */
-function open_data_schema_map_schema_form($fields, $api) {
+function open_data_schema_map_schema_form($schema, $api) {
   $form = array();
+  $defaults = '';
   if (isset($api->mapping)) {
     $defaults = unserialize($api->mapping);
   }
-  foreach ($fields as $machine_name => $data) {
-    $desc = isset($data['description']) ? $data['description'] : '';
-    $default = isset($defaults[$machine_name]) ? $defaults[$machine_name] : '';
-    $form[$machine_name] = array(
-      '#title' => $data['title'],
-      '#type' => 'textfield',
-      '#description' => $desc,
-      '#default_value' => $default,
-    );
-    $form['#tree'] = TRUE;
+  $form = open_data_schema_map_form_recursion($form, $schema, $defaults);
+  return $form;
+}
+
+/**
+ * Provides form type from field type.
+ */
+function open_data_schema_map_form_field_type($field_type) {
+  switch ($field_type) {
+    case "string":
+      return 'textfield';
+
+  }
+}
+
+
+/**
+ * Recursive function to generate mapping form.
+ */
+function open_data_schema_map_form_recursion($form, $schema, $defaults = NULL) {
+  foreach ($schema as $key => $value) {
+    if (count($value) == count($value, COUNT_RECURSIVE)) {
+      $desc = isset($value['description']) ? $value['description'] : '';
+      $description = t('Machine name: %machine_name field type: %type description: %desc', array(
+        '%machine_name' => $key, '%type' => $value['type'], '%desc' => $desc));
+      $default = isset($defaults[$key]) ? $defaults[$key] : '';
+      $form[$key] = array(
+        '#title' => $value['title'],
+        '#type' => 'textfield',
+        '#description' => $description,
+        '#default_value' => $default,
+      );
+    }
+    else {
+      $form[$key] = array(
+        '#title' => $key,
+        '#type' => 'fieldset',
+        '#collapsible' => TRUE,
+      );
+      foreach ($value as $key2 => $value2) {
+        $desc = isset($value2['description']) ? $value2['description'] : '';
+        $description = t('Machine name: %machine_name field type: %type description: %desc', array(
+          '%machine_name' => $key2, '%type' => $value2['type'], '%desc' => $desc));
+        $default = isset($defaults[$key][$key2]) ? $defaults[$key][$key2] : '';
+        $form[$key][$key2] = array(
+          '#title' => $value2['title'],
+          '#type' => 'textfield',
+          '#description' => $description,
+          '#default_value' => $default,
+        );
+      }
+    }
   }
   return $form;
 }
@@ -342,11 +404,23 @@ function open_data_schema_map_bundle_ajax_callback(array $form, array &$form_sta
 }
 
 /**
+ * Form AJAX handler for search_api_admin_add_server().
+ *
+ * Just returns the "options" array of the already built form array.
+ */
+function open_data_schema_mapper_args_ajax_callback(array $form, array &$form_state) {
+  $form_state['num_args'] = $num_args = $form_state['num_args'] + 1;
+  return $form['arguments'] + open_data_schema_map_args_form($num_args, $form['arg_id_options']['#value']);
+}
+
+
+/**
  * Submit function for api map.
  */
-function open_data_schema_map_add_api_submit($form, $form_state) {
+function open_data_schema_map_manage_submit($form, $form_state) {
   $db_schema = drupal_get_schema('open_data_schema_map');
   $values = $form_state['values'];
+  unset($values['arguments']['submit']);
   $record = array();
   // Prepare values for insertion.
   foreach ($db_schema['fields'] as $name => $data) {
@@ -405,6 +479,7 @@ function open_data_schema_map_api_load_all() {
   }
   return $record;
 }
+
 /**
  * Loads API.
  *
@@ -436,5 +511,116 @@ function open_data_schema_map_schema_load($schema_name) {
  */
 function open_data_schema_map_endpoint($api) {
   $api['mapping'] = unserialize($api['mapping']);
-  return drupal_json_output($api);
+  $result = array();
+  $result['help'] = $api['mapping']['help'];
+  $map = $api['mapping']['result'];
+  if ($api['type'] && $api['bundle']) {
+    $limit = 25;
+    $offset = 0;
+    $raw_args = explode(',', $api['arguments']);
+    foreach ($raw_args as $arg) {
+      $args[$arg] = $map[$arg];
+    }
+
+    $ids = open_data_schema_map_output_entities($api['type'], $api['bundle'], $limit, $offset, $args);
+    if (!$ids) {
+      $result['success'] = FALSE;
+      return drupal_json_output($result);
+    }
+    $result['success'] = TRUE;
+    foreach ($ids as $key => $id) {
+      $entity = entity_load($api['type'], array($id));
+      foreach ($map as $field => $token) {
+        if ($token) {
+          $result['result'][$key][$field] = token_replace($token, array($api['type'] => $entity[$id]));
+        }
+        else {
+          $result['result'][$key][$field] = $token;
+        }
+      }
+    }
+  }
+  return drupal_json_output($result);
+}
+
+
+/**
+ * Retrieves public, published dataset nodes.
+ *
+ * @return array
+ *   An array of dataset nodes.
+ */
+function open_data_schema_map_output_entities($type = 'node', $bundle = 'dataset', $limit = 0, $offset = 0, $args = array()) {
+  $args = is_array($args) ? $args : array($args);
+  $query = new EntityFieldQuery();
+
+  $query->entityCondition('entity_type', $type)
+    ->entityCondition('bundle', $bundle)
+    ->propertyCondition('status', 1)
+    ->propertyOrderBy('created', 'DESC')
+    // Run the query as user 1.
+    ->addMetaData('account', user_load(1));
+
+  if ($limit) {
+    $query->range($offset, $limit);
+  }
+  foreach ($args as $arg => $token) {
+    $field = open_data_schema_map_discover_field($token);
+    if ($field[0] == 'node') {
+      $query->propertyCondition($field[1], 'dae85265-8168-422d-981e-eaa60a4729c6');
+    }
+    elseif ($field[0] == 'field') {
+  // $query->fieldCondition('field_license', 'value', 'odc-pddl');
+    }
+    //$query->propertyCondition('uuid', 'dae85265-8168-422d-981e-eaa60a4729c6');
+   //$query->fieldCondition('field_related_content', 'title', 'Torqueo');
+
+  }
+  $entities = $query->execute();
+  $ids = NULL;
+  if ($entities) {
+    $ids = array_keys($entities[$type]);
+  }
+
+  return $ids;
+}
+
+/**
+ *
+ */
+function open_data_schema_map_discover_field($token) {
+  $token = rtrim(trim($token, '['), ']');
+  return explode(':', $token);
+}
+
+function open_data_schema_map_args_form($num_args, $options, $defaults) {
+  $form = array();
+  for ($i = 1; $i <= $num_args; $i++) {
+    $form[$i] = array(
+      '#title' => 'Argument ' . $i,
+      '#type' => 'fieldset',
+    );
+    $form[$i]['field'] = array(
+      '#title' => 'Schema Field',
+      '#type' => 'select',
+      '#description' => t('Schema field to use as an argument. Is the "field" in /endpoint?KEY=123456.'),
+      '#options' => $options,
+      '#default_value' => isset($defaults[$i]['field']) ? $defaults[$i]['field'] : '',
+    );
+    $form[$i]['value'] = array(
+      '#title' => 'Schema Field Value',
+      '#type' => 'textfield',
+      '#description' => t('Value for schema field. Only for tokens with [nodes:field_FIELD_NAME]. This is the column name in the field table to grab. Defaults to "safe_value".'),
+      '#default_value' => isset($defaults[$i]['value']) ? $defaults[$i]['value'] : '',
+    );
+  }
+  return $form;
+}
+
+function open_data_schema_mapper_args_options($schema) {
+  $options = array();
+  foreach ($schema['result'] as $id => $data) {
+    $options[$id] = $data['title'];
+  }
+  return $options;
 }

@@ -1,6 +1,10 @@
 {
-  "help" : "Dataset fields for CKAN",
-  "fields": {
+  "help": {
+    "title": "Help text",
+    "description": "Help text for the return value",
+    "type": "string"
+  },
+  "result": {
     "license_title": {
       "title": "License Title",
       "description": "License Title",
@@ -16,7 +20,7 @@
     },
     "private": {
       "title": "Private",
-      "private": "boolean"
+      "type": "boolean"
     },
     "maintainer_email": {
       "title": "Maintainer Email",
