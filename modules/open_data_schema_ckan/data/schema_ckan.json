@@ -64,6 +64,8 @@
       "title": "Resources",
       "type": "array",
       "items" : {
+        "required": "true",
+        "type": "array",
         "resource_group_id": {
           "title": "resource_group_id",
           "type": "string"
