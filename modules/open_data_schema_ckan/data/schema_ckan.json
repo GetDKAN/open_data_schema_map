@@ -59,6 +59,96 @@
       "title": "Type",
       "type": "string",
       "default": "Dataset"
+    },
+    "resources": {
+      "title": "Resources",
+      "type": "array",
+      "items" : {
+        "resource_group_id": {
+          "title": "resource_group_id",
+          "type": "string"
+        },
+        "cache_last_updated": {
+          "title": "cache_last_updated",
+          "type": "string"
+        },
+        "revision_timestamp": {
+          "title": "revision_timestamp",
+          "type": "string"
+        },
+        "webstore_last_updated": {
+          "title": "webstore_last_updated",
+          "type": "string"
+        },
+        "datastore_active": {
+          "title": "datastore_active",
+          "type": "string"
+        },
+        "id": {
+          "title": "UUID",
+          "type": "string"
+        },
+        "size": {
+          "title": "size",
+          "type": "string"
+        },
+        "state": {
+          "title": "state",
+          "type": "string"
+        },
+        "hash": {
+          "title": "hash",
+          "type": "string"
+        },
+        "description": {
+          "title": "description",
+          "type": "string"
+        },
+        "format": {
+          "title": "format",
+          "type": "string"
+        },
+        "last_modified": {
+          "title": "last_modified",
+          "type": "string"
+        },
+        "url_type": {
+          "title": "url_type",
+          "type": "string"
+        },
+        "mimetype": {
+          "title": "mimetype",
+          "type": "string"
+        },
+        "name": {
+          "title": "name",
+          "type": "string"
+        },
+        "created": {
+          "title": "created",
+          "type": "string"
+        },
+        "url": {
+          "title": "url",
+          "type": "string"
+        },
+        "webstore_url": {
+          "title": "webstore_url",
+          "type": "string"
+        },
+        "position": {
+          "title": "position",
+          "type": "string"
+        },
+        "revision_id": {
+          "title": "revision_id",
+          "type": "string"
+        },
+        "resource_type": {
+          "title": "resource_type",
+          "type": "string"
+        }
+      }
     }
- }
+  }
 }

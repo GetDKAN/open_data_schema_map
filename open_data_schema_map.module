@@ -269,10 +269,9 @@ function open_data_schema_map_manage(array $form, array &$form_state, $api = NUL
       '#description' => t('Add an argument to the API. Must be one of the fields from the bundle.'),
       '#collapsible' => TRUE,
     );
-    $form['arguments']['submit'] = array(
-      '#type' => 'submit',
+    $form['args']['submit'] = array(
+      '#type' => 'button',
       '#value' => t('Add another argument'),
-      '#submit' => array('open_data_schema_mapper_args_ajax_callback'),
       '#ajax' => array(
         'callback' => 'open_data_schema_mapper_args_ajax_callback',
         'wrapper' => 'edit-arguments',
@@ -280,8 +279,12 @@ function open_data_schema_map_manage(array $form, array &$form_state, $api = NUL
         'effect' => 'fade',
       ),
     );
-    $form_state['num_args'] = $num_args = isset($form_state['num_args']) ? $form_state['num_args'] : 1;
-    $form['arguments'] = $form['arguments'] + open_data_schema_map_args_form($num_args, $form['arg_id_options']['#value'], unserialize($api->arguments));
+    $args = unserialize($api->arguments);
+    $num_args = count($args);
+    if (isset($form_state['clicked_button']) && $form_state['clicked_button']['#value'] == 'Add another argument') {
+      $num_args++;
+    }
+    $form['arguments'] = $form['arguments'] + open_data_schema_map_args_form($num_args, $form['arg_id_options']['#value'], $args);
 
     $form['api_schema']['#disabled'] = TRUE;
     $form['mapping'] = array(
@@ -349,16 +352,18 @@ function open_data_schema_map_form_field_type($field_type) {
   switch ($field_type) {
     case "string":
       return 'textfield';
-
   }
 }
-
 
 /**
  * Recursive function to generate mapping form.
  */
-function open_data_schema_map_form_recursion($form, $schema, $defaults = NULL) {
+function open_data_schema_map_form_recursion(&$form, $schema, $defaults = NULL) {
   foreach ($schema as $key => $value) {
+    // Skip if not a top level item.
+    if (!is_array($value)) {
+      continue;
+    }
     if (count($value) == count($value, COUNT_RECURSIVE)) {
       $desc = isset($value['description']) ? $value['description'] : '';
       $description = t('Machine name: %machine_name field type: %type description: %desc', array(
@@ -377,18 +382,7 @@ function open_data_schema_map_form_recursion($form, $schema, $defaults = NULL) {
         '#type' => 'fieldset',
         '#collapsible' => TRUE,
       );
-      foreach ($value as $key2 => $value2) {
-        $desc = isset($value2['description']) ? $value2['description'] : '';
-        $description = t('Machine name: %machine_name field type: %type description: %desc', array(
-          '%machine_name' => $key2, '%type' => $value2['type'], '%desc' => $desc));
-        $default = isset($defaults[$key][$key2]) ? $defaults[$key][$key2] : '';
-        $form[$key][$key2] = array(
-          '#title' => $value2['title'],
-          '#type' => 'textfield',
-          '#description' => $description,
-          '#default_value' => $default,
-        );
-      }
+      open_data_schema_map_form_recursion($form[$key], $schema[$key], $defaults[$key]);
     }
   }
   return $form;
@@ -409,8 +403,7 @@ function open_data_schema_map_bundle_ajax_callback(array $form, array &$form_sta
  * Just returns the "options" array of the already built form array.
  */
 function open_data_schema_mapper_args_ajax_callback(array $form, array &$form_state) {
-  $form_state['num_args'] = $num_args = $form_state['num_args'] + 1;
-  return $form['arguments'] + open_data_schema_map_args_form($num_args, $form['arg_id_options']['#value']);
+  return $form['arguments'];
 }
 
 
@@ -420,7 +413,12 @@ function open_data_schema_mapper_args_ajax_callback(array $form, array &$form_st
 function open_data_schema_map_manage_submit($form, $form_state) {
   $db_schema = drupal_get_schema('open_data_schema_map');
   $values = $form_state['values'];
-  unset($values['arguments']['submit']);
+  // Remove empty arguments.
+  foreach ($values['arguments'] as $num => $arg) {
+    if (!$arg['field']) {
+      unset($values['arguments'][$num]);
+    }
+  }
   $record = array();
   // Prepare values for insertion.
   foreach ($db_schema['fields'] as $name => $data) {
@@ -517,9 +515,15 @@ function open_data_schema_map_endpoint($api) {
   if ($api['type'] && $api['bundle']) {
     $limit = 25;
     $offset = 0;
-    $raw_args = explode(',', $api['arguments']);
-    foreach ($raw_args as $arg) {
-      $args[$arg] = $map[$arg];
+    $args = unserialize($api['arguments']);
+    $queries = drupal_get_query_parameters();
+    foreach ($args as $num => $arg) {
+      $args[$num]['token'] = $map[$arg['field']];
+      foreach ($queries as $field => $value) {
+        if ($arg['field'] == $field) {
+          $args[$num]['query'] = $value;
+        }
+      }
     }
 
     $ids = open_data_schema_map_output_entities($api['type'], $api['bundle'], $limit, $offset, $args);
@@ -547,6 +551,19 @@ function open_data_schema_map_endpoint($api) {
 /**
  * Retrieves public, published dataset nodes.
  *
+ * @param string $type
+ *   Entity type.
+ * @param string $bundle
+ *   Entity bundle.
+ * @param string $limit
+ *   Number of results to return.
+ * @param string $offset
+ *   Offset of results to return.
+ * @param array $args
+ *   - query: current value of query.
+ *   - value: value field
+ *   - token: token to get data from
+ *
  * @return array
  *   An array of dataset nodes.
  */
@@ -564,16 +581,20 @@ function open_data_schema_map_output_entities($type = 'node', $bundle = 'dataset
   if ($limit) {
     $query->range($offset, $limit);
   }
-  foreach ($args as $arg => $token) {
-    $field = open_data_schema_map_discover_field($token);
+  foreach ($args as $arg => $data) {
+    $field = open_data_schema_map_discover_field($data['token']);
+    // Pass conditions if no queries.
+    if (!isset($data['query']) || !$data['query']) {
+      continue;
+    }
     if ($field[0] == 'node') {
-      $query->propertyCondition($field[1], 'dae85265-8168-422d-981e-eaa60a4729c6');
+      if (substr($field[1], 0, 6) == 'field_') {
+        $query->fieldCondition($field[1], $data['value'], $data['query']);
+      }
+      else {
+        $query->propertyCondition($field[1], $data['query']);
+      }
     }
-    elseif ($field[0] == 'field') {
-  // $query->fieldCondition('field_license', 'value', 'odc-pddl');
-    }
-    //$query->propertyCondition('uuid', 'dae85265-8168-422d-981e-eaa60a4729c6');
-   //$query->fieldCondition('field_related_content', 'title', 'Torqueo');
 
   }
   $entities = $query->execute();
@@ -586,13 +607,16 @@ function open_data_schema_map_output_entities($type = 'node', $bundle = 'dataset
 }
 
 /**
- *
+ * Returns array from token.
  */
 function open_data_schema_map_discover_field($token) {
   $token = rtrim(trim($token, '['), ']');
   return explode(':', $token);
 }
 
+/**
+ * Creates argument form.
+ */
 function open_data_schema_map_args_form($num_args, $options, $defaults) {
   $form = array();
   for ($i = 1; $i <= $num_args; $i++) {
@@ -617,6 +641,9 @@ function open_data_schema_map_args_form($num_args, $options, $defaults) {
   return $form;
 }
 
+/**
+ * Creates option list from available arguments.
+ */
 function open_data_schema_mapper_args_options($schema) {
   $options = array();
   foreach ($schema['result'] as $id => $data) {
