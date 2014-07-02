@@ -32,6 +32,7 @@ function open_data_schema_apis_features_export($data, &$export, $module_name = '
   }
 
   foreach ($data as $key => $machine_name) {
+    // Load the api, check the schema and require the module associated with it
     if ($map = open_data_schema_map_api_load($machine_name)) {
       $export['features']['open_data_schema_apis'][$machine_name] = $machine_name;
       $export['dependencies'][$schema_modules[$map->api_schema]] = $schema_modules[$map->api_schema];
@@ -58,13 +59,20 @@ function open_data_schema_apis_features_export_options() {
  */
 function open_data_schema_apis_features_export_render($module, $data, $export = NULL) {
   $code = array();
+  $code[] = '  $open_data_schema_apis = array();';
+  $code[] = '';
+
+  $rendered_apis = array();
   foreach ($data as $machine_name => $api) {
     if ($definition = open_data_schema_map_api_load($api)) {
       unset($definition->id);
-      $code[$api] = $definition;
+      $code[] = "  // Exported Open Data API Map: {$definition->name}";
+      $api_code = features_var_export($definition, '  ');
+      $code[] = "  \$open_data_schema_apis['$api'] = $api_code;";
     }
   }
-  $code = "  return " . features_var_export($code, '  ') . ";";
+  $code[] = '  return $open_data_schema_apis;';
+  $code = implode("\n", $code);
   return array('open_data_schema_apis_defaults' => $code);
 }
 
@@ -79,8 +87,10 @@ function open_data_schema_apis_features_revert($module) {
  * Implements hook_features_rebuild().
  */
 function open_data_schema_apis_features_rebuild($module) {
+  // Overwrite API in DB from code...
   if ($defaults = features_get_default('open_data_schema_apis', $module)) {
     foreach ($defaults as $machine_name => $definition) {
+      // @todo add open_data_schema_map_schema_save() function to replace this
       if ($existing = open_data_schema_map_api_load($machine_name)) {
         drupal_write_record('open_data_schema_map', $definition, (string) $existing->id);
       }
