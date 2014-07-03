@@ -341,7 +341,7 @@ function open_data_schema_map_schema_form($schema, $api) {
   if (isset($api->mapping)) {
     $defaults = unserialize($api->mapping);
   }
-  $form = open_data_schema_map_form_recursion($form, $schema, $defaults);
+  $form = open_data_schema_map_form_recursion($form, $schema, $api, $defaults);
   return $form;
 }
 
@@ -357,8 +357,18 @@ function open_data_schema_map_form_field_type($field_type) {
 
 /**
  * Recursive function to generate mapping form.
+ *
+ * @param array $form
+ *   Form api ready array to build.
+ * @param array $schema
+ *   Schema array which is reduced.
+ * @param object $api
+ *   $api object which is passed around because procedural.
+ * @param array $defaults
+ *   Array of defaults which matches up with the $schema.
  */
-function open_data_schema_map_form_recursion(&$form, $schema, $defaults = NULL) {
+function open_data_schema_map_form_recursion(&$form, $schema, $api, $defaults = NULL) {
+  $entity_ref_fields = open_data_schema_map_entity_ref_fields($api->type, $api->bundle);
   foreach ($schema as $key => $value) {
     if (is_array($value)  && isset($value['items'])) {
       foreach ($value['items'] as $item => $data) {
@@ -366,7 +376,7 @@ function open_data_schema_map_form_recursion(&$form, $schema, $defaults = NULL) 
         unset($value['items']);
       }
       $schema[$key] = $value;
-      open_data_schema_map_form_recursion($form[$key], $schema[$key], $defaults[$key]);
+      open_data_schema_map_form_recursion($form[$key], $schema[$key], $api, $defaults[$key]);
     }
     // Skip if not a top level item.
     if (!is_array($value)) {
@@ -390,18 +400,82 @@ function open_data_schema_map_form_recursion(&$form, $schema, $defaults = NULL) 
         '#type' => 'fieldset',
         '#collapsible' => TRUE,
       );
-      if ($value['type'] == 'array') {
+      if ($value['type'] == 'array' && $entity_ref_fields) {
         $form[$key]['odsm_entity_reference'] = array(
-          '#title' => $key . ' Entity Reference',
+          '#title' => $key . ' Multivalue Field',
           '#type' => 'select',
-          '#options' => array('wtf'),
-          '#description' => t('entity reference'),
+          '#options' => array('' => t('-- none --')) + $entity_ref_fields,
+          '#default_value' => $defaults[$key]['odsm_entity_reference'],
+          '#description' => t('This array can iterate over multi-value fields as long as they are an entity reference. Select entity reference field to use. If none is selected this output will not loop and accept single value tokens. "Nth" represents iteratable tokens.') . open_data_schema_map_token_tree('[node:' . str_replace('_', '-', $defaults[$key]['odsm_entity_reference']) . ']'),
         );
       }
-      open_data_schema_map_form_recursion($form[$key], $schema[$key], $defaults[$key]);
+      open_data_schema_map_form_recursion($form[$key], $schema[$key], $api, $defaults[$key]);
     }
   }
   return $form;
+}
+
+/**
+ * Recursive function that walks throw tokens to output rows.
+ */
+function open_data_schema_map_token_rows(&$rows, $token_info) {
+  if (isset($token_info['children'])) {
+    foreach ($token_info['children'] as $token_child => $token_child_info) {
+      $token_child = str_replace('1', 'Nth', $token_child);
+      $token_child_info['name'] = str_replace('1', 'Nth', $token_child_info['name']);
+      $token_child_info['raw token'] = str_replace('1', 'Nth', $token_child_info['raw token']);
+      $token_child_info['token'] = str_replace('1', 'N', $token_child_info['token']);
+      $token_child_info['description'] = str_replace('1', 'Nth', $token_child_info['description']);
+      $token_child_info['parent'] = str_replace('1', 'Nth', $token_child_info['parent']);
+      $row = _token_token_tree_format_row($token_child, $token_child_info);
+      unset($row['data']['value']);
+      $rows[] = $row;
+      if (isset($token_info['children'])) {
+        open_data_schema_map_token_rows($rows, $token_child_info);
+      }
+    }
+  }
+
+}
+
+/**
+ * Creates token tree for single token.
+ */
+function open_data_schema_map_token_tree($token) {
+  module_load_include('inc', 'token', 'token.pages');
+
+  $tree = token_build_tree('node');
+  $token_info = $tree[$token];
+  if (isset($token_info['children'])) {
+    $shifted = array_shift($token_info['children']);
+    $token_info['children'] = array($shifted['raw token'] => $shifted);
+  }
+
+  $row = _token_token_tree_format_row($token, $token_info);
+  unset($row['data']['value']);
+  $rows = array($row);
+  open_data_schema_map_token_rows($rows, $token_info);
+
+  $element = array(
+    '#theme' => 'tree_table',
+    '#header' => array(
+      t('Name'),
+      t('Token'),
+      t('Description'),
+    ),
+    '#rows' => $rows,
+    '#attributes' => array('class' => array('token-tree')),
+    '#empty' => t('No tokens available'),
+    '#attached' => array(
+      'js' => array(drupal_get_path('module', 'token') . '/token.js'),
+      'css' => array(drupal_get_path('module', 'token') . '/token.css'),
+      'library' => array(array('token', 'treeTable')),
+    ),
+  );
+  $element['#caption'] = t("Click a token to insert it into the field you've last clicked.");
+  $element['#attributes']['class'][] = 'token-click-insert';
+  return drupal_render($element);
+
 }
 
 /**
@@ -552,17 +626,35 @@ function open_data_schema_map_endpoint($api) {
       $entity = entity_load($api['type'], array($id));
       foreach ($map as $field => $token) {
         if ($token && !is_array($token)) {
-          $result['result'][$key][$field] = token_replace($token, array($api['type'] => $entity[$id]));
+          $result['result'][$key][$field] = token_replace($token, array($api['type'] => $entity[$id]), array('clear' => TRUE));
         }
-        else {
-          $result['result'][$key][$field] = $token;
+        elseif (is_array($token)) {
+          // Here we are looking up any entity reference fields and looping
+          // through them.
+          if ($token['odsm_entity_reference']) {
+            $ref_field = $token['odsm_entity_reference'];
+            unset($token['odsm_entity_reference']);
+            $field_language = field_language($api['type'], $entity[$id], $ref_field);
+            $values = isset($entity[$id]->{$ref_field}[$field_language]) ? $entity[$id]->{$ref_field}[$field_language] : NULL;
+            if ($values) {
+              foreach ($values as $num => $item) {
+                $subvalue = array();
+                foreach ($token as $subfield => $subtoken) {
+                  $subtoken = str_replace('Nth', $num, $subtoken) ? str_replace('Nth', $num, $subtoken) : $subtoken;
+                  if ($subtoken) {
+                    $subvalue[$subfield] = token_replace($subtoken, array($api['type'] => $entity[$id]), array('clear' => TRUE));
+                  }
+                }
+                $result['result'][$key][$field][] = $subvalue;
+              }
+            }
+          }
         }
       }
     }
   }
   return drupal_json_output($result);
 }
-
 
 /**
  * Retrieves public, published dataset nodes.
@@ -604,7 +696,7 @@ function open_data_schema_map_output_entities($type = 'node', $bundle = 'dataset
       continue;
     }
     if ($field[0] == 'node') {
-      if (substr($field[1], 0, 6) == 'field_') {
+      if (substr($field[1], 0, 5) == 'field') {
         $query->fieldCondition($field[1], $data['value'], $data['query']);
       }
       else {
@@ -648,7 +740,7 @@ function open_data_schema_map_args_form($num_args, $options, $defaults) {
       '#default_value' => isset($defaults[$i]['field']) ? $defaults[$i]['field'] : '',
     );
     $form[$i]['value'] = array(
-      '#title' => 'Schema Field Value',
+      '#title' => 'Schema Field Column',
       '#type' => 'textfield',
       '#description' => t('Value for schema field. Only for tokens with [nodes:field_FIELD_NAME]. This is the column name in the field table to grab. Defaults to "safe_value".'),
       '#default_value' => isset($defaults[$i]['value']) ? $defaults[$i]['value'] : '',
@@ -666,4 +758,41 @@ function open_data_schema_mapper_args_options($schema) {
     $options[$id] = $data['title'];
   }
   return $options;
+}
+
+/**
+ * Finds entity reference fields for a given bundle.
+ *
+ * @param string $entity
+ *   Entity machine name.
+ * @param string $bundle
+ *   Bundle machine name.
+ *
+ * @return array
+ *   Array of entity reference or similar fields.
+ */
+function open_data_schema_map_entity_ref_fields($entity, $bundle, $ref_fields = array('entityreference', 'taxonomy')) {
+  // Get instances.
+  $instances = field_info_instances($entity, $bundle);
+
+  // Get reference fields.
+  $query = db_select('field_config', 'f');
+  $query->fields('f', array('field_name'));
+  $or = db_or();
+  foreach ($ref_fields as $field) {
+    $or->condition('f.module', $field);
+  }
+  $query->condition($or);
+  $query->distinct();
+  $rows = $query->execute();
+
+  foreach ($rows as $row) {
+    $field_name = $row->field_name;
+    // See if reference field is used in bundle.
+    if (isset($instances[$field_name])) {
+      $field_names[$field_name] = $instances[$field_name]['label'];
+    }
+  }
+  return $field_names;
+
 }
