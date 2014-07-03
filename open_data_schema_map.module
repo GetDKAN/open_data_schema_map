@@ -401,12 +401,14 @@ function open_data_schema_map_form_recursion(&$form, $schema, $api, $defaults = 
         '#collapsible' => TRUE,
       );
       if ($value['type'] == 'array' && $entity_ref_fields) {
+        $odsm_entity_reference = isset($defaults[$key]['odsm_entity_reference']) ? $defaults[$key]['odsm_entity_reference'] : '';
+        $osd_key_map = $odsm_entity_reference ? open_data_schema_map_token_tree('[node:' . str_replace('_', '-', $odsm_entity_reference) . ']') : '';
         $form[$key]['odsm_entity_reference'] = array(
           '#title' => $key . ' Multivalue Field',
           '#type' => 'select',
           '#options' => array('' => t('-- none --')) + $entity_ref_fields,
-          '#default_value' => $defaults[$key]['odsm_entity_reference'],
-          '#description' => t('This array can iterate over multi-value fields as long as they are an entity reference. Select entity reference field to use. If none is selected this output will not loop and accept single value tokens. "Nth" represents iteratable tokens.') . open_data_schema_map_token_tree('[node:' . str_replace('_', '-', $defaults[$key]['odsm_entity_reference']) . ']'),
+          '#default_value' => $odsm_entity_reference,
+          '#description' => t('This array can iterate over multi-value fields as long as they are an entity reference. Select entity reference field to use. If none is selected this output will not loop and accept single value tokens. "Nth" represents iteratable tokens.') . $osd_key_map,
         );
       }
       open_data_schema_map_form_recursion($form[$key], $schema[$key], $api, $defaults[$key]);
