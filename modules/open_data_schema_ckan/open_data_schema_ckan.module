@@ -9,7 +9,7 @@
  * Implements hook_open_data_schema().
  */
 function open_data_schema_ckan_open_data_schema() {
-  $path = DRUPAL_ROOT . '/' . drupal_get_path('module', 'open_data_schema_ckan') . '/data/schema_ckan.json';
+  $path = DRUPAL_ROOT . '/' . drupal_get_path('module', 'open_data_schema_ckan') . '/data/OGPD_JSON_Schema.json';
   return array(
     'short_name' => 'ckan',
     'title' => 'CKAN',
