@@ -32,7 +32,7 @@ function open_data_schema_apis_features_export($data, &$export, $module_name = '
   }
 
   foreach ($data as $key => $machine_name) {
-    // Load the api, check the schema and require the module associated with it
+    // Load the api, check the schema and require the module associated with it.
     if ($map = open_data_schema_map_api_load($machine_name)) {
       $export['features']['open_data_schema_apis'][$machine_name] = $machine_name;
       $export['dependencies'][$schema_modules[$map->api_schema]] = $schema_modules[$map->api_schema];
@@ -47,7 +47,7 @@ function open_data_schema_apis_features_export($data, &$export, $module_name = '
 function open_data_schema_apis_features_export_options() {
   $apis = array();
 
-  foreach(open_data_schema_map_api_load_all() as $api) {
+  foreach (open_data_schema_map_api_load_all() as $api) {
     $apis[$api['machine_name']] = $api['name'];
   }
 
@@ -92,10 +92,10 @@ function open_data_schema_apis_features_rebuild($module) {
     foreach ($defaults as $machine_name => $definition) {
       // @todo add open_data_schema_map_schema_save() function to replace this
       if ($existing = open_data_schema_map_api_load($machine_name)) {
-        drupal_write_record('open_data_schema_map', $definition, (string) $existing->id);
+        drupal_write_record('open_data_schema_map', $definition, $existing->id);
       }
       else {
-        drupal_write_record('open_data_schema_map', $definition); 
+        drupal_write_record('open_data_schema_map', $definition);
       }
     }
   }

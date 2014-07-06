@@ -13,6 +13,7 @@ function open_data_schema_map_page_overview() {
   $apis = open_data_schema_map_api_table();
   $list = array();
   foreach ($apis as $num => $data) {
+    $data = (array) $data;
     $data['endpoint'] = isset($data['endpoint']) ? l($data['endpoint'], $data['endpoint']) : '';
     $data['delete'] = l(t('delete'), 'admin/config/services/odsm/delete/' . $data['machine_name']);
     unset($data['machine_name']);
@@ -186,7 +187,7 @@ function open_data_schema_map_manage(array $form, array &$form_state, $api = NUL
         'effect' => 'fade',
       ),
     );
-    $args = unserialize($api->arguments);
+    $args = $api->arguments;
     $num_args = count($args);
     if (isset($form_state['clicked_button']) && $form_state['clicked_button']['#value'] == 'Add another argument') {
       $num_args++;
@@ -207,16 +208,19 @@ function open_data_schema_map_manage(array $form, array &$form_state, $api = NUL
         '#title' => t('Replacement patterns'),
         '#type' => 'fieldset',
         '#collapsible' => TRUE,
-        '#collapsed' => TRUE,
         '#description' => t('Prefer raw-text replacements for text to avoid problems with HTML entities!'),
       );
-      $form['mapping']['token_help']['help'] = array(
+      $form['mapping']['token_help']['tokens'] = array(
         '#theme' => 'token_tree',
         '#token_types' => array('node'),
       );
+      $form['mapping']['token_help']['help'] = array(
+        '#type' => 'item',
+        '#markup' => t('Insert tokens or static values into the text fields below. Use "|" or "&" to indicate "either" or "and" between
+        token values. For example, "[node:uuid] | [node:nid]" would print the nid if it is available and if not the nid.'),
+      );
     }
-    $form['mapping'] = $form['mapping'] + 
-    open_data_schema_map_schema_map_form($schema, $api);
+    $form['mapping'] = $form['mapping'] + open_data_schema_map_schema_map_form($schema, $api);
 
     // Load defaults.
     $form['name']['#default_value'] = $api->name;
@@ -248,7 +252,7 @@ function open_data_schema_map_schema_map_form($schema, $api) {
   $function = open_data_schema_map_schema_types_callback($schema['$schema']);
   $defaults = '';
   if (isset($api->mapping)) {
-    $defaults = unserialize($api->mapping);
+    $defaults = $api->mapping;
   }
   $form = $function($schema, $api, $defaults);
   return $form;
@@ -267,7 +271,6 @@ function open_data_schema_map_bundle_ajax_callback(array $form, array &$form_sta
 function open_data_schema_mapper_args_ajax_callback(array $form, array &$form_state) {
   return $form['arguments'];
 }
-
 
 /**
  * Submit function for api map.
@@ -306,34 +309,36 @@ function open_data_schema_map_manage_submit($form, $form_state) {
  * Creates endpoint.
  */
 function open_data_schema_map_endpoint($api) {
-  $map = $api['mapping'] = unserialize($api['mapping']);
 
   $result = array();
-  if ($api['type'] && $api['bundle']) {
+  if ($api->type && $api->bundle) {
     $limit = 25;
     $offset = 0;
-    $args = unserialize($api['arguments']);
     $queries = drupal_get_query_parameters();
-    foreach ($args as $num => $arg) {
-      $args[$num]['token'] = $map[$arg['field']];
-      foreach ($queries as $field => $value) {
-        if ($arg['field'] == $field) {
-          $args[$num]['query'] = $value;
+    $args = array();
+
+    if ($api->arguments) {
+      foreach ($api->arguments as $num => $arg) {
+        $args[$num]['token'] = $map[$arg['field']];
+        foreach ($queries as $field => $value) {
+          if ($arg['field'] == $field) {
+            $args[$num]['query'] = $value;
+          }
         }
       }
     }
 
-    $ids = open_data_schema_map_output_entities($api['type'], $api['bundle'], $limit, $offset, $args);
+    $ids = open_data_schema_map_output_entities($api->type, $api->bundle, $limit, $offset, $args);
     if (!$ids) {
       $result['success'] = FALSE;
       return drupal_json_output($result);
     }
     $result['success'] = TRUE;
     foreach ($ids as $key => $id) {
-      $entity = entity_load($api['type'], array($id));
-      foreach ($map as $field => $token) {
+      $entity = entity_load($api->type, array($id));
+      foreach ($api->mapping as $field => $token) {
         if ($token && !is_array($token)) {
-          $result['result'][$key][$field] = token_replace($token, array($api['type'] => $entity[$id]), array('clear' => TRUE));
+          $result['result'][$key][$field] = token_replace($token, array($api->type => $entity[$id]), array('clear' => TRUE));
         }
         elseif (is_array($token)) {
           // Here we are looking up any entity reference fields and looping
@@ -341,7 +346,7 @@ function open_data_schema_map_endpoint($api) {
           if ($token['odsm_entity_reference']) {
             $ref_field = $token['odsm_entity_reference'];
             unset($token['odsm_entity_reference']);
-            $field_language = field_language($api['type'], $entity[$id], $ref_field);
+            $field_language = field_language($api->type, $entity[$id], $ref_field);
             $values = isset($entity[$id]->{$ref_field}[$field_language]) ? $entity[$id]->{$ref_field}[$field_language] : NULL;
             if ($values) {
               foreach ($values as $num => $item) {
@@ -349,7 +354,7 @@ function open_data_schema_map_endpoint($api) {
                 foreach ($token as $subfield => $subtoken) {
                   $subtoken = str_replace('Nth', $num, $subtoken) ? str_replace('Nth', $num, $subtoken) : $subtoken;
                   if ($subtoken) {
-                    $subvalue[$subfield] = token_replace($subtoken, array($api['type'] => $entity[$id]), array('clear' => TRUE));
+                    $subvalue[$subfield] = token_replace($subtoken, array($api->type => $entity[$id]), array('clear' => TRUE));
                   }
                 }
                 $result['result'][$key][$field][] = $subvalue;
@@ -360,6 +365,6 @@ function open_data_schema_map_endpoint($api) {
       }
     }
   }
-  // drupal_alter('open_data_schema_map_results', $api['machine_name'], $api['schema'], $results);
+  drupal_alter('open_data_schema_map_results', $api['machine_name'], $api['schema'], $results);
   return drupal_json_output($result);
 }
