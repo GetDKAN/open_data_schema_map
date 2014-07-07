@@ -792,15 +792,3 @@ function open_data_schema_map_endpoint_special_arg(&$query_args, $default_args, 
   }
   return $value;
 }
-
-
-
-// TODO:
-// * types
-// * alter / hook documentation
-//   * per field
-//   * per result 'schema + api'
-// * api and documentation
-// * publish open_data_schema_map_dkan
-// * add "enabled" option
-//
