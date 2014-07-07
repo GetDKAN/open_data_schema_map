@@ -48,7 +48,7 @@ function open_data_schema_apis_features_export_options() {
   $apis = array();
 
   foreach (open_data_schema_map_api_load_all() as $api) {
-    $apis[$api['machine_name']] = $api['name'];
+    $apis[$api->machine_name] = $api->name;
   }
 
   return $apis;

@@ -24,6 +24,13 @@ function open_data_schema_map_schema() {
         'length' => 50,
         'not null' => TRUE,
       ),
+      'enabled' => array(
+        'description' => 'Whether API is enabled.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'size' => 'tiny',
+        'default' => 0,
+      ),
       'machine_name' => array(
         'description' => 'The machine name for an api.',
         'type' => 'varchar',
