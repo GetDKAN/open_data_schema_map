@@ -1,18 +1,89 @@
 {
-  "help": {
-    "title": "Help text",
-    "description": "Help text for the return value",
-    "type": "string"
-  },
-  "result": {
-    "license_title": {
-      "title": "License Title",
-      "description": "License Title",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "http://project-open-data.github.io/schema/1_0_final/single_entry.json#",
+  "title": "Common Core Metadata Schema",
+  "description": "The metadata format for all federal open data. Validates a single JSON object entry (as opposed to entire Data.json catalog).",
+  "type": "object",
+  "properties": {
+    "id": {
+      "title": "UUID",
+      "type": "string"
+    },
+    "revision_id": {
+      "title": "Revision ID",
+      "type": "string"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    },
+    "author": {
+      "title": "Author",
+      "type": "string"
+    },
+    "author_email": {
+      "title": "Author Email",
       "type": "string"
     },
     "maintainer": {
       "title": "Maintainer",
+      "description": "",
       "type": "string"
+    },
+    "maintainer_email": {
+      "title": "Maintainer Email",
+      "description": "",
+      "type": "string"
+    },
+    "license_title": {
+      "title": "License Title",
+      "description": "",
+      "type": "string"
+    },
+    "license_id": {
+      "title": "License ID",
+      "description": "",
+      "type": "string"
+    },
+    "notes": {
+      "title": "Notes",
+      "description": "",
+      "type": "string"
+    },
+    "url": {
+      "title": "URL",
+      "description": "",
+      "type": "string"
+    },
+    "version": {
+      "title": "Version",
+      "description": "",
+      "type": "string"
+    },
+    "state": {
+      "title": "state",
+      "description": "",
+      "type": "string",
+      "enum": ["uncomplete", "complete", "active"]
+    },
+    "owner_org": {
+      "title": "Owner Organization",
+      "description": "",
+      "type": "string"
+    },
+    "log_message": {
+      "title": "Log Message",
+      "description": "",
+      "type": "string"
+    },
+    "private": {
+      "title": "Private",
+      "description": "",
+      "type": "boolean"
     },
     "relationships_as_object": {
       "title": "Relationships",
@@ -22,16 +93,8 @@
       "title": "Private",
       "type": "boolean"
     },
-    "maintainer_email": {
-      "title": "Maintainer Email",
-      "type": "string"
-    },
     "revision_timestamp": {
       "title": "Revision Date",
-      "type": "string"
-    },
-    "id": {
-      "title": "UUID",
       "type": "string"
     },
     "metadata_created": {
@@ -61,96 +124,222 @@
       "default": "Dataset"
     },
     "resources": {
-      "title": "Resources",
-      "type": "array",
-      "items" : {
-        "required": "true",
-        "type": "array",
-        "resource_group_id": {
-          "title": "resource_group_id",
-          "type": "string"
+      "title":"Resources",
+      "description":"",
+      "anyOf": [
+        {
+          "type": "array",                    
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "title": "UUID",
+                "type": "string"
+              },
+              "revision_id": {
+                "title": "revision_id",
+                "type": "string"
+              },
+              "url": {
+                "title": "url",
+                "type": "string"
+              },
+              "description": {
+                "title": "description",
+                "type": "string"
+              },
+              "format": {
+                "title": "format",
+                "type": "string"
+              },
+              "hash": {
+                "title": "hash",
+                "type": "string"
+              },
+              "state": {
+                "title": "state",
+                "type": "string"
+              },
+              "position": {
+                "title": "position",
+                "type": "string"
+              },
+              "revision_timestamp": {
+                "title": "revision_timestamp",
+                "type": "string"
+              },
+              "name": {
+                "title": "name",
+                "type": "string"
+              },
+              "resource_type": {
+                "title": "resource_type",
+                "type": "string"
+              },
+              "url_type": {
+                "title": "url_type",
+                "type": "string"
+              },
+              "mimetype": {
+                "title": "mimetype",
+                "type": "string"
+              },
+              "webstore_url": {
+                "title": "webstore_url",
+                "type": "string"
+              },
+              "size": {
+                "title": "size",
+                "type": "string"
+              },
+              "created": {
+                "title": "created",
+                "type": "string"
+              },
+              "resource_group_id": {
+                "title": "resource_group_id",
+                "type": "string"
+              },
+              "resource_group_id": {
+                "title": "resource_group_id",
+                "type": "string"
+              },
+              "cache_last_updated": {
+                "title": "cache_last_updated",
+                "type": "string"
+              },
+              "webstore_last_updated": {
+                "title": "webstore_last_updated",
+                "type": "string"
+              },
+              "datastore_active": {
+                "title": "datastore_active",
+                "type": "string"
+              },
+              "last_modified": {
+                "title": "last_modified",
+                "type": "string"
+              }
+            }
+          },
+          "minItems": 1,
+          "uniqueItems": true
         },
-        "cache_last_updated": {
-          "title": "cache_last_updated",
-          "type": "string"
-        },
-        "revision_timestamp": {
-          "title": "revision_timestamp",
-          "type": "string"
-        },
-        "webstore_last_updated": {
-          "title": "webstore_last_updated",
-          "type": "string"
-        },
-        "datastore_active": {
-          "title": "datastore_active",
-          "type": "string"
-        },
-        "id": {
-          "title": "UUID",
-          "type": "string"
-        },
-        "size": {
-          "title": "size",
-          "type": "string"
-        },
-        "state": {
-          "title": "state",
-          "type": "string"
-        },
-        "hash": {
-          "title": "hash",
-          "type": "string"
-        },
-        "description": {
-          "title": "description",
-          "type": "string"
-        },
-        "format": {
-          "title": "format",
-          "type": "string"
-        },
-        "last_modified": {
-          "title": "last_modified",
-          "type": "string"
-        },
-        "url_type": {
-          "title": "url_type",
-          "type": "string"
-        },
-        "mimetype": {
-          "title": "mimetype",
-          "type": "string"
-        },
-        "name": {
-          "title": "name",
-          "type": "string"
-        },
-        "created": {
-          "title": "created",
-          "type": "string"
-        },
-        "url": {
-          "title": "url",
-          "type": "string"
-        },
-        "webstore_url": {
-          "title": "webstore_url",
-          "type": "string"
-        },
-        "position": {
-          "title": "position",
-          "type": "string"
-        },
-        "revision_id": {
-          "title": "revision_id",
-          "type": "string"
-        },
-        "resource_type": {
-          "title": "resource_type",
-          "type": "string"
+        {
+            "type": "null"                    
         }
-      }
+      ]       
+    },
+    "tags": {
+      "title":"Tags",
+      "description":"",
+      "anyOf": [
+        {
+          "type": "array",                    
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "title": "UUID",
+                "type": "string"
+              },
+              "vocabulary_id": {
+                "title": "Vocaulary ID",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "revision_timestamp": {
+                "title": "Revision Timestamp",
+                "type": "string"
+              },
+              "state": {
+                "title": "state",
+                "description": "",
+                "type": "string",
+                "enum": ["uncomplete", "complete", "active"]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "groups": {
+      "title":"Groups",
+      "description":"",
+      "anyOf": [
+        {
+          "type": "array",                    
+          "items": {
+            "type": "object",
+            "properties": {
+              "display_name": {
+                "title": "Display NAme",
+                "type": "string"
+              },
+              "description": {
+                "title": "Description",
+                "type": "string"
+              },
+              "id": {
+                "title": "UUID",
+                "type": "string"
+              },
+              "image_display_url": {
+                "title": "Image URL",
+                "type": "string"
+              },
+              "title": {
+                "title": "Title",
+                "description": "",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "extras": {
+      "title":"Extras",
+      "description":"",
+      "anyOf": [
+        {
+          "type": "array",                    
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "title": "UUID",
+                "type": "string"
+              },
+              "key": {
+                "title": "Key",
+                "type": "string"
+              },
+              "value": {
+                "title": "Value",
+                "type": "string"
+              },
+              "state": {
+                "title": "state",
+                "description": "",
+                "type": "string",
+                "enum": ["uncomplete", "complete", "active"]
+              },
+              "revision_timestamp": {
+                "title": "Revision Timestamp",
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
     }
   }
 }
