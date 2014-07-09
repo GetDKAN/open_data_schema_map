@@ -74,6 +74,7 @@ function open_data_schema_pod_extra_settings_submit(&$form, $form_state) {
  */
 function open_data_schema_pod_open_data_schema_map_results_alter(&$result, $machine_name, $api_schema) {
   if ($api_schema == 'pod') {
+    // Adds additional catalog entry.
     $catalog_dist = array();
     $catalog_dist['accessURL'] = url('data.json', array('absolute' => TRUE));
     $catalog_dist['format'] = 'application/json';

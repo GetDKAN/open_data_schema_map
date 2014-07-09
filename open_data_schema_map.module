@@ -177,17 +177,19 @@ function open_data_schema_map_form_recursion(&$form, $schema, $api, $defaults = 
 function open_data_schema_map_token_rows(&$rows, $token_info) {
   if (isset($token_info['children'])) {
     foreach ($token_info['children'] as $token_child => $token_child_info) {
-      $token_child = str_replace('1', 'Nth', $token_child);
-      $token_child_info['name'] = str_replace('1', 'Nth', $token_child_info['name']);
-      $token_child_info['raw token'] = str_replace('1', 'Nth', $token_child_info['raw token']);
-      $token_child_info['token'] = str_replace('1', 'N', $token_child_info['token']);
-      $token_child_info['description'] = str_replace('1', 'Nth', $token_child_info['description']);
-      $token_child_info['parent'] = str_replace('1', 'Nth', $token_child_info['parent']);
-      $row = _token_token_tree_format_row($token_child, $token_child_info);
-      unset($row['data']['value']);
-      $rows[] = $row;
-      if (isset($token_info['children'])) {
-        open_data_schema_map_token_rows($rows, $token_child_info);
+      if (is_array($token_child_info)) {
+        $token_child = str_replace('1', 'Nth', $token_child);
+        $token_child_info['name'] = str_replace('1', 'Nth', $token_child_info['name']);
+        $token_child_info['raw token'] = str_replace('1', 'Nth', $token_child_info['raw token']);
+        $token_child_info['token'] = str_replace('1', 'N', $token_child_info['token']);
+        $token_child_info['description'] = str_replace('1', 'Nth', $token_child_info['description']);
+        $token_child_info['parent'] = str_replace('1', 'Nth', $token_child_info['parent']);
+        $row = _token_token_tree_format_row($token_child, $token_child_info);
+        unset($row['data']['value']);
+        $rows[] = $row;
+        if (isset($token_info['children'])) {
+          open_data_schema_map_token_rows($rows, $token_child_info);
+        }
       }
     }
   }
@@ -201,36 +203,41 @@ function open_data_schema_map_token_tree($token) {
   module_load_include('inc', 'token', 'token.pages');
 
   $tree = token_build_tree('node');
-  $token_info = $tree[$token];
-  if (isset($token_info['children'])) {
-    $shifted = array_shift($token_info['children']);
-    $token_info['children'] = array($shifted['raw token'] => $shifted);
+  if (!isset($tree[$token])) {
+    $token = substr($token, 0, -1) . ":?]";
   }
+  if (isset($tree[$token])) {
+    $token_info = $tree[$token];
+    if (isset($token_info['children'])) {
+      $shifted = array_shift($token_info['children']);
+      $token_info['children'] = array($shifted['raw token'] => $shifted);
+    }
 
-  $row = _token_token_tree_format_row($token, $token_info);
-  unset($row['data']['value']);
-  $rows = array($row);
-  open_data_schema_map_token_rows($rows, $token_info);
+    $row = _token_token_tree_format_row($token, $token_info);
+    unset($row['data']['value']);
+    $rows = array($row);
+    open_data_schema_map_token_rows($rows, $token_info);
 
-  $element = array(
-    '#theme' => 'tree_table',
-    '#header' => array(
-      t('Name'),
-      t('Token'),
-      t('Description'),
-    ),
-    '#rows' => $rows,
-    '#attributes' => array('class' => array('token-tree')),
-    '#empty' => t('No tokens available'),
-    '#attached' => array(
-      'js' => array(drupal_get_path('module', 'token') . '/token.js'),
-      'css' => array(drupal_get_path('module', 'token') . '/token.css'),
-      'library' => array(array('token', 'treeTable')),
-    ),
-  );
-  $element['#caption'] = t("Click a token to insert it into the field you've last clicked.");
-  $element['#attributes']['class'][] = 'token-click-insert';
-  return drupal_render($element);
+    $element = array(
+      '#theme' => 'tree_table',
+      '#header' => array(
+        t('Name'),
+        t('Token'),
+        t('Description'),
+      ),
+      '#rows' => $rows,
+      '#attributes' => array('class' => array('token-tree')),
+      '#empty' => t('No tokens available'),
+      '#attached' => array(
+        'js' => array(drupal_get_path('module', 'token') . '/token.js'),
+        'css' => array(drupal_get_path('module', 'token') . '/token.css'),
+        'library' => array(array('token', 'treeTable')),
+      ),
+    );
+    $element['#caption'] = t("Click a token to insert it into the field you've last clicked.");
+    $element['#attributes']['class'][] = 'token-click-insert';
+    return drupal_render($element);
+  }
 
 }
 
@@ -342,7 +349,7 @@ function open_data_schema_map_endpoint_query($type = 'node', $bundle = 'dataset'
     $query->range($offset, $limit);
   }
   foreach ($args as $arg => $arg_value) {
-    $field = open_data_schema_map_discover_field($arg_value['token']);
+    $field = open_data_schema_map_discover_field($arg_value['token']['value']);
     // Pass conditions if no queries.
     if (!isset($arg_value['query']) || !$arg_value['query']) {
       continue;
@@ -492,6 +499,14 @@ function open_data_schema_map_entity_ref_fields($entity, $bundle, $ref_fields = 
   $query->condition($or);
   $query->distinct();
   $rows = $query->execute();
+  $query = db_select('field_config', 'f');
+  $query->fields('f', array('field_name'));
+  $or = db_or();
+  $or->condition('cardinality', '1', '>');
+  $or->condition('cardinality', '-1', '=');
+  $query->condition($or);
+  $query->distinct();
+  $rows = $query->execute();
   $field_names = array();
 
   foreach ($rows as $row) {
@@ -523,11 +538,12 @@ function open_data_schema_map_json_4($schema, $api, $defaults) {
         $data['type'] = 'string';
       }
     }
+    $desc = isset($data['description']) ? $data['description'] . t('Type:') . $data['type'] : t('Type:') . $data['type'];
     $form[$item] = array(
       '#title' => $data['title'],
       '#type' => 'textfield',
       '#maxlength' => 256,
-      '#description' => $data['description'] . t('Type:') . $data['type'],
+      '#description' => $desc,
       '#default_value' => isset($defaults[$item]['value']) ? $defaults[$item]['value'] : '',
       '#field_type' => $data['type'],
     );
@@ -545,14 +561,15 @@ function open_data_schema_map_json_4($schema, $api, $defaults) {
         '#type' => 'select',
         '#options' => array('' => t('-- none --')) + $entity_ref_fields,
         '#default_value' => $odsm_entity_reference,
-        '#description' => t('This array can iterate over multi-value fields as long as they are an entity reference. Select entity reference field to use. If none is selected this output will not loop and accept single value tokens. "Nth" represents iteratable tokens.') . $osd_key_map,
+        '#description' => t('This array can iterate over multi-value fields. Select multi-value field to use. If none is selected this output will not loop and accept single value tokens. Selecting and saving an entity reference will produce a list of chaiabale tokens. For non entity reference fields, replace "?" with "Nth:value". "Nth" represents iteratable tokens.') . $osd_key_map,
       );
       foreach ($data['anyOf'][0]['items']['properties'] as $subitem => $subdata) {
+        $desc = isset($subdata['description']) ? $subdata['description'] . t('Type:') . $subdata['type'] : t('Type:') . $subdata['type'];
         $form[$item][$subitem] = array(
           '#title' => $subdata['title'],
           '#type' => 'textfield',
           '#maxlength' => 256,
-          '#description' => $subdata['description'],
+          '#description' => $desc,
           '#default_value' => isset($defaults[$item][$subitem]['value']) ? $defaults[$item][$subitem]['value'] : '',
         );
       }
@@ -708,6 +725,9 @@ function open_data_schema_map_endpoint_process_map($ids, $api) {
           if (isset($token['value']) && !$token['value']) {
             continue;
           }
+          if (isset($token['odsm_entity_reference']['value']) && !$token['odsm_entity_reference']['value']) {
+            continue;
+          }
           $result[$key][$api_field] = open_data_schema_map_endpoint_process_field($api_field, $token, $api->type, $entity[$id]);
         }
       }
@@ -721,7 +741,7 @@ function open_data_schema_map_endpoint_process_map($ids, $api) {
  */
 function open_data_schema_map_endpoint_process_field($api_field, $token, $type, $entity) {
   $result = array();
-  if ($token && isset($token['value'])) {
+  if ($token && isset($token['value']) && isset($token['type'])) {
     $result = open_data_schema_mapper_token_replace($token['value'], $type, $entity);
     $result = open_data_schema_mapper_field_type_check($result, $token);
   }
@@ -730,20 +750,23 @@ function open_data_schema_map_endpoint_process_field($api_field, $token, $type, 
     // through them.
     $result = array();
     if ($token['odsm_entity_reference']) {
-      $ref_field = $token['odsm_entity_reference']['value'];
+      $values = '';
+      if ($ref_field = $token['odsm_entity_reference']['value']) {
+        $field_language = field_language($type, $entity, $ref_field);
+        $values = isset($entity->{$ref_field}[$field_language]) ? $entity->{$ref_field}[$field_language] : NULL;
+      }
+      $values = $values ? $values : array(array());
       unset($token['odsm_entity_reference']);
-      $field_language = field_language($type, $entity, $ref_field);
-      $values = isset($entity->{$ref_field}[$field_language]) ? $entity->{$ref_field}[$field_language] : NULL;
-      if ($values) {
-        foreach ($values as $num => $item) {
-          $subvalue = array();
-          foreach ($token as $subfield => $subtoken) {
-            $subtoken['value'] = str_replace('Nth', $num, $subtoken['value']) ? str_replace('Nth', $num, $subtoken['value']) : $subtoken['value'];
-            if ($subtoken['value']) {
-              $subvalue[$subfield] = open_data_schema_mapper_token_replace($subtoken['value'], $type, $entity);
-              $subvalue[$subfield] = open_data_schema_mapper_field_type_check($subvalue[$subfield], $subtoken);
-            }
+      foreach ($values as $num => $item) {
+        $subvalue = array();
+        foreach ($token as $subfield => $subtoken) {
+          $subtoken['value'] = str_replace('Nth', $num, $subtoken['value']) ? str_replace('Nth', $num, $subtoken['value']) : $subtoken['value'];
+          if ($subtoken['value']) {
+            $subvalue[$subfield] = open_data_schema_mapper_token_replace($subtoken['value'], $type, $entity);
+            $subvalue[$subfield] = open_data_schema_mapper_field_type_check($subvalue[$subfield], $subtoken);
           }
+        }
+        if ($subvalue) {
           $result[] = $subvalue;
         }
       }

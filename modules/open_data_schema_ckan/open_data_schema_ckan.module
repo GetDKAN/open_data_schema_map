@@ -17,3 +17,33 @@ function open_data_schema_ckan_open_data_schema() {
     'description' => t('CKAN schema. See http://ckan.org for more awesome details.'),
   );
 }
+
+/**
+ * Implements hook_open_data_schema_map_results_alter().
+ */
+function open_data_schema_ckan_open_data_schema_map_results_alter(&$result, $machine_name, $api_schema) {
+  if ($api_schema == 'ckan') {
+    // CKAN expects results wrapped in help, success, result.
+    $result = array(
+      'help' => '',
+      'success' => TRUE,
+      'result' => $result,
+    );
+    if (!$result['result']) {
+      $result['success'] = FALSE;
+    }
+    if ($machine_name == 'ckan_package_show') {
+      $result['help'] = t('Return the metadata of a dataset (package) and its resources. :param id: the id or name of the dataset :type id: string');
+    }
+    elseif ($machine_name == 'ckan_revision_list') {
+      $result['help'] = t("Return a list of the IDs of the site's revisions.\n\n :rtype: list of strings.");
+      foreach ($result['result'] as $num => $data) {
+        // This endpoint just produces a list.
+        foreach ($data as $api_field => $item) {
+          $list[] = $item;
+        }
+      }
+      $result['result'] = $list;
+    }
+  }
+}
