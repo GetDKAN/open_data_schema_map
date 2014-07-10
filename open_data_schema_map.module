@@ -350,6 +350,7 @@ function open_data_schema_map_endpoint_query($type = 'node', $bundle = 'dataset'
   }
   foreach ($args as $arg => $arg_value) {
     $field = open_data_schema_map_discover_field($arg_value['token']['value']);
+    drupal_alter('open_data_schema_map_args', $field, $arg_value);
     // Pass conditions if no queries.
     if (!isset($arg_value['query']) || !$arg_value['query']) {
       continue;
@@ -490,15 +491,6 @@ function open_data_schema_map_entity_ref_fields($entity, $bundle, $ref_fields = 
   $instances = field_info_instances($entity, $bundle);
 
   // Get reference fields.
-  $query = db_select('field_config', 'f');
-  $query->fields('f', array('field_name'));
-  $or = db_or();
-  foreach ($ref_fields as $field) {
-    $or->condition('f.module', $field);
-  }
-  $query->condition($or);
-  $query->distinct();
-  $rows = $query->execute();
   $query = db_select('field_config', 'f');
   $query->fields('f', array('field_name'));
   $or = db_or();
@@ -814,4 +806,38 @@ function open_data_schema_map_endpoint_special_arg(&$query_args, $default_args, 
     }
   }
   return $value;
+}
+/**
+ * Implements hook_open_data_schema_map_args().
+ */
+function open_data_schema_map_open_data_schema_map_args_alter(&$field, &$arg) {
+  if ($field[0] == 'node' && $field[1] == 'url') {
+    if ($arg['token']['value'] == '[node:url:arg:last]') {
+      $result = db_select('url_alias', 'url')->fields('url', array('source', 'alias'))->execute()->fetchAll();
+      $field[1] = 'nid';
+      foreach ($result as $result) {
+        $alias = explode('/', $result->alias);
+        if ($alias[count($alias) - 1] == $arg['query']) {
+          $nid = explode('/', $result->source);
+          $arg['query'] = $nid[count($nid) - 1];
+          return;
+        }
+      }
+    }
+    elseif ($arg['token']['value'] == '[node:url]') {
+      $field[1] = 'nid';
+      $query = db_select('url_alias', 'url');
+      $query->fields('f', array('source'));
+      $query->condition('alias', $arg['query'], '=');
+      $query->distinct();
+      $rows = $query->execute();
+      foreach ($rows as $row) {
+        if ($row->source) {
+          $nid = explode('/', $row->source);
+          $arg['query'] = $nid[count($nid) - 1];
+          return;
+        }
+      }
+    }
+  }
 }
