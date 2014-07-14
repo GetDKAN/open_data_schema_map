@@ -22,7 +22,7 @@ function open_data_schema_map_menu() {
           'description' => $description,
           'page callback' => 'open_data_schema_map_endpoint',
           'page arguments' => array($api),
-          'access arguments' => array('administer open data schema mapper.'),
+          'access arguments' => array('access content'),
           'file' => 'open_data_schema_map.pages.inc',
         );
       }
@@ -711,21 +711,52 @@ function open_data_schema_map_endpoint_process_map($ids, $api) {
     $schema = open_data_schema_map_schema_load($api->api_schema);
     foreach ($ids as $key => $id) {
       $entity = entity_load($api->type, array($id));
-      foreach ($api->mapping as $api_field => $token) {
-        // Don't show results for fields without tokens.
-        if ($token) {
-          if (isset($token['value']) && !$token['value']) {
-            continue;
-          }
-          if (isset($token['odsm_entity_reference']['value']) && !$token['odsm_entity_reference']['value']) {
-            continue;
-          }
-          $result[$key][$api_field] = open_data_schema_map_endpoint_process_field($api_field, $token, $api->type, $entity[$id]);
-        }
-      }
+      open_data_schema_map_endpoint_process_map_recursion($result, $api->mapping, $api->type, $entity[$id]);
     }
   }
   return $result;
+}
+
+/**
+ * Walks through map adding to results.
+ */
+function open_data_schema_map_endpoint_process_map_recursion(&$result, $map, $type, $entity) {
+  foreach ($map as $api_field => $token) {
+    // Don't show results for fields without tokens.
+    if ($token) {
+      if (isset($token['value']) && !$token['value']) {
+        continue;
+      }
+      if ($token['odsm_entity_reference']) {
+        $values = '';
+        if ($ref_field = $token['odsm_entity_reference']['value']) {
+          $field_language = field_language($type, $entity, $ref_field);
+          $values = isset($entity->{$ref_field}[$field_language]) ? $entity->{$ref_field}[$field_language] : NULL;
+        }
+        unset($token['odsm_entity_reference']);
+        foreach ($values as $num => $item) {
+          $subvalue = array();
+          foreach ($token as $subfield => $subtoken) {
+            $subtoken['value'] = str_replace('Nth', $num, $subtoken['value']) ? str_replace('Nth', $num, $subtoken['value']) : $subtoken['value'];
+            if ($subtoken['value']) {
+              $subvalue = open_data_schema_mapper_token_replace($subtoken['value'], $type, $entity);
+              $subvalue = open_data_schema_mapper_field_type_check($subvalue, $subtoken);
+              $sub_result[$subfield] = $subvalue;
+            }
+          }
+          $result[$api_field][] = $sub_result;
+        }
+        foreach ($token as $subfield => $subtoken) {
+          if ($subtoken['odsm_entity_reference']) {
+            open_data_schema_map_endpoint_process_map_recursion($result[$api_field][$subfield], $map[$api_field][$subfield], $type, $entity);
+          }
+        }
+      }
+      else {
+        $result[$api_field] = open_data_schema_map_endpoint_process_field($api_field, $token, $type, $entity);
+      }
+    }
+  }
 }
 
 /**
@@ -736,33 +767,6 @@ function open_data_schema_map_endpoint_process_field($api_field, $token, $type, 
   if ($token && isset($token['value']) && isset($token['type'])) {
     $result = open_data_schema_mapper_token_replace($token['value'], $type, $entity);
     $result = open_data_schema_mapper_field_type_check($result, $token);
-  }
-  elseif (is_array($token)) {
-    // Here we are looking up any entity reference fields and looping
-    // through them.
-    $result = array();
-    if ($token['odsm_entity_reference']) {
-      $values = '';
-      if ($ref_field = $token['odsm_entity_reference']['value']) {
-        $field_language = field_language($type, $entity, $ref_field);
-        $values = isset($entity->{$ref_field}[$field_language]) ? $entity->{$ref_field}[$field_language] : NULL;
-      }
-      $values = $values ? $values : array(array());
-      unset($token['odsm_entity_reference']);
-      foreach ($values as $num => $item) {
-        $subvalue = array();
-        foreach ($token as $subfield => $subtoken) {
-          $subtoken['value'] = str_replace('Nth', $num, $subtoken['value']) ? str_replace('Nth', $num, $subtoken['value']) : $subtoken['value'];
-          if ($subtoken['value']) {
-            $subvalue[$subfield] = open_data_schema_mapper_token_replace($subtoken['value'], $type, $entity);
-            $subvalue[$subfield] = open_data_schema_mapper_field_type_check($subvalue[$subfield], $subtoken);
-          }
-        }
-        if ($subvalue) {
-          $result[] = $subvalue;
-        }
-      }
-    }
   }
   drupal_alter('open_data_schema_map_process_field', $result, $api_field, $token);
   return $result;
