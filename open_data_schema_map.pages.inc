@@ -331,12 +331,16 @@ function open_data_schema_map_manage_submit($form, $form_state) {
   // Decide if we are updating or inserting.
   if (isset($record['id']) && $record['id']) {
     $update = array('id');
+    $message = t('API %name updated.', array('%name' => $record['name']));
   }
   else {
     $update = array();
+    $message = t('Created API %name. You may now add arguments and field mappings.', array('%name' => $record['name']));
   }
   drupal_static_reset('open_data_schema_map_api_load_all');
-  drupal_write_record('open_data_schema_map', $record, $update);
+  if (drupal_write_record('open_data_schema_map', $record, $update)) {
+    drupal_set_message($message);    
+  }
   drupal_goto('admin/config/services/odsm/edit/' . $values['machine_name']);
 }
 
