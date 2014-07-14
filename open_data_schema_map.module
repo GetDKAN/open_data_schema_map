@@ -811,7 +811,7 @@ function open_data_schema_map_endpoint_special_arg(&$query_args, $default_args, 
  * Implements hook_open_data_schema_map_args().
  */
 function open_data_schema_map_open_data_schema_map_args_alter(&$field, &$arg) {
-  if ($arg['token']['value'] == '[node:url:arg:last]') {
+  if ($arg['token']['value'] == '[node:url:arg:last]' || $arg['token']['value'] == '[node:url:args:last]') {
     $result = db_select('url_alias', 'url')->fields('url', array('source', 'alias'))->execute()->fetchAll();
     $field[1] = 'nid';
     foreach ($result as $result) {
