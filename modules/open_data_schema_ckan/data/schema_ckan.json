@@ -137,19 +137,19 @@
                 "type": "string"
               },
               "revision_id": {
-                "title": "revision_id",
+                "title": "Revision ID",
                 "type": "string"
               },
               "url": {
-                "title": "url",
+                "title": "URL",
                 "type": "string"
               },
               "description": {
-                "title": "description",
+                "title": "Description",
                 "type": "string"
               },
               "format": {
-                "title": "format",
+                "title": "Format",
                 "type": "string"
               },
               "hash": {
@@ -160,64 +160,60 @@
                 "title": "state",
                 "type": "string"
               },
-              "position": {
+              "Position": {
                 "title": "position",
                 "type": "string"
               },
               "revision_timestamp": {
-                "title": "revision_timestamp",
+                "title": "Revision Timestamp",
                 "type": "string"
               },
               "name": {
-                "title": "name",
+                "title": "Name",
                 "type": "string"
               },
               "resource_type": {
-                "title": "resource_type",
+                "title": "Resource Type",
                 "type": "string"
               },
               "url_type": {
-                "title": "url_type",
+                "title": "URL Type",
                 "type": "string"
               },
               "mimetype": {
-                "title": "mimetype",
+                "title": "MIME Type",
                 "type": "string"
               },
               "webstore_url": {
-                "title": "webstore_url",
+                "title": "Web Store URL",
                 "type": "string"
               },
               "size": {
-                "title": "size",
+                "title": "Size",
                 "type": "string"
               },
               "created": {
-                "title": "created",
+                "title": "Created",
                 "type": "string"
               },
               "resource_group_id": {
-                "title": "resource_group_id",
-                "type": "string"
-              },
-              "resource_group_id": {
-                "title": "resource_group_id",
+                "title": "Resource Group UUID",
                 "type": "string"
               },
               "cache_last_updated": {
-                "title": "cache_last_updated",
+                "title": "Cache Last Updated",
                 "type": "string"
               },
               "webstore_last_updated": {
-                "title": "webstore_last_updated",
+                "title": "Web Store Last Updated",
                 "type": "string"
               },
               "datastore_active": {
-                "title": "datastore_active",
+                "title": "Datastore Active",
                 "type": "string"
               },
               "last_modified": {
-                "title": "last_modified",
+                "title": "Last Modified",
                 "type": "string"
               }
             }
