@@ -440,7 +440,7 @@ function open_data_schema_map_args_form($num_args, $options, $defaults) {
     $form[$i]['field'] = array(
       '#title' => 'Schema Field',
       '#type' => 'select',
-      '#description' => t('Schema field to use as an argument. Is the "key" in /endpoint?KEY=123456.'),
+      '#description' => t('Schema field to use as an argument. The schema field is the "key" in /endpoint?key=123456. Also available are special arguments "offset" and "limit."'),
       '#options' => $options,
       '#default_value' => isset($defaults[$i]['field']) ? $defaults[$i]['field'] : '',
     );
@@ -470,8 +470,8 @@ function open_data_schema_map_args_form($num_args, $options, $defaults) {
  */
 function open_data_schema_map_special_arguments() {
   return array(
-    'offset' => t('Offset'),
-    'limit' => t('Limit'),
+    'offset' => t('offset'),
+    'limit' => t('limit'),
   );
 }
 
@@ -520,7 +520,7 @@ function open_data_schema_map_json_4($schema, $api, $defaults) {
   $form['#title'] = $schema['title'] ? $schema['title'] : t('Mapping');
   $form['#description'] = $schema['description'] ? $schema['description'] : t('Fields to map.');
   $form['#type'] = 'fieldset';
-
+  dpm($schema);
   foreach ($schema['properties'] as $item => $data) {
     if (!isset($data['type'])) {
       if (isset($data['anyOf'][0]['type'])) {
@@ -532,7 +532,7 @@ function open_data_schema_map_json_4($schema, $api, $defaults) {
     }
     $desc = isset($data['description']) ? $data['description'] . t('Type:') . $data['type'] : t('Type:') . $data['type'];
     $form[$item] = array(
-      '#title' => $data['title'],
+      '#title' => $data['title'] . ' (' . $item . ')',
       '#type' => 'textfield',
       '#maxlength' => 256,
       '#description' => $desc,
@@ -558,7 +558,7 @@ function open_data_schema_map_json_4($schema, $api, $defaults) {
       foreach ($data['anyOf'][0]['items']['properties'] as $subitem => $subdata) {
         $desc = isset($subdata['description']) ? $subdata['description'] . t('Type:') . $subdata['type'] : t('Type:') . $subdata['type'];
         $form[$item][$subitem] = array(
-          '#title' => $subdata['title'],
+          '#title' => $subdata['title'] . ' (' . $subitem . ')',
           '#type' => 'textfield',
           '#maxlength' => 256,
           '#description' => $desc,
@@ -635,7 +635,7 @@ function open_data_schema_map_json_3($schema, $api, $defaults) {
 function open_data_schema_mapper_args_options_json_4($schema) {
   $options = array();
   foreach ($schema['properties'] as $id => $data) {
-    $options[$id] = $data['title'];
+    $options[$id] = $id;
   }
   return $options;
 }
