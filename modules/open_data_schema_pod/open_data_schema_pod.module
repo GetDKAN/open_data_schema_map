@@ -39,6 +39,12 @@ function open_data_schema_pod_form_alter(&$form, $form_state, $form_id) {
           '#description' => t('Description field for data catalog. Should usually just read "Data Catalog."'),
           '#default_value' => variable_get('pod_catalog_desc', 'Data Catalog'),
         );
+        $form['pod_catalog']['publisher'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Data Catalog Publisher'),
+          '#description' => t('Description field for data catalog. Should usually just read "Data Catalog."'),
+          '#default_value' => variable_get('pod_catalog_publisher', variable_get('site_name')),
+        );
         $form['pod_catalog']['contact'] = array(
           '#type' => 'textfield',
           '#title' => t('Data Catalog Contact Point'),
@@ -66,6 +72,7 @@ function open_data_schema_pod_extra_settings_submit(&$form, $form_state) {
     variable_set('pod_catalog_desc', $form_state['values']['pod_catalog']['desc']);
     variable_set('pod_catalog_contact', $form_state['values']['pod_catalog']['contact']);
     variable_set('pod_catalog_mbox', $form_state['values']['pod_catalog']['mbox']);
+    variable_set('pod_catalog_publisher', $form_state['values']['pod_catalog']['publisher']);
   }
 }
 
@@ -84,7 +91,7 @@ function open_data_schema_pod_open_data_schema_map_results_alter(&$result, $mach
     $catalog_row['description'] = variable_get('pod_catalog_desc', 'Version 1.0');
     $catalog_row['keyword'] = array('catalog');
     $catalog_row['modified'] = NULL;
-    $catalog_row['publisher'] = variable_get('site_name');
+    $catalog_row['publisher'] = variable_get('pod_catalog_publisher');
     $catalog_row['contactPoint'] = variable_get('pod_catalog_contact', $catalog_row['publisher']);
     $catalog_row['mbox'] = variable_get('pod_catalog_mbox', variable_get('site_mail'));
     $catalog_row['identifier'] = "1";

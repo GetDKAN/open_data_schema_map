@@ -18,7 +18,8 @@ function open_data_schema_map_page_overview() {
     $data['delete'] = l(t('delete'), 'admin/config/services/odsm/delete/' . $data['machine_name']);
     unset($data['machine_name']);
     // TODO: report features status.
-    // $data['configuration'] = theme('entity_status', array('status' => $data['features']));
+    // $data['configuration'] = theme('entity_status',
+    // array('status' => $data['features']));
     $data['enabled'] = $data['enabled'] ? t('Enabled') : t('Disabled');
     $list[] = $data;
   }
@@ -212,7 +213,7 @@ function open_data_schema_map_manage(array $form, array &$form_state, $api = NUL
     if (isset($form_state['clicked_button']) && $form_state['clicked_button']['#value'] == 'Add another argument') {
       $num_args++;
     }
-    $form['arguments'] = $form['arguments'] + open_data_schema_map_args_form($num_args, $form['arg_id_options']['#value'], $args);
+    $form['arguments'] = $form['arguments'] + open_data_schema_map_args_form($num_args, $form['arg_id_options']['#value'], $args, $api);
 
     $form['api_schema']['#disabled'] = TRUE;
     $title = isset($schema['title']) ? $schema['title'] : t('Mapping');
@@ -339,7 +340,7 @@ function open_data_schema_map_manage_submit($form, $form_state) {
   }
   drupal_static_reset('open_data_schema_map_api_load_all');
   if (drupal_write_record('open_data_schema_map', $record, $update)) {
-    drupal_set_message($message);    
+    drupal_set_message($message);
   }
   drupal_goto('admin/config/services/odsm/edit/' . $values['machine_name']);
 }
@@ -363,16 +364,22 @@ function open_data_schema_map_add_type(&$values, $mapping) {
  * Creates endpoint.
  */
 function open_data_schema_map_endpoint($api) {
-  $limit = 25;
-  $offset = 0;
-
   $queries = drupal_get_query_parameters();
   $args = open_data_schema_map_endpoint_args($api->mapping, $queries, $api->arguments);
-  $offset = open_data_schema_map_endpoint_special_arg($args, $api->arguments, 'offset');
-  $limit = open_data_schema_map_endpoint_special_arg($args, $api->arguments, 'limit');
-  $ids = open_data_schema_map_endpoint_query($api->type, $api->bundle, $limit, $offset, $args);
-  $result = open_data_schema_map_endpoint_process_map($ids, $api);
-
-  drupal_alter('open_data_schema_map_results', $result, $api->machine_name, $api->api_schema);
+  $hash = md5(serialize(array($api->endpoint) + $args));
+  if (isset($args['required'])) {
+    $result = array(t('Required field "!field" is missing', array('!field' => $args['required'])));
+  }
+  elseif ($cache = cache_get('open_data_schema_map_' . $hash)) {
+    $result = $cache->data;
+  }
+  else {
+    $offset = open_data_schema_map_endpoint_special_arg($args, 'offset');
+    $limit = open_data_schema_map_endpoint_special_arg($queries, $api->arguments, 'limit');
+    $ids = open_data_schema_map_endpoint_query($api->type, $api->bundle, $limit, $offset, $args);
+    $result = open_data_schema_map_endpoint_process_map($ids, $api);
+    drupal_alter('open_data_schema_map_results', $result, $api->machine_name, $api->api_schema);
+    cache_set('open_data_schema_map_' . $hash, $result);
+  }
   return drupal_json_output($result);
 }

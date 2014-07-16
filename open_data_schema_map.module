@@ -430,9 +430,24 @@ function open_data_schema_map_schema_types() {
 /**
  * Creates argument form.
  */
-function open_data_schema_map_args_form($num_args, $options, $defaults) {
-  $form = array();
+function open_data_schema_map_args_form($num_args, $options, $defaults, $api) {
+  $map = $api->mapping;
+  $form = $columns = array();
   for ($i = 1; $i <= $num_args; $i++) {
+    if (isset($defaults[$i]['field']) &&
+      isset($map[$defaults[$i]['field']]['value']) &&
+      $token = $map[$defaults[$i]['field']]['value']) {
+      $token = open_data_schema_map_discover_field($token);
+      if ($token[0] == 'node') {
+        if (substr($token[1], 0, 5) == 'field') {
+          $field = str_replace('-', '_', $token[1]);
+          $field_info = field_info_field($field);
+          foreach ($field_info['columns'] as $column => $data) {
+            $columns[$column] = $column;
+          }
+        }
+      }
+    }
     $form[$i] = array(
       '#title' => 'Argument ' . $i,
       '#type' => 'fieldset',
@@ -444,6 +459,12 @@ function open_data_schema_map_args_form($num_args, $options, $defaults) {
       '#options' => $options,
       '#default_value' => isset($defaults[$i]['field']) ? $defaults[$i]['field'] : '',
     );
+    $form[$i]['required'] = array(
+      '#title' => 'Required',
+      '#type' => 'checkbox',
+      '#description' => t('Whether argument is required.'),
+      '#default_value' => isset($defaults[$i]['required']) ? $defaults[$i]['required'] : 1,
+    );
     $special_args = open_data_schema_map_special_arguments();
     if (isset($defaults[$i]['field']) && isset($special_args[$defaults[$i]['field']])) {
       $form[$i]['value'] = array(
@@ -454,12 +475,15 @@ function open_data_schema_map_args_form($num_args, $options, $defaults) {
       );
     }
     else {
-      $form[$i]['value'] = array(
-        '#title' => 'Schema Field Column',
-        '#type' => 'textfield',
-        '#description' => t('Value for schema field. Only for tokens with [nodes:field_FIELD_NAME]. This is the column name in the field table to grab. Defaults to "safe_value".'),
-        '#default_value' => isset($defaults[$i]['value']) ? $defaults[$i]['value'] : '',
-      );
+      if ($columns) {
+        $form[$i]['value'] = array(
+          '#title' => 'Schema Field Column',
+          '#type' => 'select',
+          '#options' => $columns,
+          '#description' => t('Value for schema field. Only for tokens with [nodes:field_FIELD_NAME]. This is the column name in the field table to grab. Defaults to "safe_value".'),
+          '#default_value' => isset($defaults[$i]['value']) ? $defaults[$i]['value'] : '',
+        );
+      }
     }
   }
   return $form;
@@ -684,18 +708,20 @@ function open_data_schema_mapper_token_replace($token, $entity_type, $entity) {
  */
 function open_data_schema_map_endpoint_args($map, $queries, $args = array()) {
   $output = array();
-  if ($queries) {
-    $output = $args;
-    foreach ($args as $num => $arg) {
-      // Args have 'query', 'value', and 'token' keys.
-      $output[$num]['token'] = isset($map[$arg['field']]) ? $map[$arg['field']] : '';
-      $output[$num]['value'] = $args[$num]['value'] ? $args[$num]['value'] : 'value';
+  foreach ($args as $num => $arg) {
+    if ($queries) {
       foreach ($queries as $query_field => $query_value) {
         // Make sure query passed to enpoint is actual argument field.
         if ($arg['field'] == $query_field) {
+          $output[$num]['field'] = $query_field;
           $output[$num]['query'] = $query_value;
+          $output[$num]['token'] = isset($map[$arg['field']]) ? $map[$arg['field']] : '';
+          $output[$num]['value'] = isset($args[$num]['value']) ? $args[$num]['value'] : 'value';
         }
       }
+    }
+    if ($arg['required'] == 1 && !isset($output[$num])) {
+      return array('required' => $arg['field']);
     }
   }
   return $output;
@@ -705,15 +731,16 @@ function open_data_schema_map_endpoint_args($map, $queries, $args = array()) {
  * Process entities using api.
  */
 function open_data_schema_map_endpoint_process_map($ids, $api) {
-  $result = array();
+  $result = $outpt = array();
   if ($ids) {
     $schema = open_data_schema_map_schema_load($api->api_schema);
     foreach ($ids as $key => $id) {
       $entity = entity_load($api->type, array($id));
       open_data_schema_map_endpoint_process_map_recursion($result, $api->mapping, $api->type, $entity[$id]);
+      $output[] = $result;
     }
   }
-  return $result;
+  return $output;
 }
 
 /**
@@ -726,33 +753,41 @@ function open_data_schema_map_endpoint_process_map_recursion(&$result, $map, $ty
       if (isset($token['value']) && !$token['value']) {
         continue;
       }
-      if ($token['odsm_entity_reference']) {
+      if (isset($token['odsm_entity_reference']) && $token['odsm_entity_reference']) {
         $values = '';
         if ($ref_field = $token['odsm_entity_reference']['value']) {
           $field_language = field_language($type, $entity, $ref_field);
           $values = isset($entity->{$ref_field}[$field_language]) ? $entity->{$ref_field}[$field_language] : NULL;
         }
         unset($token['odsm_entity_reference']);
-        foreach ($values as $num => $item) {
-          $subvalue = array();
-          foreach ($token as $subfield => $subtoken) {
-            $subtoken['value'] = str_replace('Nth', $num, $subtoken['value']) ? str_replace('Nth', $num, $subtoken['value']) : $subtoken['value'];
-            if ($subtoken['value']) {
-              $subvalue = open_data_schema_mapper_token_replace($subtoken['value'], $type, $entity);
-              $subvalue = open_data_schema_mapper_field_type_check($subvalue, $subtoken);
-              $sub_result[$subfield] = $subvalue;
+        if ($values) {
+          foreach ($values as $num => $item) {
+            $subvalue = array();
+            foreach ($token as $subfield => $subtoken) {
+              $subtoken['value'] = str_replace('Nth', $num, $subtoken['value']) ? str_replace('Nth', $num, $subtoken['value']) : $subtoken['value'];
+              if ($subtoken['value']) {
+                $subvalue = open_data_schema_mapper_token_replace($subtoken['value'], $type, $entity);
+                $subvalue = open_data_schema_mapper_field_type_check($subvalue, $subtoken);
+                $sub_result[$subfield] = $subvalue;
+              }
             }
+            $result[$api_field][] = $sub_result;
           }
-          $result[$api_field][] = $sub_result;
         }
         foreach ($token as $subfield => $subtoken) {
-          if ($subtoken['odsm_entity_reference']) {
+          if (isset($subtoken['odsm_entity_reference']) && $subtoken['odsm_entity_reference']) {
             open_data_schema_map_endpoint_process_map_recursion($result[$api_field][$subfield], $map[$api_field][$subfield], $type, $entity);
           }
         }
       }
       else {
-        $result[$api_field] = open_data_schema_map_endpoint_process_field($api_field, $token, $type, $entity);
+        // Don't return empty fields.
+        if ($field_value = open_data_schema_map_endpoint_process_field($api_field, $token, $type, $entity)) {
+          $result[$api_field] = $field_value;
+        }
+        else {
+          unset($result[$api_field]);
+        }
       }
     }
   }
@@ -776,11 +811,13 @@ function open_data_schema_map_endpoint_process_field($api_field, $token, $type, 
  */
 function open_data_schema_mapper_field_type_check($value, $token) {
   if ($token['type'] == 'array') {
-    if (preg_match('/, /', $value)) {
-      $value = explode(', ', $value);
-    }
-    else {
-      $value = array($value);
+    if ($value) {
+      if (preg_match('/, /', $value)) {
+        $value = explode(', ', $value);
+      }
+      else {
+        $value = array($value);
+      }
     }
   }
   elseif ($token['type'] == 'object') {
@@ -792,26 +829,18 @@ function open_data_schema_mapper_field_type_check($value, $token) {
 /**
  * Grabs special from arguments and removes it.
  */
-function open_data_schema_map_endpoint_special_arg(&$query_args, $default_args, $type) {
+function open_data_schema_map_endpoint_special_arg($args, $type) {
   $value = '';
-  foreach ($query_args as $num => $arg) {
+  foreach ($args as $num => $arg) {
     if ($arg['field'] == $type) {
-      $value = $arg['query'];
-      unset($query_args[$num]);
-    }
-  }
-  if (!$value) {
-    foreach ($default_args as $num => $arg) {
-      if ($arg['field'] == $type) {
-        $value = $arg['value'];
-        unset($query_args[$num]);
-      }
+      return $arg['query'];
     }
   }
   return $value;
 }
+
 /**
- * Implements hook_open_data_schema_map_args().
+ * Implements hook_open_data_schema_map_args_alter().
  */
 function open_data_schema_map_open_data_schema_map_args_alter(&$field, &$arg) {
   if ($arg['token']['value'] == '[node:url:arg:last]' || $arg['token']['value'] == '[node:url:args:last]') {
