@@ -520,7 +520,6 @@ function open_data_schema_map_json_4($schema, $api, $defaults) {
   $form['#title'] = $schema['title'] ? $schema['title'] : t('Mapping');
   $form['#description'] = $schema['description'] ? $schema['description'] : t('Fields to map.');
   $form['#type'] = 'fieldset';
-  dpm($schema);
   foreach ($schema['properties'] as $item => $data) {
     if (!isset($data['type'])) {
       if (isset($data['anyOf'][0]['type'])) {
