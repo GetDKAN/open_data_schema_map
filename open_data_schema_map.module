@@ -731,7 +731,7 @@ function open_data_schema_map_endpoint_args($map, $queries, $args = array()) {
  * Process entities using api.
  */
 function open_data_schema_map_endpoint_process_map($ids, $api) {
-  $result = $outpt = array();
+  $result = $output = array();
   if ($ids) {
     $schema = open_data_schema_map_schema_load($api->api_schema);
     foreach ($ids as $key => $id) {
@@ -772,6 +772,7 @@ function open_data_schema_map_endpoint_process_map_recursion(&$result, $map, $ty
               }
             }
             $result[$api_field][] = $sub_result;
+            $sub_result = '';
           }
         }
         foreach ($token as $subfield => $subtoken) {
@@ -829,10 +830,11 @@ function open_data_schema_mapper_field_type_check($value, $token) {
 /**
  * Grabs special from arguments and removes it.
  */
-function open_data_schema_map_endpoint_special_arg($args, $type) {
+function open_data_schema_map_endpoint_special_arg(&$args, $type) {
   $value = '';
   foreach ($args as $num => $arg) {
     if ($arg['field'] == $type) {
+      unset($args[$num]);
       return $arg['query'];
     }
   }

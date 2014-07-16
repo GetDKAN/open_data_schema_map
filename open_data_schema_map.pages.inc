@@ -366,12 +366,8 @@ function open_data_schema_map_add_type(&$values, $mapping) {
 function open_data_schema_map_endpoint($api) {
   $queries = drupal_get_query_parameters();
   $args = open_data_schema_map_endpoint_args($api->mapping, $queries, $api->arguments);
-  $hash = md5(serialize(array($api->endpoint) + $args));
   if (isset($args['required'])) {
     $result = array(t('Required field "!field" is missing', array('!field' => $args['required'])));
-  }
-  elseif ($cache = cache_get('open_data_schema_map_' . $hash)) {
-    $result = $cache->data;
   }
   else {
     $offset = open_data_schema_map_endpoint_special_arg($args, 'offset');
@@ -379,7 +375,6 @@ function open_data_schema_map_endpoint($api) {
     $ids = open_data_schema_map_endpoint_query($api->type, $api->bundle, $limit, $offset, $args);
     $result = open_data_schema_map_endpoint_process_map($ids, $api);
     drupal_alter('open_data_schema_map_results', $result, $api->machine_name, $api->api_schema);
-    cache_set('open_data_schema_map_' . $hash, $result);
   }
   return drupal_json_output($result);
 }
