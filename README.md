@@ -3,6 +3,8 @@ Open Data Schema Map
 
 This module provides a flexible way to expose your Drupal content via APIs following specific Open Data schemas. Currently, the [CKAN](http://docs.ckan.org/en/ckan-1.8/domain-model-dataset.html) and [Project Open Data schemas](http://project-open-data.github.io/schema/) are provided, but new schemas can be easily added through your own modules. A user interface is in place to create endpoints and map fields from the chosen schema to Drupal content using tokens.
 
+DKAN specific implmentation: https://github.com/NuCivic/open_data_schema_map_dkan
+
 ## Basic concepts
 
 ### Schema
