@@ -24,11 +24,13 @@ function open_data_schema_map_features_api() {
 function open_data_schema_apis_features_export($data, &$export, $module_name = '') {
   $export['dependencies']['open_data_schema_map'] = 'open_data_schema_map';
 
-  // Build array of schema name => module name for individual schema dependencies
+  // Build array of schema name => module name for individual schema deps.
   $schema_modules = array();
   foreach (module_implements('open_data_schema') as $module) {
-    $schema = module_invoke($module, 'open_data_schema');
-    $schema_modules[$schema['short_name']] = $module;
+    $schemas = module_invoke($module, 'open_data_schema');
+    foreach ($schemas as $schema) {
+      $schema_modules[$schema['short_name']] = $module;
+    }
   }
 
   foreach ($data as $key => $machine_name) {
