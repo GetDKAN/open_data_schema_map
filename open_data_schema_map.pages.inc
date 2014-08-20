@@ -15,8 +15,10 @@ function open_data_schema_map_page_overview() {
   foreach ($apis as $num => $data) {
     $data = (array) $data;
     $data['endpoint'] = isset($data['endpoint']) ? l($data['endpoint'], $data['endpoint']) : '';
-    $data['delete'] = l(t('delete'), 'admin/config/services/odsm/delete/' . $data['machine_name']);
+    // If there is a callback this has no UI.
+    $data['delete'] = isset($data['callback']) ? '' : l(t('delete'), 'admin/config/services/odsm/delete/' . $data['machine_name']);
     unset($data['machine_name']);
+    unset($data['callback']);
     // TODO: report features status.
     // $data['configuration'] = theme('entity_status',
     // array('status' => $data['features']));
@@ -24,7 +26,7 @@ function open_data_schema_map_page_overview() {
     $list[] = $data;
   }
   $header = array();
-  $header[] = t('title');
+  $header[] = t('Title');
   $header[] = t('Status');
   $header[] = t('Schema');
   $header[] = t('Entity');
