@@ -15,8 +15,11 @@ function open_data_schema_map_page_overview() {
   foreach ($apis as $num => $data) {
     $data = (array) $data;
     $data['endpoint'] = isset($data['endpoint']) ? l($data['endpoint'], $data['endpoint']) : '';
-    $data['delete'] = l(t('delete'), 'admin/config/services/odsm/delete/' . $data['machine_name']);
+    // If there is a callback this has no UI.
+    $data['edit'] = isset($data['callback']) ? '' : $data['edit'];
+    $data['delete'] = isset($data['callback']) ? '' : l(t('delete'), 'admin/config/services/odsm/delete/' . $data['machine_name']);
     unset($data['machine_name']);
+    unset($data['callback']);
     // TODO: report features status.
     // $data['configuration'] = theme('entity_status',
     // array('status' => $data['features']));
@@ -24,7 +27,7 @@ function open_data_schema_map_page_overview() {
     $list[] = $data;
   }
   $header = array();
-  $header[] = t('title');
+  $header[] = t('Title');
   $header[] = t('Status');
   $header[] = t('Schema');
   $header[] = t('Entity');
@@ -47,8 +50,16 @@ function open_data_schema_map_page_overview() {
  * Callback for delete page.
  */
 function open_data_schema_map_delete(array $form, array &$form_state, $api = NULL) {
-  $form = confirm_form($form, t('Delete this API?'), 'admin/config/services/odsm', '', t('Delete'), t('Cancel'), 'administer open data schema mapper.');
-  $form['#api'] = $api;
+  if (isset($api->callback)) {
+    $form['in_code'] = array(
+      '#type' => 'item',
+      '#markup' => t('This endpoint has been created in code. It cannot be edited through the user interface.'),
+    );
+  }
+  else {
+    $form = confirm_form($form, t('Delete this API?'), 'admin/config/services/odsm', '', t('Delete'), t('Cancel'), 'administer open data schema mapper.');
+    $form['#api'] = $api;
+  }
   return $form;
 }
 
@@ -69,6 +80,13 @@ function open_data_schema_map_delete_submit(array $form, array &$form_state) {
  * Callback for primary menu page.
  */
 function open_data_schema_map_manage(array $form, array &$form_state, $api = NULL) {
+  if (isset($api->callback)) {
+    $form['in_code'] = array(
+      '#type' => 'item',
+      '#markup' => t('This endpoint has been created in code. It cannot be edited through the user interface.'),
+    );
+    return $form;
+  }
   $schemas = open_data_schema_map_register();
   if (!$schemas) {
     $form['empty'] = array(
@@ -365,16 +383,28 @@ function open_data_schema_map_add_type(&$values, $mapping) {
  */
 function open_data_schema_map_endpoint($api) {
   $queries = drupal_get_query_parameters();
-  $args = open_data_schema_map_endpoint_args($api->mapping, $queries, $api->arguments);
-  if (isset($args['required'])) {
-    $result = array(t('Required field "!field" is missing', array('!field' => $args['required'])));
+  // This endpoint is created in code.
+  if (isset($api->callback) && function_exists($api->callback)) {
+    $function = $api->callback;
+    $result = $function($queries, $api->arguments);
   }
+  // This endpoint was created with the UI.
   else {
-    $offset = open_data_schema_map_endpoint_special_arg($args, 'offset');
-    $limit = open_data_schema_map_endpoint_special_arg($queries, $api->arguments, 'limit');
-    $ids = open_data_schema_map_endpoint_query($api->type, $api->bundle, $limit, $offset, $args);
-    $result = open_data_schema_map_endpoint_process_map($ids, $api);
-    drupal_alter('open_data_schema_map_results', $result, $api->machine_name, $api->api_schema);
+    if (isset($api->callback) && function_exists($api->callback)) {
+      $function = $api->callback;
+      return $function($api->args, $queries, $api->arguments);
+    }
+    $args = open_data_schema_map_endpoint_args($api->mapping, $queries, $api->arguments);
+    if (isset($args['required'])) {
+      $result = array(t('Required field "!field" is missing', array('!field' => $args['required'])));
+    }
+    else {
+      $offset = open_data_schema_map_endpoint_special_arg($args, 'offset');
+      $limit = open_data_schema_map_endpoint_special_arg($queries, $api->arguments, 'limit');
+      $ids = open_data_schema_map_endpoint_query($api->type, $api->bundle, $limit, $offset, $args);
+      $result = open_data_schema_map_endpoint_process_map($ids, $api);
+      drupal_alter('open_data_schema_map_results', $result, $api->machine_name, $api->api_schema);
+    }
   }
   return drupal_json_output($result);
 }
