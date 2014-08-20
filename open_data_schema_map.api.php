@@ -5,6 +5,44 @@
  * Let there be hooks.
  */
 
+/**
+ * Declares endpoint without user interface.
+ * 
+ * @return object
+ *   Record object with the following:
+ *     - name
+ *     - machine_name
+ *     - description (optional)
+ *     - endpoint
+ *     - arguments (optional)
+ *     - callback
+ * /
+function hook_open_data_schema_map_load($machine_name) {
+  if ($machine_name == 'my_machine_name') {
+    $record = new new stdClass();
+    $record->name = 'My endpoint name';
+    $record->machine_name = $machine_name;
+    $record->endpoint = 'api/action/3/my_endpoint';
+    $record->callback = 'my_module_endpoint_callback';
+    return $record;
+  }
+}
+
+/**
+ *  Callback for my custom endpoint.
+ * 
+ * @return array
+ *   Results of my custom function or query.
+ * /
+function my_module_endpoint_callback() {
+  // Here we can call a query on a single table or provide other callback to generate items.
+  $items = my_sudo_code_query();
+  $results = array(
+    'description' => t('My endpoint'),
+    'results' => $items,
+  );
+  return $results;
+}
 
 /**
  * Declare new open data schema.
