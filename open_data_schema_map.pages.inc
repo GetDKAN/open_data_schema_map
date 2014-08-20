@@ -376,5 +376,38 @@ function open_data_schema_map_endpoint($api) {
     $result = open_data_schema_map_endpoint_process_map($ids, $api);
     drupal_alter('open_data_schema_map_results', $result, $api->machine_name, $api->api_schema);
   }
-  return drupal_json_output($result);
+  return open_data_schema_map_json_output($result);
 }
+
+/**
+ * Makes json output human readable.
+ */
+
+function open_data_schema_map_json_encode($var) {
+  // The PHP version cannot change within a request.
+  static $php530;
+
+  if (!isset($php530)) {
+    $php530 = version_compare(PHP_VERSION, '5.3.0', '>=');
+  }
+
+  if ($php530) {
+    return json_encode($var, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
+  }
+
+  // json_encode() escapes <, >, ', &, and " using its options parameter, but
+  // does not support this parameter prior to PHP 5.3.0.  Use a helper instead.
+  include_once DRUPAL_ROOT . '/includes/json-encode.inc';
+  return drupal_json_encode_helper($var);
+}
+
+
+function open_data_schema_map_json_output($var = NULL) {
+  // We are returning JSON, so tell the browser.
+  drupal_add_http_header('Content-Type', 'application/json');
+
+  if (isset($var)) {
+    echo open_data_schema_map_json_encode($var);
+  }
+}
+
