@@ -291,12 +291,17 @@ function open_data_schema_map_api_load_all() {
  *   API object.
  */
 function open_data_schema_map_api_load($machine_name) {
-  $record = db_query("select * from {open_data_schema_map} where machine_name = :machine_name", array(':machine_name' => $machine_name))->fetchObject();
-  if ($record) {
+  if ($record = module_invoke_all('open_data_schema_map_load', $machine_name)) {
+    return $record;
+  }
+  elseif ($record = db_query("select * from {open_data_schema_map} where machine_name = :machine_name", array(':machine_name' => $machine_name))->fetchObject()) {
     $record->mapping = unserialize($record->mapping);
     $record->arguments = unserialize($record->arguments);
+    return $record;
   }
-  return $record;
+  else {
+    return FALSE;
+  }
 }
 
 /**
