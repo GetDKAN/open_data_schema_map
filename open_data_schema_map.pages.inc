@@ -49,8 +49,16 @@ function open_data_schema_map_page_overview() {
  * Callback for delete page.
  */
 function open_data_schema_map_delete(array $form, array &$form_state, $api = NULL) {
-  $form = confirm_form($form, t('Delete this API?'), 'admin/config/services/odsm', '', t('Delete'), t('Cancel'), 'administer open data schema mapper.');
-  $form['#api'] = $api;
+  if (isset($api->callback) {
+    $form = confirm_form($form, t('Delete this API?'), 'admin/config/services/odsm', '', t('Delete'), t('Cancel'), 'administer open data schema mapper.');
+    $form['#api'] = $api;
+  }
+  else {
+    $form = array(
+      '#type' => 'item',
+      '#markup' => t('This endpoint has been created in code. It cannot be deleted through the user interface.'),
+    );
+  }
   return $form;
 }
 
@@ -71,6 +79,12 @@ function open_data_schema_map_delete_submit(array $form, array &$form_state) {
  * Callback for primary menu page.
  */
 function open_data_schema_map_manage(array $form, array &$form_state, $api = NULL) {
+  if (isset($api->callback) {
+    $form = array(
+      '#type' => 'item',
+      '#markup' => t('This endpoint has been created in code. It cannot be edited through the user interface.'),
+    );
+  }
   $schemas = open_data_schema_map_register();
   if (!$schemas) {
     $form['empty'] = array(
