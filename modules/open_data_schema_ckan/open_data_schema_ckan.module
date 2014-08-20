@@ -6,6 +6,13 @@
  */
 
 /**
+ * Check if $guid is a valid uuid.
+ */ 
+function open_data_schema_ckan_is_valid_guid($guid) {
+  return !empty($guid) && preg_match('/^(\{)?[a-f\d]{8}(-[a-f\d]{4}){4}[a-f\d]{8}(?(1)\})$/i', $guid);
+}
+
+/**
  * Implements hook_open_data_schema().
  */
 function open_data_schema_ckan_open_data_schema() {
@@ -16,6 +23,18 @@ function open_data_schema_ckan_open_data_schema() {
     'schema_file' => $path,
     'description' => t('CKAN schema. See http://ckan.org for more awesome details.'),
   );
+}
+
+/**
+ * Implements hook_open_data_schema_map_args_alter().
+ */
+function open_data_schema_ckan_open_data_schema_map_args_alter(&$field, &$args_value){
+  // CKAN accepts either uuid as name in the id parameter
+  if($args_value['field'] === 'id' && !open_data_schema_ckan_is_valid_guid($args_value['query'])){
+    $args_value['field'] = 'name';
+    $args_value['token']['value'] = '[node:url:args:last]';
+    $field[1] = 'name';
+  }
 }
 
 /**
