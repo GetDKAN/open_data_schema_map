@@ -364,7 +364,15 @@ function open_data_schema_map_add_type(&$values, $mapping) {
  * Creates endpoint.
  */
 function open_data_schema_map_endpoint($api) {
+  if (isset($api->callback) && function_exists($api->callback)) {
+    $function = $api->callback;
+    return $function($api->args, $query, $args);
+  }
   $queries = drupal_get_query_parameters();
+  if (isset($api->callback) && function_exists($api->callback)) {
+    $function = $api->callback;
+    return $function($api->args, $queries, $api->arguments);
+  }
   $args = open_data_schema_map_endpoint_args($api->mapping, $queries, $api->arguments);
   if (isset($args['required'])) {
     $result = array(t('Required field "!field" is missing', array('!field' => $args['required'])));
