@@ -53,6 +53,7 @@ function open_data_schema_ckan_open_data_schema_map_results_alter(&$result, $mac
     }
     if ($machine_name == 'ckan_package_show') {
       $result['help'] = t('Return the metadata of a dataset (package) and its resources. :param id: the id or name of the dataset :type id: string');
+      $result['result'] = $result['result'][0];
     }
     elseif ($machine_name == 'ckan_revision_list') {
       $result['help'] = t("Return a list of the IDs of the site's revisions.\n\n :rtype: list of strings.");
