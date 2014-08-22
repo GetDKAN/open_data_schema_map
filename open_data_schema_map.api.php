@@ -5,6 +5,69 @@
  * Let there be hooks.
  */
 
+/******** Add Endpoint in code *******/
+
+/**
+ * Adds declared endpoint to list.
+ *
+ * This and hook_open_data_schema_map_load() are necessary so that modules can
+ * declare more than one endpoint.
+ */
+function hook_open_data_schema_map_endpoints_alter(&$records) {
+  $records[] = 'my_machine_name';
+}
+
+/**
+ * Loads endpoints with callback.
+ *
+ * @return object
+ *   Record object with the following. All are required:
+ *     - name
+ *     - enabled
+ *     - schema
+ *     - entity
+ *     - bundle
+ *     - arguments
+ *     - description
+ *     - machine_name
+ *     - endpoint
+ *     - callback
+ */
+function hook_open_data_schema_map_load($machine_name) {
+  if ($machine_name == 'my_machine_name') {
+    $record = new stdClass();
+    $record->name = 'My endpoint name';
+    $record->enabled = TRUE;
+    $record->schema = '';
+    $record->entity = '';
+    $record->bundle = '';
+    $record->arguments = '';
+    $record->machine_name = 'my_machine_name';
+    $record->endpoint = 'api/action/3/my_endpoint';
+    $record->callback = 'my_module_endpoint_callback';
+    return $record;
+  }
+}
+
+/**
+ * Callback for my custom endpoint.
+ *
+ * @return array
+ *   Results of my custom function or query.
+ */
+function my_module_endpoint_callback($queries, $args) {
+  // Here we can call a query on a single table or provide other callback to
+  // generate items. This endpoint has not arguments so ignoring those.
+  $items = my_sudo_code_query();
+  $results = array(
+    'description' => t('My endpoint'),
+    'results' => $items,
+  );
+  return $results;
+}
+
+/******** Add schema *******/
+
 /**
  * Declare new open data schema.
  */
@@ -27,6 +90,8 @@ function hook_open_data_schema() {
  */
 function hook_open_data_schema_map_schema_types_alter(&$schemas) {
 }
+
+/******** Update results *******/
 
 /**
  * Allows overriding final results about to be rendered.
