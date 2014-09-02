@@ -15,7 +15,7 @@ function open_data_schema_map_menu() {
   $apis = open_data_schema_map_api_load_all();
   if ($apis) {
     foreach ($apis as $num => $api) {
-      $description = $api->description ? $api->description : '';
+      $description = isset($api->description) ? $api->description : '';
       if ($api->enabled) {
         $items[$api->endpoint] = array(
           'title' => $api->name,
@@ -270,15 +270,20 @@ function open_data_schema_map_api_exist($machine_name) {
  * Loads all APIs.
  */
 function open_data_schema_map_api_load_all() {
-  $record = &drupal_static(__FUNCTION__, array());
-  if ($record) {
-    return $record;
+  $records = &drupal_static(__FUNCTION__, array());
+  if ($records) {
+    return $records;
   }
   $results = db_query("select machine_name from {open_data_schema_map}")->fetchAll();
   foreach ($results as $result) {
-    $record[] = open_data_schema_map_api_load($result->machine_name);
+    $list[] = $result->machine_name;
   }
-  return $record;
+
+  drupal_alter('open_data_schema_map_endpoints', $list);
+  foreach ($list as $item) {
+    $records[] = open_data_schema_map_api_load($item);
+  }
+  return $records;
 }
 
 /**
@@ -291,12 +296,14 @@ function open_data_schema_map_api_load_all() {
  *   API object.
  */
 function open_data_schema_map_api_load($machine_name) {
-  $record = db_query("select * from {open_data_schema_map} where machine_name = :machine_name", array(':machine_name' => $machine_name))->fetchObject();
-  if ($record) {
+  if ($record = module_invoke_all('open_data_schema_map_load', $machine_name)) {
+    return $record[0];
+  }
+  elseif ($record = db_query("select * from {open_data_schema_map} where machine_name = :machine_name", array(':machine_name' => $machine_name))->fetchObject()) {
     $record->mapping = unserialize($record->mapping);
     $record->arguments = unserialize($record->arguments);
+    return $record;
   }
-  return $record;
 }
 
 /**

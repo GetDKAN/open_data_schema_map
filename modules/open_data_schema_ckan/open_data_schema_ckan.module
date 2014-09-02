@@ -53,6 +53,7 @@ function open_data_schema_ckan_open_data_schema_map_results_alter(&$result, $mac
     }
     if ($machine_name == 'ckan_package_show') {
       $result['help'] = t('Return the metadata of a dataset (package) and its resources. :param id: the id or name of the dataset :type id: string');
+      $result['result'] = $result['result'][0];
     }
     elseif ($machine_name == 'ckan_revision_list') {
       $result['help'] = t("Return a list of the IDs of the site's revisions.\n\n :rtype: list of strings.");
@@ -64,13 +65,28 @@ function open_data_schema_ckan_open_data_schema_map_results_alter(&$result, $mac
       }
       $result['result'] = $list;
     }
-    elseif ($machine_name == 'ckan_package_list') {      
+    elseif ($machine_name == 'ckan_package_list') {
       $result['help'] = t("Return a list of the names of the site's datasets (packages).\n\n :param limit: if given, the list of datasets will be broken into pages of\n at most ``limit`` datasets per page and only one page will be returned\n at a time (optional)\n :type limit: int\n :param offset: when ``limit`` is given, the offset to start returning packages from\n :type offset: int\n\n :rtype: list of strings\n\n");
-      foreach ($result['result'] as $num => $data) {        
-        $list[] = $data['name'];        
+      foreach ($result['result'] as $num => $data) {
+        // This endpoint just produces a list.
+        foreach ($data as $api_field => $item) {
+          $list[] = $data['name'];
+        }
       }
 
       $result['result'] = $list;
-    }    
+    } 
+    elseif ($machine_name == 'ckan_group_list') {
+      $result['help'] = t("Return a list of the names of the site's groups.\n\n    :param order_by: the field to sort the list by, must be ``'name'`` or\n      ``'packages'`` (optional, default: ``'name'``) Deprecated use sort.\n    :type order_by: string\n    :param sort: sorting of the search results.  Optional.  Default:\n        \"name asc\" string of field name and sort-order. The allowed fields are\n        'name' and 'packages'\n    :type sort: string\n    :param all_fields: return full group dictionaries instead of  just names\n        (optional, default: ``False``)\n    :type all_fields: boolean\n\n    :rtype: list of strings");
+      foreach ($result['result'] as $num => $data) {
+        // This endpoint just produces a list.
+        foreach ($data as $api_field => $item) {
+          $list[] = $item;
+        }
+      }
+
+      $result['result'] = $list;
+    }
+     
   }
 }
