@@ -106,3 +106,9 @@ When you return to the tags section of the form after saving, you will now see a
 ### Adding new schemas
 
 You are not limited by the schemas included with this module; any Open Data schema may be defined in a custom module. Use the open_data_schema_ckan module as a model to get started.
+
+### Date format
+Date formats can be chanaged manually by changing the "Medium" date time format in "admin/config/regional/date-time" or in code by using one of the alter hooks:
+![screen shot 2014-09-04 at 11 15 01 am](https://cloud.githubusercontent.com/assets/512243/4152408/a9cb06b2-344e-11e4-84c8-c2174b5fc566.png)
+
+
