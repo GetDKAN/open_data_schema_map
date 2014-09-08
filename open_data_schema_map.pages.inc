@@ -33,6 +33,7 @@ function open_data_schema_map_page_overview() {
   $header[] = t('Entity');
   $header[] = t('Bundle');
   $header[] = t('Endpoint');
+  $header[] = t('Output Format');
   $header[] = t('Edit');
   $header[] = t('Delete');
   // $header[] = t('Configuration');
@@ -104,17 +105,28 @@ function open_data_schema_map_manage(array $form, array &$form_state, $api = NUL
   if ($list) {
     $markup = t('Choose from the available APIs:') . theme('item_list', $list);
   }
+  $outputformat_choices['json'] = "JSON";
+  $outputformat_choices['json-pretty'] = "JSON - human-readable";
+  $outputformat_choices['xml']  = "XML";
+
   $entity_types = entity_get_info();
   foreach ($entity_types as $entity_name => $entity_info) {
     $entity_list[$entity_name] = $entity_info['label'];
   }
   $selected_entity = '';
   $selected_schema = '';
+  $selected_outputformat = '';
   if (isset($form_state['triggering_element']['#name']) && $name = $form_state['triggering_element']['#name']) {
     $selected_entity = $form_state['triggering_element']['#value'];
   }
   elseif ($api) {
     $selected_entity = $api->type;
+  }
+  if (isset($form_state['triggering_element']['#outputformat']) && $outputformat = $form_state['triggering_element']['#outputformat']) {
+    $selected_outputformat = $form_state['triggering_element']['#value'];
+  }
+  else {
+    $selected_outputformat = 'Json';
   }
   $form['name'] = array(
     '#title' => 'Title',
@@ -180,6 +192,14 @@ function open_data_schema_map_manage(array $form, array &$form_state, $api = NUL
     '#title' => 'Endpoint',
     '#type' => 'textfield',
     '#description' => t('Add and enpoint ie "api/3/action/package_show".'),
+    '#required' => TRUE,
+    '#weight' => 1,
+  );
+  $form['outputformat'] = array(
+    '#title' => 'Output Format',
+    '#type' => 'select',
+    '#description' => t('Select from the available output formats.'),
+    '#options' => $outputformat_choices, 
     '#required' => TRUE,
     '#weight' => 1,
   );
@@ -268,6 +288,7 @@ function open_data_schema_map_manage(array $form, array &$form_state, $api = NUL
     $form['type']['#default_value'] = $api->type;
     $form['bundle']['#default_value'] = $api->bundle;
     $form['endpoint']['#default_value'] = $api->endpoint;
+    $form['outputformat']['#default_value'] = $api->outputformat;
     $form['enabled']['#default_value'] = $api->enabled;
     $form['api_schema']['#default_value'] = $api->api_schema;
     $form['arguments']['#default_value'] = $api->arguments;
@@ -406,7 +427,15 @@ function open_data_schema_map_endpoint($api) {
       drupal_alter('open_data_schema_map_results', $result, $api->machine_name, $api->api_schema);
     }
   }
-  return open_data_schema_map_json_output($result);
+  if ($outputformat == 'json') {
+    return drupal_json_output($result);
+  if ($outputformat == 'json-pretty') {
+    return open_data_schema_map_json_output($result);
+  } elseif ($outputformat == 'xml') {
+    return open_data_schema_map_xml_output($result);
+  } else {
+    drupal_set_message("Invalid output format", "error");
+  }
 }
 
 /**
@@ -431,6 +460,19 @@ function open_data_schema_map_json_encode($var) {
   return drupal_json_encode_helper($var);
 }
 
+function open_data_schema_map_xml_encode($var) {
+  // The PHP version cannot change within a request.
+  require_once 'XML/Serializer.php';
+  $options = array(
+    XML_SERIALIZER_OPTION_INDENT        => '    ',
+    XML_SERIALIZER_OPTION_RETURN_RESULT => true
+  );
+  $serializer = &new XML_Serializer($options);
+  // TODO: Remove node id from object
+
+  // Serialize and return xml
+  return  $serializer->serialize($var);
+}
 
 function open_data_schema_map_json_output($var = NULL) {
   // We are returning JSON, so tell the browser.
@@ -440,4 +482,13 @@ function open_data_schema_map_json_output($var = NULL) {
     echo open_data_schema_map_json_encode($var);
   }
 }
+function open_data_schema_map_xml_output($var = NULL) {
+  // We are returning XML, so tell the browser.
+  drupal_add_http_header('Content-Type', 'application/xml');
+
+  if (isset($var)) {
+    echo open_data_schema_map_xml_encode($var);
+  }
+}
+
 
