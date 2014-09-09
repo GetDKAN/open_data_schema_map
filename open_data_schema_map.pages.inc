@@ -464,8 +464,12 @@ function open_data_schema_map_xml_encode($var) {
   // The PHP version cannot change within a request.
   require_once 'XML/Serializer.php';
   $options = array(
-    XML_SERIALIZER_OPTION_INDENT        => '    ',
-    XML_SERIALIZER_OPTION_RETURN_RESULT => true
+    "returnResult"    => true,
+    "indent"          => "  ",
+    "addDecl"         => true,
+    "rootName"        => "records",
+    "encoding"        => "UTF-8",
+    "defaultTagName"  => "record",
   );
   $serializer = &new XML_Serializer($options);
   // TODO: Remove node id from object
