@@ -472,7 +472,10 @@ function open_data_schema_map_xml_encode($var) {
     "defaultTagName"  => "record",
   );
   $serializer = &new XML_Serializer($options);
-  // TODO: Remove node id from object
+  // Remove key from object - only used for the link
+  foreach (array_keys($var) as $key) {
+    unset ($var[$key]['key']);
+  }
 
   // Serialize and return xml
   return  $serializer->serialize($var);
