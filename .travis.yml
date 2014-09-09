@@ -1,0 +1,9 @@
+language: php
+
+php:
+  - 5.3
+
+mysql:
+  database: open_data_schema_map_test
+  username: root
+  encoding: utf8
