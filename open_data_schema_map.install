@@ -102,6 +102,8 @@ function open_data_schema_map_schema() {
  */
 
 function open_data_schema_map_update_7001() {
+}
+function open_data_schema_map_update_7002() {
 
   $column = array(
     'type' => 'varchar',
@@ -113,7 +115,7 @@ function open_data_schema_map_update_7001() {
 
   $data_table_name = 'open_data_schema_map';
   if (!db_field_exists('open_data_schema_map', 'outputformat')) {
-    db_add_field($data_table_name, 'outputformat', $spec);
+    db_add_field($data_table_name, 'outputformat', $column);
   }
 }
 

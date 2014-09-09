@@ -126,7 +126,7 @@ function open_data_schema_map_manage(array $form, array &$form_state, $api = NUL
     $selected_outputformat = $form_state['triggering_element']['#value'];
   }
   else {
-    $selected_outputformat = 'Json';
+    $selected_outputformat = 'json';
   }
   $form['name'] = array(
     '#title' => 'Title',
@@ -427,11 +427,11 @@ function open_data_schema_map_endpoint($api) {
       drupal_alter('open_data_schema_map_results', $result, $api->machine_name, $api->api_schema);
     }
   }
-  if ($outputformat == 'json') {
+  if ($api->outputformat == 'json') {
     return drupal_json_output($result);
-  if ($outputformat == 'json-pretty') {
+  } elseif ($api->outputformat == 'json-pretty') {
     return open_data_schema_map_json_output($result);
-  } elseif ($outputformat == 'xml') {
+  } elseif ($api->outputformat == 'xml') {
     return open_data_schema_map_xml_output($result);
   } else {
     drupal_set_message("Invalid output format", "error");
@@ -482,6 +482,7 @@ function open_data_schema_map_json_output($var = NULL) {
     echo open_data_schema_map_json_encode($var);
   }
 }
+
 function open_data_schema_map_xml_output($var = NULL) {
   // We are returning XML, so tell the browser.
   drupal_add_http_header('Content-Type', 'application/xml');
@@ -490,5 +491,4 @@ function open_data_schema_map_xml_output($var = NULL) {
     echo open_data_schema_map_xml_encode($var);
   }
 }
-
 
