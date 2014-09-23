@@ -62,7 +62,7 @@ class OpenDataSchemaMapAPIWebTestCase extends DrupalWebTestCase {
   /**
    * Change /data.json path to /json during tests.
    */
-  public function fixJsonEndpoint() {
+  protected function fixJsonEndpoint() {
     $data_json = open_data_schema_map_api_load('data_json');
     $data_json->endpoint = 'json';
     drupal_write_record('open_data_schema_map', $data_json, 'id');
@@ -158,7 +158,7 @@ class OpenDataSchemaMapAPIWebTestCase extends DrupalWebTestCase {
    *   A string to match against the returned help string.
    */
   protected function runCommonTest($result, $text) {
-    if (count($result->result)) {
+    if (isset($result->result)  && count($result->result)) {
       $this->assertTrue($result->result);
       $this->assertTrue($result->success);
     }

@@ -1,7 +1,7 @@
 language: php
 
 php:
-  - 5.3
+  - 5.4
 
 mysql:
   database: open_data_schema_map_test
@@ -11,7 +11,6 @@ mysql:
 
 install:
   - cd test
-  - composer install
   - mysql -e 'create database open_data_schema_map_test;'
   - sudo apt-get update > /dev/null
   - sudo apt-get --quiet=2 install php5-cgi php5-curl php5-gd php5-mysql > /dev/null
@@ -33,25 +32,26 @@ before_script:
 
   # Grab dependencies
   - git clone --branch 7.x-1.x http://git.drupal.org/project/dkan.git
-  - git clone --branch entity_module_patch https://github.com/NuCivic/dkan_dataset.git
-  - git clone --branch master https://github.com/NuCivic/open_data_schema_map_dkan.git
+  - git clone --branch 7.x-1.x https://github.com/NuCivic/dkan_dataset.git
+  # For now, when this gets in we need to merge that branch on odsm dkan module
+  - git clone --branch nucivic_nucivic_internal_issue_43_move_read_apis_odsm https://github.com/NuCivic/open_data_schema_map_dkan.git
 
   # copy dependencies to sites/all
-  - mkdir open_data_schema_test/drupal/sites/all/modules/contrib
-  - cp -r $TRAVIS_BUILD_DIR open_data_schema_test/drupal/sites/all/modules/contrib
+  - cp -r $TRAVIS_BUILD_DIR open_data_schema_map_test/drupal/sites/all/modules/
+  - cp -r open_data_schema_map_dkan open_data_schema_map_test/drupal/sites/all/modules/
   - cp -r dkan/modules/dkan/dkan_sitewide/modules/dkan_default_content open_data_schema_map_test/drupal/sites/all/modules/
   - cp -r dkan_dataset open_data_schema_map_test/drupal/sites/all/modules/
-  - cp -r open_data_schema_map_dkan open_data_schema_map_test/drupal/sites/all/modules/
 
   # Jump into setup directory
-  - cd open_data_schema_test/drupal
+  - cd open_data_schema_map_test/drupal
 
   # Make dkan_dataset
   - drush make -v --no-core --yes sites/all/modules/dkan_dataset/dkan_dataset.make
 
   # Enable modules
-  - drush --yes pm-enable dkan_dataset_content_types open_data_schema_map open_data_schema_map_dkan dkan_dataset_content_types
+  - drush --yes pm-enable dkan_dataset_content_types open_data_schema_map open_data_schema_map_dkan
 
+  # start a web server on port 8888, run in the background; wait for initialization
   - drush --quiet --yes --root=$PWD runserver :8888 > /dev/null 2>&1 &
   - sleep 4
 
