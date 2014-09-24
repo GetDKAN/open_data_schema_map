@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "id": "http://project-open-data.github.io/schema/1_0_final/single_entry.json#",
-  "title": "Common Core Metadata Schema",
+  "title": "CKAN Dataset Schema",
   "description": "The metadata format for all federal open data. Validates a single JSON object entry (as opposed to entire Data.json catalog).",
   "type": "object",
   "properties": {
@@ -128,7 +128,7 @@
       "description":"",
       "anyOf": [
         {
-          "type": "array",                    
+          "type": "array",
           "items": {
             "type": "object",
             "properties": {
@@ -222,16 +222,16 @@
           "uniqueItems": true
         },
         {
-            "type": "null"                    
+            "type": "null"
         }
-      ]       
+      ]
     },
     "tags": {
       "title":"Tags",
       "description":"",
       "anyOf": [
         {
-          "type": "array",                    
+          "type": "array",
           "items": {
             "type": "object",
             "properties": {
@@ -267,7 +267,7 @@
       "description":"",
       "anyOf": [
         {
-          "type": "array",                    
+          "type": "array",
           "items": {
             "type": "object",
             "properties": {
@@ -306,7 +306,7 @@
       "description":"",
       "anyOf": [
         {
-          "type": "array",                    
+          "type": "array",
           "items": {
             "type": "object",
             "properties": {
