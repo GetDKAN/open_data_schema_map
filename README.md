@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/NuCivic/open_data_schema_map.svg?branch=master)](https://travis-ci.org/NuCivic/open_data_schema_map)
+
 Open Data Schema Map
 ====================
 
