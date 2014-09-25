@@ -34,7 +34,7 @@ before_script:
   - git clone --branch 7.x-1.x http://git.drupal.org/project/dkan.git
   - git clone --branch 7.x-1.x https://github.com/NuCivic/dkan_dataset.git
   # For now, when this gets in we need to merge that branch on odsm dkan module
-  - git clone --branch nucivic_nucivic_internal_issue_43_move_read_apis_odsm https://github.com/NuCivic/open_data_schema_map_dkan.git
+  - git clone --branch master https://github.com/NuCivic/open_data_schema_map_dkan.git
 
   # copy dependencies to sites/all
   - cp -r $TRAVIS_BUILD_DIR open_data_schema_map_test/drupal/sites/all/modules/
