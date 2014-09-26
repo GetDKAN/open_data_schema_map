@@ -201,7 +201,21 @@ function open_data_schema_map_manage(array $form, array &$form_state, $api = NUL
     '#description' => t('Select from the available output formats.'),
     '#options' => $outputformat_choices, 
     '#required' => TRUE,
-    '#weight' => 1,
+    '#weight' => 2,
+  );
+  $form['xml_root'] = array(
+    '#title' => 'XML Root',
+    '#type' => 'textfield',
+    '#description' => t('(XML only) Enter the XML Root Name (default: records).'),
+    '#required' => False,
+    '#weight' => 3,
+  );
+  $form['xml_defaulttag'] = array(
+    '#title' => 'XML Default Node',
+    '#type' => 'textfield',
+    '#description' => t('(XML only) Enter the XML Default Node Name (default: record).'),
+    '#required' => False,
+    '#weight' => 4,
   );
   $form['enabled'] = array(
     '#title' => 'Enabled',
@@ -215,7 +229,7 @@ function open_data_schema_map_manage(array $form, array &$form_state, $api = NUL
     '#description' => t('Select from the available schemas.'),
     '#options' => $list,
     '#required' => TRUE,
-    '#weight' => 2,
+    '#weight' => 5,
   );
   // Only add Schema if we've already saved the initial config.
   if ($api) {
@@ -292,6 +306,8 @@ function open_data_schema_map_manage(array $form, array &$form_state, $api = NUL
     $form['enabled']['#default_value'] = $api->enabled;
     $form['api_schema']['#default_value'] = $api->api_schema;
     $form['arguments']['#default_value'] = $api->arguments;
+    $form['xml_root']['#default_value'] = $api->xml_root;
+    $form['xml_defaulttag']['#default_value'] = $api->xml_defaulttag;
 
     $form['id'] = array(
       '#type' => 'hidden',
@@ -432,7 +448,7 @@ function open_data_schema_map_endpoint($api) {
   } elseif ($api->outputformat == 'json-pretty') {
     return open_data_schema_map_json_output($result);
   } elseif ($api->outputformat == 'xml') {
-    return open_data_schema_map_xml_output($result);
+    return open_data_schema_map_xml_output($result, $api->xml_root, $api->xml_defaulttag);
   } else {
     drupal_set_message("Invalid output format", "error");
   }
@@ -460,16 +476,21 @@ function open_data_schema_map_json_encode($var) {
   return drupal_json_encode_helper($var);
 }
 
-function open_data_schema_map_xml_encode($var) {
-  // The PHP version cannot change within a request.
+function open_data_schema_map_xml_encode($var, $xml_root, $xml_defaulttag) {
+  if (!isset($xml_root)) {
+    $xml_root = "records";
+  }
+  if (!isset($xml_defaulttag)) {
+    $xml_defaulttag = "record";
+  }
   require_once 'XML/Serializer.php';
   $options = array(
     "returnResult"    => true,
     "indent"          => "  ",
     "addDecl"         => true,
-    "rootName"        => "records",
+    "rootName"        => $xml_root,
     "encoding"        => "UTF-8",
-    "defaultTagName"  => "record",
+    "defaultTagName"  => $xml_defaulttag,
   );
   $serializer = &new XML_Serializer($options);
   // Remove key from object - only used for the link
@@ -490,12 +511,12 @@ function open_data_schema_map_json_output($var = NULL) {
   }
 }
 
-function open_data_schema_map_xml_output($var = NULL) {
+function open_data_schema_map_xml_output($var = NULL, $xml_root, $xml_defaulttag) {
   // We are returning XML, so tell the browser.
   drupal_add_http_header('Content-Type', 'application/xml');
 
   if (isset($var)) {
-    echo open_data_schema_map_xml_encode($var);
+    echo open_data_schema_map_xml_encode($var, $xml_root, $xml_defaulttag);
   }
 }
 

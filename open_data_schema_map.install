@@ -74,6 +74,18 @@ function open_data_schema_map_schema() {
         'not null' => True,
         'default' => 'json',
       ),
+      'xml_root' => array(
+        'description' => 'XML Root.',
+        'type' => 'varchar',
+        'length' => 60,
+        'not null' => False,
+      ),
+      'xml_defaulttag' => array(
+        'description' => 'XML Default Tag.',
+        'type' => 'varchar',
+        'length' => 60,
+        'not null' => False,
+      ),
       'endpoint' => array(
         'type' => 'varchar',
         'length' => 256,
@@ -102,8 +114,6 @@ function open_data_schema_map_schema() {
  */
 
 function open_data_schema_map_update_7001() {
-}
-function open_data_schema_map_update_7002() {
 
   $column = array(
     'type' => 'varchar',
@@ -116,6 +126,34 @@ function open_data_schema_map_update_7002() {
   $data_table_name = 'open_data_schema_map';
   if (!db_field_exists('open_data_schema_map', 'outputformat')) {
     db_add_field($data_table_name, 'outputformat', $column);
+  }
+}
+function open_data_schema_map_update_7002() {
+
+  $column = array(
+    'type' => 'varchar',
+    'description' => "XML Root",
+    'length' => 60,
+    'not null' => False,
+    'default' => 'records',
+  );
+
+  $data_table_name = 'open_data_schema_map';
+  if (!db_field_exists('open_data_schema_map', 'xml_root')) {
+    db_add_field($data_table_name, 'xml_root', $column);
+  }
+
+  $column = array(
+    'type' => 'varchar',
+    'description' => "XML Default Tag",
+    'length' => 60,
+    'not null' => False,
+    'default' => 'record',
+  );
+
+  $data_table_name = 'open_data_schema_map';
+  if (!db_field_exists('open_data_schema_map', 'xml_defaulttag')) {
+    db_add_field($data_table_name, 'xml_defaulttag', $column);
   }
 }
 
