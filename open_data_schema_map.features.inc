@@ -24,11 +24,13 @@ function open_data_schema_map_features_api() {
 function open_data_schema_apis_features_export($data, &$export, $module_name = '') {
   $export['dependencies']['open_data_schema_map'] = 'open_data_schema_map';
 
-  // Build array of schema name => module name for individual schema dependencies
+  // Build array of schema name => module name for individual schema deps.
   $schema_modules = array();
   foreach (module_implements('open_data_schema') as $module) {
-    $schema = module_invoke($module, 'open_data_schema');
-    $schema_modules[$schema['short_name']] = $module;
+    $schemas = module_invoke($module, 'open_data_schema');
+    foreach ($schemas as $schema) {
+      $schema_modules[$schema['short_name']] = $module;
+    }
   }
 
   foreach ($data as $key => $machine_name) {
@@ -90,8 +92,9 @@ function open_data_schema_apis_features_rebuild($module) {
   // Overwrite API in DB from code...
   if ($defaults = features_get_default('open_data_schema_apis', $module)) {
     foreach ($defaults as $machine_name => $definition) {
+      $existing = open_data_schema_map_api_load($machine_name);
       // @todo add open_data_schema_map_schema_save() function to replace this
-      if ($existing = open_data_schema_map_api_load($machine_name)) {
+      if ($existing && isset($existing->id)) {
         drupal_write_record('open_data_schema_map', $definition, $existing->id);
       }
       else {

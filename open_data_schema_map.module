@@ -5,6 +5,54 @@
  * Maps entity types to Open Data schemas.
  */
 
+class OpenDataSchemaMapException extends Exception {
+
+  /**
+   * Override Exception constructor to add data parameter.
+   */
+  public function __construct($message, $code = 0, $data = NULL) {
+    parent::__construct($message, $code);
+    $this->data = !empty($data) ? $data : $message;
+  }
+
+  /**
+   * Returns the data associated with the exception.
+   */
+  public function getData() {
+    return $this->data;
+  }
+
+  /**
+   * Returns HTTP status error given a code.
+   */
+  public function getHTTPError() {
+    $code = $this->getCode();
+    switch ($code) {
+      case 400:
+        return '400 Bad Request';
+
+      case 403:
+        return '403 Forbidden';
+
+      case 404:
+        return '404 Not Found';
+
+      case 406:
+        return '406 Not Acceptable';
+
+      case 412:
+        return '412 Precondition Failed';
+
+      case 422:
+        return '422 Unprocessable Entity';
+
+      default:
+        return '500 Internal Server Error';
+
+    }
+  }
+}
+
 /**
  * Implements hook_menu().
  */
@@ -89,8 +137,10 @@ function open_data_schema_map_register() {
     return $schemas;
   }
   foreach (module_implements('open_data_schema') as $module) {
-    $data = module_invoke($module, 'open_data_schema');
-    $schemas[$data['short_name']] = $data;
+    $module_schemas = module_invoke($module, 'open_data_schema');
+    foreach ($module_schemas as $schema) {
+      $schemas[$schema['short_name']] = $schema;
+    }
   }
   return $schemas;
 }
@@ -325,10 +375,8 @@ function open_data_schema_map_schema_load($schema_name) {
 /**
  * Retrieves public, published dataset nodes.
  *
- * @param string $type
- *   Entity type.
- * @param string $bundle
- *   Entity bundle.
+ * @param string $api
+ *   Api object.
  * @param string $limit
  *   Number of results to return.
  * @param string $offset
@@ -341,7 +389,9 @@ function open_data_schema_map_schema_load($schema_name) {
  * @return array
  *   An array of dataset nodes.
  */
-function open_data_schema_map_endpoint_query($type = 'node', $bundle = 'dataset', $limit = 0, $offset = 0, $args = array()) {
+function open_data_schema_map_endpoint_query($api, $limit = 0, $offset = 0, $args = array()) {
+  $type = $api->type;
+  $bundle = $api->bundle;
   $args = is_array($args) ? $args : array($args);
   $query = new EntityFieldQuery();
 
@@ -357,13 +407,13 @@ function open_data_schema_map_endpoint_query($type = 'node', $bundle = 'dataset'
   }
   foreach ($args as $arg => $arg_value) {
     $field = open_data_schema_map_discover_field($arg_value['token']['value']);
-    drupal_alter('open_data_schema_map_args', $field, $arg_value);
+    drupal_alter('open_data_schema_map_args', $field, $arg_value, $api->machine_name);
     // Pass conditions if no queries.
     if (!isset($arg_value['query']) || !$arg_value['query']) {
       continue;
     }
-    if ($field[0] == 'node') {
-      if (substr($field[1], 0, 5) == 'field') {
+    if (!empty($field) && $field[0] == 'node') {
+      if (substr($field[1], 0, 5) == 'field' || $field[1] == 'og_group_ref') {
         $query->fieldCondition($field[1], $arg_value['value'], $arg_value['query']);
       }
       else {
@@ -371,6 +421,7 @@ function open_data_schema_map_endpoint_query($type = 'node', $bundle = 'dataset'
       }
     }
   }
+  drupal_alter('open_data_schema_map_endpoint_query', $query, $api->machine_name);
   $entities = $query->execute();
   $ids = NULL;
   if ($entities) {
@@ -713,7 +764,7 @@ function open_data_schema_mapper_token_replace($token, $entity_type, $entity) {
 /**
  * Provides working arguments by validating fields and queries.
  */
-function open_data_schema_map_endpoint_args($map, $queries, $args = array()) {
+function open_data_schema_map_endpoint_args(&$map, $queries, $args = array()) {
   $output = array();
   foreach ($args as $num => $arg) {
     if ($queries) {
@@ -727,7 +778,7 @@ function open_data_schema_map_endpoint_args($map, $queries, $args = array()) {
         }
       }
     }
-    if ($arg['required'] == 1 && !isset($output[$num])) {
+    if ($arg['required'] == 1 && (!isset($output[$num]) || empty($output[$num]['query']))) {
       return array('required' => $arg['field']);
     }
   }
@@ -742,8 +793,8 @@ function open_data_schema_map_endpoint_process_map($ids, $api) {
   if ($ids) {
     $schema = open_data_schema_map_schema_load($api->api_schema);
     foreach ($ids as $key => $id) {
-      $entity = entity_load($api->type, array($id));
-      open_data_schema_map_endpoint_process_map_recursion($result, $api->mapping, $api->type, $entity[$id]);
+      $entity = entity_load_single($api->type, $id);
+      open_data_schema_map_endpoint_process_map_recursion($result, $api->mapping, $api->type, $entity);
       $output[] = $result;
     }
   }
@@ -770,6 +821,7 @@ function open_data_schema_map_endpoint_process_map_recursion(&$result, $map, $ty
         if ($values) {
           foreach ($values as $num => $item) {
             $subvalue = array();
+            $sub_result = array();
             foreach ($token as $subfield => $subtoken) {
               $subtoken['value'] = str_replace('Nth', $num, $subtoken['value']) ? str_replace('Nth', $num, $subtoken['value']) : $subtoken['value'];
               if ($subtoken['value']) {
@@ -778,8 +830,9 @@ function open_data_schema_map_endpoint_process_map_recursion(&$result, $map, $ty
                 $sub_result[$subfield] = $subvalue;
               }
             }
-            $result[$api_field][] = $sub_result;
-            $sub_result = '';
+            if ($result) {
+              $result[$api_field][] = $sub_result;
+            }
           }
         }
         foreach ($token as $subfield => $subtoken) {
@@ -841,10 +894,12 @@ function open_data_schema_map_endpoint_special_arg(&$args, $type) {
   $value = '';
   foreach ($args as $num => $arg) {
     if ($arg['field'] == $type) {
+      $value = $args[$num];
       unset($args[$num]);
       return $arg['query'];
     }
   }
+
   return $value;
 }
 

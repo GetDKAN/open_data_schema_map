@@ -11,10 +11,12 @@
 function open_data_schema_pod_open_data_schema() {
   $path = DRUPAL_ROOT . '/' . drupal_get_path('module', 'open_data_schema_pod') . '/data/single_entry.json';
   return array(
-    'short_name' => 'pod',
-    'title' => 'Project Open Data',
-    'schema_file' => $path,
-    'description' => t('Project Open Data schema. See http://project-open-data.github.io/schema/ for more awesome details.'),
+    array(
+      'short_name' => 'pod',
+      'title' => 'Project Open Data',
+      'schema_file' => $path,
+      'description' => t('Project Open Data schema. See http://project-open-data.github.io/schema/ for more awesome details.'),
+    ),
   );
 }
 

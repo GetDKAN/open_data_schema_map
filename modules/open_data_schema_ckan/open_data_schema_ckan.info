@@ -5,3 +5,4 @@ package = Open Data
 version = 7.x-1.x
 dependencies[] = features
 dependencies[] = open_data_schema_map
+dependencies[] = pathauto
