@@ -420,29 +420,38 @@ function open_data_schema_map_add_type(&$values, $mapping) {
  */
 function open_data_schema_map_endpoint($api) {
   $queries = drupal_get_query_parameters();
-  // This endpoint is created in code.
-  if (isset($api->callback) && function_exists($api->callback)) {
-    $function = $api->callback;
-    $result = $function($queries, $api->arguments);
-  }
-  // This endpoint was created with the UI.
-  else {
-    if (isset($api->callback) && function_exists($api->callback)) {
-      $function = $api->callback;
-      return $function($api->args, $queries, $api->arguments);
-    }
+  try {
     $args = open_data_schema_map_endpoint_args($api->mapping, $queries, $api->arguments);
     if (isset($args['required'])) {
-      $result = array(t('Required field "!field" is missing', array('!field' => $args['required'])));
+      $error_data = array(
+        '__type' => 'Validation Error',
+        'name_or_id' => array('Missing Value'),
+      );
+      throw new OpenDataSchemaMapException(t('Required field "!field" is missing', array('!field' => $args['required'])), 400, $error_data);
     }
+    // This endpoint is created in code.
+    if (isset($api->callback) && function_exists($api->callback)) {
+      $function = $api->callback;
+      $result = $function($queries, $api->arguments);
+    }
+    // This endpoint was created with the UI.
     else {
+      if (isset($api->callback) && function_exists($api->callback)) {
+        $function = $api->callback;
+        return $function($api->args, $queries, $api->arguments);
+      }
       $offset = open_data_schema_map_endpoint_special_arg($args, 'offset');
-      $limit = open_data_schema_map_endpoint_special_arg($queries, $api->arguments, 'limit');
-      $ids = open_data_schema_map_endpoint_query($api->type, $api->bundle, $limit, $offset, $args);
+      $limit = open_data_schema_map_endpoint_special_arg($args, 'limit');
+      $ids = open_data_schema_map_endpoint_query($api, $limit, $offset, $args);
       $result = open_data_schema_map_endpoint_process_map($ids, $api);
-      drupal_alter('open_data_schema_map_results', $result, $api->machine_name, $api->api_schema);
     }
   }
+  catch (OpenDataSchemaMapException $e) {
+    drupal_add_http_header('Status', $e->getHTTPError());
+    $result['error'] = $e->getData();
+  }
+  drupal_alter('open_data_schema_map_results', $result, $api->machine_name, $api->api_schema);
+
   if ($api->outputformat == 'json') {
     return drupal_json_output($result);
   } elseif ($api->outputformat == 'json-pretty') {
