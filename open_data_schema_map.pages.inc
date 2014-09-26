@@ -209,6 +209,11 @@ function open_data_schema_map_manage(array $form, array &$form_state, $api = NUL
     '#description' => t('(XML only) Enter the XML Root Name (default: records).'),
     '#required' => False,
     '#weight' => 3,
+    '#states' => array(
+      'visible' => array(
+        ':input[name="outputformat"]' => array('value' => 'xml'),
+      ),
+    ),
   );
   $form['xml_defaulttag'] = array(
     '#title' => 'XML Default Node',
@@ -216,6 +221,11 @@ function open_data_schema_map_manage(array $form, array &$form_state, $api = NUL
     '#description' => t('(XML only) Enter the XML Default Node Name (default: record).'),
     '#required' => False,
     '#weight' => 4,
+    '#states' => array(
+      'visible' => array(
+        ':input[name="outputformat"]' => array('value' => 'xml'),
+      ),
+    ),
   );
   $form['enabled'] = array(
     '#title' => 'Enabled',
