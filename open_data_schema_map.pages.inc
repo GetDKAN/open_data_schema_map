@@ -20,6 +20,8 @@ function open_data_schema_map_page_overview() {
     $data['delete'] = isset($data['callback']) ? '' : l(t('delete'), 'admin/config/services/odsm/delete/' . $data['machine_name']);
     unset($data['machine_name']);
     unset($data['callback']);
+    unset($data['xml_root']);
+    unset($data['xml_defaulttag']);
     // TODO: report features status.
     // $data['configuration'] = theme('entity_status',
     // array('status' => $data['features']));
