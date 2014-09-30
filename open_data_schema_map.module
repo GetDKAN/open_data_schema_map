@@ -329,10 +329,12 @@ function open_data_schema_map_api_load_all() {
     $list[] = $result->machine_name;
   }
 
+  debug($list);
   drupal_alter('open_data_schema_map_endpoints', $list);
   foreach ($list as $item) {
     $records[] = open_data_schema_map_api_load($item);
   }
+  debug($list);
   return $records;
 }
 
@@ -542,6 +544,7 @@ function open_data_schema_map_args_form($num_args, $options, $defaults, $api) {
           '#default_value' => isset($defaults[$i]['value']) ? $defaults[$i]['value'] : '',
         );
       }
+      debug($form[$i]);
     }
   }
   return $form;
@@ -807,6 +810,8 @@ function open_data_schema_map_endpoint_process_map($ids, $api) {
 function open_data_schema_map_endpoint_process_map_recursion(&$result, $map, $type, $entity) {
   foreach ($map as $api_field => $token) {
     // Don't show results for fields without tokens.
+    debug("token");
+    debug($token);
     if ($token) {
       if (isset($token['value']) && !$token['value']) {
         continue;

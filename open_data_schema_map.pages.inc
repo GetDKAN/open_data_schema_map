@@ -514,13 +514,17 @@ function open_data_schema_map_xml_encode($var, $xml_root, $xml_defaulttag) {
     "defaultTagName"  => $xml_defaulttag,
   );
   $serializer = &new XML_Serializer($options);
-  // Remove key from object - only used for the link
-  foreach (array_keys($var) as $key) {
-    unset ($var[$key]['key']);
-  }
-
+  // The record we want to serialize are in $var['result']
+  // Copy them to an array with the default tag
+  $xml = array();
+  $xml[$xml_defaulttag] = $var['result'];
+  // don't include the key
+  unset($xml[$xml_defaulttag]['key']);
   // Serialize and return xml
-  return  $serializer->serialize($var);
+  foreach ($xml[$xml_defaulttag] as $key => $tag) {
+    $xml[$xml_defaulttag][$key] = strip_tags($tag);
+  }
+  return  $serializer->serialize($xml);
 }
 
 function open_data_schema_map_json_output($var = NULL) {
@@ -539,5 +543,5 @@ function open_data_schema_map_xml_output($var = NULL, $xml_root, $xml_defaulttag
   if (isset($var)) {
     echo open_data_schema_map_xml_encode($var, $xml_root, $xml_defaulttag);
   }
-}
 
+}
