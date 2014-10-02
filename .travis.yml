@@ -58,3 +58,10 @@ before_script:
 script:
   # Run test suite
   - drush test-run --xml 'Open Data Schema Map' --uri=http://127.0.0.1:8888
+
+notifications:
+  slack:
+    rooms:
+      - nucivic:t3p2KxXdzymmwxitWPvfAsnK#monitor-devops
+      - nucivic:t3p2KxXdzymmwxitWPvfAsnK#monitor-dkan
+      - nucivic:t3p2KxXdzymmwxitWPvfAsnK#monitor-data-starter
