@@ -27,6 +27,7 @@ function open_data_schema_ckan_open_data_schema_map_load($machine_name) {
     $record->bundle = '';
     $record->arguments = array();
     $record->machine_name = 'ckan_site_read';
+    $record->outputformat = 'json';
     $record->endpoint = 'api/3/action/site_read';
     $record->callback = 'open_data_schema_ckan_site_read_callback';
     return $record;
@@ -40,6 +41,7 @@ function open_data_schema_ckan_open_data_schema_map_load($machine_name) {
     $record->bundle = '';
     $record->arguments = array();
     $record->machine_name = 'ckan_revision_list';
+    $record->outputformat = 'json';
     $record->endpoint = 'api/3/action/revision_list';
     $record->callback = 'open_data_schema_ckan_revision_list_callback';
     return $record;
@@ -53,6 +55,7 @@ function open_data_schema_ckan_open_data_schema_map_load($machine_name) {
     $record->bundle = '';
     $record->arguments = array('1' => array('field' => 'id', 'required' => 1));
     $record->machine_name = 'ckan_package_revision_list';
+    $record->outputformat = 'json';
     $record->endpoint = 'api/3/action/package_revision_list';
     $record->callback = 'open_data_schema_ckan_package_revision_list_callback';
     return $record;

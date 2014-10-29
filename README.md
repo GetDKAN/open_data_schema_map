@@ -28,7 +28,28 @@ An API in this module is a configuration set that exposes a specific set of mach
 
 ### Installation
 
-Enable the main _Open Data Schema Map_ module as usual, and additionally enable any schema modules you will need to create your API. 
+In order to install this module you need to have composer installed globally in your system. Please refer to https://getcomposer.org/doc/00-intro.md#globally for instructions on how to install it.
+
+Once you have composer installed do the following:
+
+```
+# cd into the path where this module is located
+$ cd sites/all/contrib/open_data_schema_map
+$ drush -y open_data_schema_map
+```
+
+### Update an old non composer dependant version
+
+If you are updating from a previous version of ODSM then you need to do the following:
+
+```
+# cd into the path where this module is located
+$ cd sites/all/contrib/open_data_schema_map
+$ drush -y en composer_manager
+$ drush -y composer-manager install
+``` 
+
+Additionally enable any schema modules you will need to create your API.
 
 ### Creating APIs
 
