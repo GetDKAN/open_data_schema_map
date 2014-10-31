@@ -31,7 +31,7 @@ before_script:
   - drush --yes core-quick-drupal --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/open_data_schema_map_test --enable=simpletest open_data_schema_map_test
 
   # Grab dependencies
-  - git clone --branch 7.x-1.x http://git.drupal.org/project/dkan.git
+  - git clone --branch 7.x-1.x https://github.com/NuCivic/dkan.git
   - git clone --branch 7.x-1.x https://github.com/NuCivic/dkan_dataset.git
   # For now, when this gets in we need to merge that branch on odsm dkan module
   - git clone --branch master https://github.com/NuCivic/open_data_schema_map_dkan.git
