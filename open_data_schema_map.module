@@ -370,6 +370,10 @@ function open_data_schema_map_schema_load($schema_name) {
   $json_file = $loaded_schema['schema_file'];
   $json = file_get_contents($json_file);
   $schema = drupal_json_decode($json);
+  foreach (module_implements('open_data_schema_fill_references') as $module) {
+    $hook_implementation = $module . '_open_data_schema_fill_references';
+    $hook_implementation($schema_name, $schema);
+  }
   return $schema;
 }
 
@@ -638,7 +642,26 @@ function open_data_schema_map_json_4($schema, $api, $defaults) {
         '#description' => t('This array can iterate over multi-value fields. Select multi-value field to use. If none is selected this output will not loop and accept single value tokens. Selecting and saving an entity reference will produce a list of chaiabale tokens. For non entity reference fields, replace "?" with "Nth:value". "Nth" represents iteratable tokens.') . $osd_key_map,
       );
       foreach ($data['anyOf'][0]['items']['properties'] as $subitem => $subdata) {
-        $desc = isset($subdata['description']) ? $subdata['description'] . t('Type:') . $subdata['type'] : t('Type:') . $subdata['type'];
+        $desc = isset($subdata['description']) ? $subdata['description'] : '';
+        $desc .= isset($subdata['type']) ? t(' Type:') . $subdata['type'] : '';
+        $form[$item][$subitem] = array(
+          '#title' => $subdata['title'] . ' (' . $subitem . ')',
+          '#type' => 'textfield',
+          '#maxlength' => 256,
+          '#description' => $desc,
+          '#default_value' => isset($defaults[$item][$subitem]['value']) ? $defaults[$item][$subitem]['value'] : '',
+        );
+      }
+    }
+    if ($data['type'] == 'object') {
+      $form[$item] = array(
+        '#title' => $data['title'],
+        '#type' => 'fieldset',
+        '#description' => $data['description'],
+      );
+      foreach ($data['properties'] as $subitem => $subdata) {
+        $desc = isset($subdata['description']) ? $subdata['description'] : '';
+        $desc .= isset($subdata['type']) ? t(' Type:') . $subdata['type'] : '';
         $form[$item][$subitem] = array(
           '#title' => $subdata['title'] . ' (' . $subitem . ')',
           '#type' => 'textfield',
@@ -649,7 +672,6 @@ function open_data_schema_map_json_4($schema, $api, $defaults) {
       }
     }
   }
-
   return $form;
 }
 
@@ -807,6 +829,7 @@ function open_data_schema_map_endpoint_process_map($ids, $api) {
  */
 function open_data_schema_map_endpoint_process_map_recursion(&$result, $map, $type, $entity) {
   foreach ($map as $api_field => $token) {
+    
     // Don't show results for fields without tokens.
     if ($token) {
       if (isset($token['value']) && !$token['value']) {
@@ -843,8 +866,17 @@ function open_data_schema_map_endpoint_process_map_recursion(&$result, $map, $ty
         }
       }
       else {
-        // Don't return empty fields.
-        if ($field_value = open_data_schema_map_endpoint_process_field($api_field, $token, $type, $entity)) {
+        if (!in_array('value', array_keys($token)) && count($token)) {
+          // If field has depth make recursive call.
+          $result[$api_field] = array();
+          open_data_schema_map_endpoint_process_map_recursion($result[$api_field], $map[$api_field], $type, $entity);
+          // foreach ($token as $subfield => $subtoken) {
+          //   if ($field_value = open_data_schema_map_endpoint_process_field($subfield, $subtoken, $type, $entity)) {
+          //     $result[$api_field][$subfield] = $field_value;    
+          //   }
+          // }
+        }
+        else if ($field_value = open_data_schema_map_endpoint_process_field($api_field, $token, $type, $entity)) {
           $result[$api_field] = $field_value;
         }
         else {
