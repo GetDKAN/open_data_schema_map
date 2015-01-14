@@ -193,7 +193,7 @@ function open_data_schema_map_form_recursion(&$form, $schema, $api, $defaults = 
       $form[$key] = array(
         '#title' => $value['title'],
         '#type' => 'textfield',
-        '#maxlength' => 256,
+        '#maxlength' => 512,
         '#description' => $description,
         '#default_value' => $default,
       );
@@ -616,7 +616,7 @@ function open_data_schema_map_json_4($schema, $api, $defaults) {
     $form[$item] = array(
       '#title' => $data['title'] . ' (' . $item . ')',
       '#type' => 'textfield',
-      '#maxlength' => 256,
+      '#maxlength' => 512,
       '#description' => $desc,
       '#default_value' => isset($defaults[$item]['value']) ? $defaults[$item]['value'] : '',
       '#field_type' => $data['type'],
@@ -642,7 +642,7 @@ function open_data_schema_map_json_4($schema, $api, $defaults) {
         $form[$item][$subitem] = array(
           '#title' => $subdata['title'] . ' (' . $subitem . ')',
           '#type' => 'textfield',
-          '#maxlength' => 256,
+          '#maxlength' => 512,
           '#description' => $desc,
           '#default_value' => isset($defaults[$item][$subitem]['value']) ? $defaults[$item][$subitem]['value'] : '',
         );
@@ -667,6 +667,7 @@ function open_data_schema_map_json_3_recursion(&$form, $schema, $api, $defaults 
     $form[$item] = array(
       '#title' => $item,
       '#type' => 'textfield',
+      '#maxlength' => 512,
       '#description' => $data['description'],
       '#field_type' => $field_type,
       '#default_value' => $default_value,
