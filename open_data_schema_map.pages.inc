@@ -399,10 +399,6 @@ function open_data_schema_map_endpoint($api) {
     }
     // This endpoint was created with the UI.
     else {
-      if (isset($api->callback) && function_exists($api->callback)) {
-        $function = $api->callback;
-        return $function($api->args, $queries, $api->arguments);
-      }
       $offset = open_data_schema_map_endpoint_special_arg($args, 'offset');
       $limit = open_data_schema_map_endpoint_special_arg($args, 'limit');
       $ids = open_data_schema_map_endpoint_query($api, $limit, $offset, $args);
