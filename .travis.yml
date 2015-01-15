@@ -22,6 +22,7 @@ install:
   - export PATH="$HOME/.composer/vendor/bin:$PATH"
   - composer global require --no-interaction drush/drush:dev-master
   - composer global require --no-interaction youngj/httpserver:*
+  - drush dl composer-8.x registry_rebuild
 
 before_script:
   # navigate out of module directory to prevent blown stack by recursive module lookup
@@ -47,9 +48,12 @@ before_script:
 
   # Make dkan_dataset
   - drush make -v --no-core --yes sites/all/modules/dkan_dataset/dkan_dataset.make
+  - drush rr
 
   # Enable modules
-  - drush --yes pm-enable dkan_dataset_content_types open_data_schema_map open_data_schema_map_dkan
+  - drush --yes en dkan_dataset_content_types
+  - drush --yes en open_data_schema_map
+  - drush --yes en open_data_schema_map_dkan
 
   # start a web server on port 8888, run in the background; wait for initialization
   - drush --quiet --yes --root=$PWD runserver :8888 > /dev/null 2>&1 &

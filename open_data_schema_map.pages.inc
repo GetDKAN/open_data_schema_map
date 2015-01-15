@@ -5,6 +5,12 @@
  * Pages and forms for ODSM.
  */
 
+use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\Encoder\XmlEncoder;
+use Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer;
+
+define("DEFAULT_XML_ROOT", "records");
+define("DEFAULT_XML_TAG", "record");
 /**
  * Callback for ODSM overiew page.
  */
@@ -20,6 +26,8 @@ function open_data_schema_map_page_overview() {
     $data['delete'] = isset($data['callback']) ? '' : l(t('delete'), 'admin/config/services/odsm/delete/' . $data['machine_name']);
     unset($data['machine_name']);
     unset($data['callback']);
+    unset($data['xml_root']);
+    unset($data['xml_defaulttag']);
     // TODO: report features status.
     // $data['configuration'] = theme('entity_status',
     // array('status' => $data['features']));
@@ -33,6 +41,7 @@ function open_data_schema_map_page_overview() {
   $header[] = t('Entity');
   $header[] = t('Bundle');
   $header[] = t('Endpoint');
+  $header[] = t('Output Format');
   $header[] = t('Edit');
   $header[] = t('Delete');
   // $header[] = t('Configuration');
@@ -104,17 +113,28 @@ function open_data_schema_map_manage(array $form, array &$form_state, $api = NUL
   if ($list) {
     $markup = t('Choose from the available APIs:') . theme('item_list', $list);
   }
+  $outputformat_choices['json'] = "JSON";
+  $outputformat_choices['json-pretty'] = "JSON - human-readable";
+  $outputformat_choices['xml']  = "XML";
+
   $entity_types = entity_get_info();
   foreach ($entity_types as $entity_name => $entity_info) {
     $entity_list[$entity_name] = $entity_info['label'];
   }
   $selected_entity = '';
   $selected_schema = '';
+  $selected_outputformat = '';
   if (isset($form_state['triggering_element']['#name']) && $name = $form_state['triggering_element']['#name']) {
     $selected_entity = $form_state['triggering_element']['#value'];
   }
   elseif ($api) {
     $selected_entity = $api->type;
+  }
+  if (isset($form_state['triggering_element']['#outputformat']) && $outputformat = $form_state['triggering_element']['#outputformat']) {
+    $selected_outputformat = $form_state['triggering_element']['#value'];
+  }
+  else {
+    $selected_outputformat = 'json';
   }
   $form['name'] = array(
     '#title' => 'Title',
@@ -183,6 +203,38 @@ function open_data_schema_map_manage(array $form, array &$form_state, $api = NUL
     '#required' => TRUE,
     '#weight' => 1,
   );
+  $form['outputformat'] = array(
+    '#title' => 'Output Format',
+    '#type' => 'select',
+    '#description' => t('Select from the available output formats.'),
+    '#options' => $outputformat_choices, 
+    '#required' => TRUE,
+    '#weight' => 2,
+  );
+  $form['xml_root'] = array(
+    '#title' => 'XML Root',
+    '#type' => 'textfield',
+    '#description' => t('(XML only) Enter the XML Root Name (default: records).'),
+    '#required' => False,
+    '#weight' => 3,
+    '#states' => array(
+      'visible' => array(
+        ':input[name="outputformat"]' => array('value' => 'xml'),
+      ),
+    ),
+  );
+  $form['xml_defaulttag'] = array(
+    '#title' => 'XML Default Node',
+    '#type' => 'textfield',
+    '#description' => t('(XML only) Enter the XML Default Node Name (default: record).'),
+    '#required' => False,
+    '#weight' => 4,
+    '#states' => array(
+      'visible' => array(
+        ':input[name="outputformat"]' => array('value' => 'xml'),
+      ),
+    ),
+  );
   $form['enabled'] = array(
     '#title' => 'Enabled',
     '#type' => 'checkbox',
@@ -195,7 +247,7 @@ function open_data_schema_map_manage(array $form, array &$form_state, $api = NUL
     '#description' => t('Select from the available schemas.'),
     '#options' => $list,
     '#required' => TRUE,
-    '#weight' => 2,
+    '#weight' => 5,
   );
   // Only add Schema if we've already saved the initial config.
   if ($api) {
@@ -268,9 +320,12 @@ function open_data_schema_map_manage(array $form, array &$form_state, $api = NUL
     $form['type']['#default_value'] = $api->type;
     $form['bundle']['#default_value'] = $api->bundle;
     $form['endpoint']['#default_value'] = $api->endpoint;
+    $form['outputformat']['#default_value'] = $api->outputformat;
     $form['enabled']['#default_value'] = $api->enabled;
     $form['api_schema']['#default_value'] = $api->api_schema;
     $form['arguments']['#default_value'] = $api->arguments;
+    $form['xml_root']['#default_value'] = $api->xml_root != '' ? $api->xml_root : DEFAULT_XML_ROOT;
+    $form['xml_defaulttag']['#default_value'] = $api->xml_defaulttag != '' ? $api->xml_defaulttag : DEFAULT_XML_TAG;
 
     $form['id'] = array(
       '#type' => 'hidden',
@@ -411,5 +466,82 @@ function open_data_schema_map_endpoint($api) {
   }
   drupal_alter('open_data_schema_map_results', $result, $api->machine_name, $api->api_schema);
 
-  return drupal_json_output($result);
+  if ($api->outputformat == 'json') {
+    return drupal_json_output($result);
+  } elseif ($api->outputformat == 'json-pretty') {
+    return open_data_schema_map_json_output($result);
+  } elseif ($api->outputformat == 'xml') {
+    $xml_root = DEFAULT_XML_ROOT;
+    $xml_defaulttag = DEFAULT_XML_TAG;
+    if (isset($api->xml_root) && $api->xml_root != '') {
+      $xml_root = $api->xml_root;
+    }
+    if (isset($api->xml_defaulttag) && $api->xml_defaulttag != '') {
+      $xml_defaulttag = $api->xml_defaulttag;
+    }
+    return open_data_schema_map_xml_output($result, $xml_root, $xml_defaulttag);
+  } else {
+    drupal_set_message("Invalid output format", "error");
+  }
+}
+
+/**
+ * Makes json output human readable.
+ */
+
+function open_data_schema_map_json_encode($var) {
+  // The PHP version cannot change within a request.
+  static $php530;
+
+  if (!isset($php530)) {
+    $php530 = version_compare(PHP_VERSION, '5.3.0', '>=');
+  }
+
+  if ($php530) {
+    return json_encode($var, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
+  }
+
+  // json_encode() escapes <, >, ', &, and " using its options parameter, but
+  // does not support this parameter prior to PHP 5.3.0.  Use a helper instead.
+  include_once DRUPAL_ROOT . '/includes/json-encode.inc';
+  return drupal_json_encode_helper($var);
+}
+
+function open_data_schema_map_xml_encode($var, $xml_root = DEFAULT_XML_ROOT, $xml_defaulttag = DEFAULT_XML_TAG) {
+  $xml = array();
+  $xml[$xml_defaulttag] = $var['result'];
+  unset($xml[$xml_defaulttag]['key']);
+
+  // Strip tags within tags
+  foreach ($xml[$xml_defaulttag] as $key => $tag) {
+    foreach($tag as $field => $value) {
+      $xml[$xml_defaulttag][$key][$field] = strip_tags($value);
+    }
+  }
+
+  // Serialize
+  $encoders = array(
+    new XmlEncoder($xml_root)
+  );
+  $normalizers = array(new GetSetMethodNormalizer());
+  $serializer = new Serializer($normalizers, $encoders);
+
+  return $serializer->serialize($xml, 'xml');
+}
+
+function open_data_schema_map_json_output($var = NULL) {
+  // We are returning JSON, so tell the browser.
+  drupal_add_http_header('Content-Type', 'application/json');
+
+  if (isset($var)) {
+    echo open_data_schema_map_json_encode($var);
+  }
+}
+
+function open_data_schema_map_xml_output($var = NULL, $xml_root = DEFAULT_XML_ROOT, $xml_defaulttag = DEFAULT_XML_TAG) {
+  // We are returning XML, so tell the browser.
+  drupal_add_http_header('Content-Type', 'application/xml');
+  if (isset($var)) {
+    echo open_data_schema_map_xml_encode($var, $xml_root, $xml_defaulttag);
+  }
 }

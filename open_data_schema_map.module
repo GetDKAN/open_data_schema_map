@@ -334,6 +334,7 @@ function open_data_schema_map_api_load_all() {
   foreach ($list as $item) {
     $records[] = open_data_schema_map_api_load($item);
   }
+
   return $records;
 }
 
