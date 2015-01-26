@@ -382,34 +382,12 @@ function open_data_schema_map_add_type(&$values, $mapping) {
  * Creates endpoint.
  */
 function open_data_schema_map_endpoint($api) {
-  $queries = drupal_get_query_parameters();
-  try {
-    $args = open_data_schema_map_endpoint_args($api->mapping, $queries, $api->arguments);
-    if (isset($args['required'])) {
-      $error_data = array(
-        '__type' => 'Validation Error',
-        'name_or_id' => array('Missing Value'),
-      );
-      throw new OpenDataSchemaMapException(t('Required field "!field" is missing', array('!field' => $args['required'])), 400, $error_data);
-    }
-    // This endpoint is created in code.
-    if (isset($api->callback) && function_exists($api->callback)) {
-      $function = $api->callback;
-      $result = $function($queries, $api->arguments);
-    }
-    // This endpoint was created with the UI.
-    else {
-      $offset = open_data_schema_map_endpoint_special_arg($args, 'offset');
-      $limit = open_data_schema_map_endpoint_special_arg($args, 'limit');
-      $ids = open_data_schema_map_endpoint_query($api, $limit, $offset, $args);
-      $result = open_data_schema_map_endpoint_process_map($ids, $api);
-    }
-  }
-  catch (OpenDataSchemaMapException $e) {
-    drupal_add_http_header('Status', $e->getHTTPError());
-    $result['error'] = $e->getData();
-  }
-  drupal_alter('open_data_schema_map_results', $result, $api->machine_name, $api->api_schema);
+  $render = open_data_schema_map_render_api($api);
+  $headers = $render['headers'];
+  $result = $render['result'];
 
+  foreach ($headers as $key => $value) {
+    drupal_add_http_header($key, $value);
+  }
   return drupal_json_output($result);
 }
