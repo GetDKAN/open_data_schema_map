@@ -334,6 +334,7 @@ function open_data_schema_map_api_load_all() {
   foreach ($list as $item) {
     $records[] = open_data_schema_map_api_load($item);
   }
+
   return $records;
 }
 
@@ -973,12 +974,14 @@ function open_data_schema_map_open_data_schema_map_args_alter(&$field, &$arg) {
 /**
  * Function that renders and odsm api for endpoint.
  */
-function open_data_schema_map_render_api($api, $query = NULL) {
+function open_data_schema_map_render_api($api, $query = NULL, $queries = NULL) {
+  if (!isset($queries)) {
+    $queries = drupal_get_query_parameters();
+  }
   if (!isset($query)) {
     $query = $_GET;
   }
   $headers = array();
-  $queries = drupal_get_query_parameters();
   try {
     $args = open_data_schema_map_endpoint_args($api->mapping, $queries, $api->arguments);
     if (isset($args['required'])) {
