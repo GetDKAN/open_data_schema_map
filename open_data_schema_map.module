@@ -1008,9 +1008,40 @@ function open_data_schema_map_render_api($api, $query = NULL, $queries = NULL) {
     $headers['Status'] = $e->getHTTPError();
     $result['error'] = $e->getData();
   }
-  drupal_alter('open_data_schema_map_results', $result, $api->machine_name, $api->api_schema);
+  drupal_alter('open_data_schema_map_results', $result, $api->machine_name, $api->api_schema, $ids);
   return array(
     'result' => $result,
     'headers' => $headers,
   );
+}
+
+/**
+ * Discovers additional fields.
+ */
+function open_data_schema_map_additional_fields($api) {
+  $tokens = array();
+  foreach ($api->mapping as $schema_id => $item) {
+    if ($item['value'] && !is_array($item['value'])) {
+      $tokens[] = $item['value'];
+    }
+  }
+  $unsused_fields = array();
+  $fields = field_info_instances('node', 'dataset');
+  foreach ($fields as $field_name => $instance) {
+    if (!in_array('[node:' . $field_name . ']', $tokens)) {
+      $addtional_fields[] = $field_name;
+    }
+  }
+  return $addtional_fields;
+}
+
+/**
+ * Adds additional fields to mapping.
+ */
+function open_data_schema_map_additional_fields_add($fields, $api) {
+  foreach ($fields as $field_name) {
+    $api->mapping['dkan_additional_fields'][$field_name]['value'] = '[node:' . $field_name . ']';
+    $api->mapping['dkan_additional_fields'][$field_name]['type'] = 'array';
+  }
+  return $api;
 }
