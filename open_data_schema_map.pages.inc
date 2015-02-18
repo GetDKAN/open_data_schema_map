@@ -72,6 +72,10 @@ function open_data_schema_map_delete_submit(array $form, array &$form_state) {
   db_delete('open_data_schema_map')
   ->condition('id', $id)
     ->execute();
+  
+  // Rebuild menu so the API is not available anymore.
+  menu_rebuild();
+  
   drupal_set_message(t('API %name has been deleted', array('%name' => $api->name)));
   drupal_goto('admin/config/services/odsm');
 }
@@ -358,6 +362,8 @@ function open_data_schema_map_manage_submit($form, $form_state) {
   }
   drupal_static_reset('open_data_schema_map_api_load_all');
   if (drupal_write_record('open_data_schema_map', $record, $update)) {
+    // Rebuild menus in order to update/add the API.
+    menu_rebuild();
     drupal_set_message($message);
   }
   drupal_goto('admin/config/services/odsm/edit/' . $values['machine_name']);
