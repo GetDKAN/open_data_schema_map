@@ -655,21 +655,27 @@ function open_data_schema_map_json_4($schema, $api, $defaults) {
       }
     }
     if ($data['type'] == 'object') {
+      $description = '';
+      if ( isset($data['description']) ) {
+        $description = $data['description'];
+      }
       $form[$item] = array(
         '#title' => $data['title'],
         '#type' => 'fieldset',
-        '#description' => $data['description'],
+        '#description' => $description,
       );
-      foreach ($data['properties'] as $subitem => $subdata) {
-        $desc = isset($subdata['description']) ? $subdata['description'] : '';
-        $desc .= isset($subdata['type']) ? t(' Type:') . $subdata['type'] : '';
-        $form[$item][$subitem] = array(
-          '#title' => $subdata['title'] . ' (' . $subitem . ')',
-          '#type' => 'textfield',
-          '#maxlength' => 512,
-          '#description' => $desc,
-          '#default_value' => isset($defaults[$item][$subitem]['value']) ? $defaults[$item][$subitem]['value'] : '',
-        );
+      if ( isset($data['properties']) ) {
+        foreach ($data['properties'] as $subitem => $subdata) {
+          $desc = isset($subdata['description']) ? $subdata['description'] : '';
+          $desc .= isset($subdata['type']) ? t(' Type:') . $subdata['type'] : '';
+          $form[$item][$subitem] = array(
+            '#title' => $subdata['title'] . ' (' . $subitem . ')',
+            '#type' => 'textfield',
+            '#maxlength' => 512,
+            '#description' => $desc,
+            '#default_value' => isset($defaults[$item][$subitem]['value']) ? $defaults[$item][$subitem]['value'] : '',
+          );
+        }
       }
     }
   }
