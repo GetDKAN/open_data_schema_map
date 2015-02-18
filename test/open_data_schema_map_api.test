@@ -79,7 +79,7 @@ class OpenDataSchemaMapAPIWebTestCase extends DrupalWebTestCase {
     // Get all data.json sucessful responses.
     foreach ($responses as $r) {
       // There should be only one item.
-      foreach ($r as $dataset) {
+      foreach ($r->dataset as $dataset) {
         // Test if title is set.
         $this->assertTrue(isset($dataset->title));
       }
