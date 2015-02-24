@@ -820,10 +820,11 @@ function open_data_schema_map_endpoint_args(&$map, $queries, $args = array()) {
  * Process entities using api.
  */
 function open_data_schema_map_endpoint_process_map($ids, $api) {
-  $result = $output = array();
+  $output = array();
   if ($ids) {
     $schema = open_data_schema_map_schema_load($api->api_schema);
     foreach ($ids as $key => $id) {
+      $result = array();
       $entity = entity_load_single($api->type, $id);
       open_data_schema_map_endpoint_process_map_recursion($result, $api->mapping, $api->type, $entity);
       $output[] = $result;
