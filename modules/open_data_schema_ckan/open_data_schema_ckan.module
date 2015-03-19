@@ -126,7 +126,7 @@ function open_data_schema_ckan_node_revision_list($content_type = 'dataset', $fi
  * Check if $guid is a valid uuid.
  */
 function open_data_schema_ckan_is_valid_guid($guid) {
-  return !empty($guid) && preg_match('/^(\{)?[a-f\d]{8}(-[a-f\d]{4}){4}[a-f\d]{8}(?(1)\})$/i', $guid);
+  return !is_array($guid) && !empty($guid) && preg_match('/^(\{)?[a-f\d]{8}(-[a-f\d]{4}){4}[a-f\d]{8}(?(1)\})$/i', $guid);
 }
 
 /**
