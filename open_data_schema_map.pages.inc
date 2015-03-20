@@ -72,10 +72,10 @@ function open_data_schema_map_delete_submit(array $form, array &$form_state) {
   db_delete('open_data_schema_map')
   ->condition('id', $id)
     ->execute();
-  
+
   // Rebuild menu so the API is not available anymore.
   menu_rebuild();
-  
+
   drupal_set_message(t('API %name has been deleted', array('%name' => $api->name)));
   drupal_goto('admin/config/services/odsm');
 }
