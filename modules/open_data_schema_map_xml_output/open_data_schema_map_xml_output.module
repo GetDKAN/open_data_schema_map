@@ -87,6 +87,6 @@ function open_data_schema_map_xml_output_render($api, $result) {
   $normalizers = array(new GetSetMethodNormalizer());
   $serializer = new Serializer($normalizers, $encoders);
 
-  echo $serializer->serialize($xml, 'xml');
+  return $serializer->serialize($xml, 'xml');
 }
 

@@ -65,11 +65,11 @@ function open_data_schema_map_json_pretty_output($api, $results) {
       $php530 = version_compare(PHP_VERSION, '5.3.0', '>=');
     }
     if ($php530) {
-      echo json_encode($results, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+      return json_encode($results, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
     // json_encode() escapes <, >, ', &, and " using its options parameter, but
     // does not support this parameter prior to PHP 5.3.0.
     include_once DRUPAL_ROOT . '/includes/json-encode.inc';
-    echo drupal_json_encode_helper($results);
+    return drupal_json_encode_helper($results);
   }
 }
