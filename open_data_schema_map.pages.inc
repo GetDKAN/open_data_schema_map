@@ -432,7 +432,8 @@ function open_data_schema_map_endpoint($api) {
   $output_formats = open_data_schema_map_retrieve_output_formats();
   if (in_array($api->outputformat, array_keys($output_formats))) {
     $function = $output_formats[$api->outputformat];
-    return $function($api, $result);
+    $response = $function($api, $result);
+    echo $response;
   }
   else {
     drupal_set_message("Invalid output format", "error");
