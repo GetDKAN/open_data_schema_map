@@ -113,4 +113,15 @@ You are not limited by the schemas included with this module; any Open Data sche
 Date formats can be chanaged manually by changing the "Medium" date time format in "admin/config/regional/date-time" or in code by using one of the alter hooks:
 ![screen shot 2014-09-04 at 11 15 01 am](https://cloud.githubusercontent.com/assets/512243/4152408/a9cb06b2-344e-11e4-84c8-c2174b5fc566.png)
 
+## Contributing
+
+We are accepting issues in the dkan issue thread only -> https://github.com/NuCivic/dkan/issues -> Please label your issue as **"component: open_data_schema_map"** after submitting so we can identify problems and feature requests faster.
+
+If you can, please cross reference commits in this repo to the corresponding issue in the dkan issue thread. You can do that easily adding this text:
+
+```
+NuCivic/dkan#issue_id
+``` 
+
+to any commit message or comment replacing **issue_id** with the corresponding issue id.
 
