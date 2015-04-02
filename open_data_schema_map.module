@@ -321,6 +321,7 @@ function open_data_schema_map_api_exist($machine_name) {
  * Loads all APIs.
  */
 function open_data_schema_map_api_load_all() {
+  $list = array();
   $records = &drupal_static(__FUNCTION__, array());
   if ($records) {
     return $records;
@@ -331,6 +332,7 @@ function open_data_schema_map_api_load_all() {
   }
 
   drupal_alter('open_data_schema_map_endpoints', $list);
+  
   foreach ($list as $item) {
     $records[] = open_data_schema_map_api_load($item);
   }
