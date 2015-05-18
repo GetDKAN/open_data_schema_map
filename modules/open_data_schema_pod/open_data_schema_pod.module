@@ -117,14 +117,6 @@ function open_data_schema_pod_open_data_schema_map_results_alter(&$result, $mach
         if (!isset($dataset['accessLevel']) || $dataset['accessLevel'] == '') {
           $dataset['accessLevel'] = 'public';
         }
-        if (isset($dataset['license'])) {
-          if ($dataset['license'] != 'notspecified') {
-            $dataset['license'] = 'http://opendefinition.org/licenses/' . $dataset['license'];
-          }
-          else {
-            unset($dataset['license']);
-          }
-        }
         array_push($dataset_row, $dataset);
         unset($result[$key]);
       }
