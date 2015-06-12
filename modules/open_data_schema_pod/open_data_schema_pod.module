@@ -215,7 +215,7 @@ function open_data_schema_pod_open_data_schema_fill_references($schema_name, &$s
  * Implements hook_tokens_alter().
  */
 function open_data_schema_pod_tokens_alter(array &$replacements, array $context) {
-  if (isset($replacements['[node:field-odfe-program-code]'])) {
+  if (isset($replacements['[node:field-odfe-program-code]']) && !empty($context['data']['node']->field_odfe_program_code['und'])) {
     $field = array();
     foreach ($context['data']['node']->field_odfe_program_code['und'] as $key => $item) {
       $field[] = str_replace("-", ":", $item['value']);
