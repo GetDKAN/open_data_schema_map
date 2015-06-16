@@ -56,10 +56,11 @@ before_script:
   # start a web server on port 8888, run in the background; wait for initialization
   - drush --quiet --yes --root=$PWD runserver :8888 > /dev/null 2>&1 &
   - sleep 4
+  - drush cache-clear drush
 
 script:
   # Run test suite
-  - drush test-run --xml 'Open Data Schema Map' --uri=http://127.0.0.1:8888
+  - drush test-run --verbose --xml 'Open Data Schema Map' --uri=http://127.0.0.1:8888
 
 notifications:
   slack:
