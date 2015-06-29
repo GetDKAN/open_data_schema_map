@@ -22,7 +22,7 @@ function open_data_schema_pod_open_data_schema() {
       'title' => 'Project Open Data v1.1',
       'schema_file' => $module_path . '/data/v1.1/dataset.json',
       'description' => t('Project Open Data v1.1 schema. See http://project-open-data.github.io/schema/ for more awesome details.'),
-    )
+    ),
   );
 }
 
@@ -67,6 +67,7 @@ function open_data_schema_pod_form_alter(&$form, $form_state, $form_id) {
 
           $form['#submit'] = array_merge(array('open_data_schema_pod_extra_settings_submit'), $form['#submit']);
           break;
+
         case 'pod_v1_1':
           break;
       }
@@ -111,11 +112,45 @@ function open_data_schema_pod_open_data_schema_map_results_alter(&$result, $mach
       // Puts catalog at top of results list.
       array_unshift($result, $catalog_row);
       break;
+
     case 'pod_v1_1':
       $dataset_row = array();
       foreach ($result as $key => $dataset) {
         if (!isset($dataset['accessLevel']) || $dataset['accessLevel'] == '') {
           $dataset['accessLevel'] = 'public';
+        }
+        elseif (isset($dataset['accessLevel'])) {
+          $dataset['accessLevel'] = strtolower($dataset['accessLevel']);
+        }
+        if (isset($dataset['distribution'])) {
+          foreach ($dataset['distribution'] as $num => $dist) {
+            if (!isset($dist['mediaType'])) {
+              $dist['mediaType'] = '';
+            }
+            if (!isset($dist['format'])) {
+              $dist['format'] = '';
+            }
+            if (!isset($dist['description'])) {
+              $dist['description'] = '';
+            }
+            if ($dist['format'] && !$dist['mediaType']) {
+              include_once DRUPAL_ROOT . '/includes/file.mimetypes.inc';
+              $map = file_mimetype_mapping();
+              $dataset['distribution'][$num]['mediaType'] = isset($map['mimetypes'][$map['extensions'][$dist['format']]]) ? $map['mimetypes'][$map['extensions'][$dist['format']]] : 'text/html';
+            }
+            if (!$dist['description']) {
+              $dataset['distribution'][$num]['description'] = t('No description provided');
+            }
+          }
+        }
+        if (isset($dataset['bureauCode']) && module_exists('open_data_federal_extras')) {
+          foreach ($dataset['bureauCode'] as $num => $code) {
+            $code = str_replace("-", ":", substr($code, 0, 6));
+            $dataset['bureauCode'][$num] = $code;
+          }
+        }
+        if (isset($dataset['issued']) && strpos($dataset['issued'], ' - ')) {
+          $dataset['issued'] = date("Y-m-d", strtotime(substr($dataset['issued'], 0, strpos($dataset['issued'], ' - '))));
         }
         array_push($dataset_row, $dataset);
         unset($result[$key]);
@@ -143,14 +178,14 @@ function open_data_schema_pod_open_data_schema_fill_references($schema_name, &$s
         'contactPoint',
       );
       $files = array();
-      // Process $ref keys to include referenced json file
+      // Process $ref keys to include referenced json file.
       foreach ($references as $key) {
         $json = $module_path . '/data/v1.1/';
         if (isset($schema['properties'][$key]['anyOf'])) {
           $json = $json . $schema['properties'][$key]['anyOf'][0]['items']['$ref'];
         }
         else {
-         $json = $json . $schema['properties'][$key]['$ref']; 
+          $json = $json . $schema['properties'][$key]['$ref'];
         }
         $json = file_get_contents($json);
         $json = drupal_json_decode($json);
@@ -160,13 +195,13 @@ function open_data_schema_pod_open_data_schema_fill_references($schema_name, &$s
           unset($json['title']);
           unset($schema['properties'][$key]['anyOf'][0]['items']['$ref']);
           if (isset($schema['properties'][$key]['anyOf'][0]['items']['minItems'])) {
-            $schema['properties'][$key]['anyOf'][0]['minItems'] = $schema['properties'][$key]['anyOf'][0]['items']['minItems'];  
+            $schema['properties'][$key]['anyOf'][0]['minItems'] = $schema['properties'][$key]['anyOf'][0]['items']['minItems'];
           }
           if ($schema['properties'][$key]['anyOf'][0]['items']['uniqueItems']) {
             $schema['properties'][$key]['anyOf'][0]['uniqueItems'] = $schema['properties'][$key]['anyOf'][0]['items']['uniqueItems'];
           }
           $schema['properties'][$key]['anyOf'][0]['uniqueItems'] = $schema['properties'][$key]['anyOf'][0]['items']['uniqueItems'];
-          $schema['properties'][$key]['anyOf'][0]['items'] = $json;  
+          $schema['properties'][$key]['anyOf'][0]['items'] = $json;
         }
         else {
           $schema['properties'][$key] = $json;
@@ -174,4 +209,69 @@ function open_data_schema_pod_open_data_schema_fill_references($schema_name, &$s
       }
       break;
   }
+}
+
+/**
+ * Implements hook_tokens_alter().
+ */
+function open_data_schema_pod_tokens_alter(array &$replacements, array $context) {
+  if (isset($replacements['[node:field-odfe-program-code]']) && !empty($context['data']['node']->field_odfe_program_code['und'])) {
+    $field = array();
+    foreach ($context['data']['node']->field_odfe_program_code['und'] as $key => $item) {
+      $field[] = str_replace("-", ":", $item['value']);
+    }
+    $replacements['[node:field-odfe-program-code]'] = implode(", ", $field);
+  }
+  if (isset($replacements['[node:field_related_content]']) && isset($context['data']['node']->field_related_content['und'])) {
+    $field = array();
+    foreach ($context['data']['node']->field_related_content['und'] as $key => $item) {
+      $field[] = $item['url'];
+    }
+    $replacements['[node:field_related_content]'] = implode(", ", $field);
+  }
+  if (isset($replacements['[node:field-frequency]']) && isset($context['data']['node']->field_frequency['und'])) {
+    $replacements['[node:field-frequency]'] = open_data_schema_pod_accrual_iso_8601_value($replacements['[node:field-frequency]']);
+  }
+}
+
+/**
+ * Provides value for human readable name.
+ */
+function open_data_schema_pod_accrual_iso_8601_value($name) {
+  if ($name == 'Annually') {
+    $name = 'Annual';
+  }
+  $iso = open_data_schema_pod_accrual_iso_8601();
+  if (isset($iso[$name])) {
+    return $iso[$name];
+  }
+  else {
+    return '';
+  }
+}
+
+/**
+ * Provides iso 8601 accrual periodicity.
+ */
+function open_data_schema_pod_accrual_iso_8601() {
+  return array(
+    'Decennial' => 'R/P10Y',
+    'Quadrennial' => 'R/P4Y',
+    'Annual' => 'R/P1Y',
+    'Bimonthly' => 'R/P2M',
+    'Semiweekly' => 'R/P3.5D',
+    'Daily' => 'R/P1D',
+    'Biweekly' => 'R/P2W',
+    'Semiannual' => 'R/P6M',
+    'Biennial' => 'R/P2Y',
+    'Triennial' => 'R/P3Y',
+    'Three times a week' => 'R/P0.33W',
+    'Three times a month' => 'R/P0.33M',
+    'Continuously updated' => 'R/PT1S',
+    'Monthly' => 'R/P1M',
+    'Quarterly' => ' R/P3M',
+    'Semimonthly' => 'R/P0.5M',
+    'Three times a year' => 'R/P4M',
+    'Weekly' => 'R/P1W',
+  );
 }
