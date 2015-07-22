@@ -1,7 +1,7 @@
 language: php
 
 php:
-  - 5.4
+  - 5.5
 
 mysql:
   database: open_data_schema_map_test
@@ -10,6 +10,7 @@ mysql:
 
 
 install:
+  - composer install
   - cd test
   - mysql -e 'create database open_data_schema_map_test;'
   - sudo apt-get update > /dev/null
@@ -60,7 +61,7 @@ before_script:
 
 script:
   # Run test suite
-  - drush test-run --verbose --xml 'Open Data Schema Map' --uri=http://127.0.0.1:8888
+  - bin/phpunit --bootstrap=test/boot.php test/OpenDataSchemaMap.php
 
 notifications:
   slack:
