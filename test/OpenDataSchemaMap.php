@@ -4,7 +4,12 @@ class OpenDataSchemaMap  extends PHPUnit_Framework_TestCase
 
     public static function setUpBeforeClass()
     {
-      $this->fixJsonEndpoint();
+      // Change /data.json path to /json during tests.
+      $data_json = open_data_schema_map_api_load('data_json_1_1');
+      $data_json->endpoint = 'json';
+      drupal_write_record('open_data_schema_map', $data_json, 'id');
+      drupal_static_reset('open_data_schema_map_api_load_all');
+      menu_rebuild();
       dkan_default_content_base_install();
     }
 
@@ -197,16 +202,6 @@ class OpenDataSchemaMap  extends PHPUnit_Framework_TestCase
     return array($endpoints[$callback]);
   }
 
-    /**
-     * Change /data.json path to /json during tests.
-     */
-    protected function fixJsonEndpoint() {
-      $data_json = open_data_schema_map_api_load('data_json_1_1');
-      $data_json->endpoint = 'json';
-      drupal_write_record('open_data_schema_map', $data_json, 'id');
-      drupal_static_reset('open_data_schema_map_api_load_all');
-      menu_rebuild();
-    }
     public function testDataJsonRollback() {
       $this->rollback('dkan_migrate_base_example_data_json11');
     }
