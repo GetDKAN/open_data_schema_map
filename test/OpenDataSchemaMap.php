@@ -10,9 +10,7 @@ class OpenDataSchemaMap  extends PHPUnit_Framework_TestCase
       drupal_write_record('open_data_schema_map', $data_json, 'id');
       drupal_static_reset('open_data_schema_map_api_load_all');
       menu_rebuild();
-      dkan_default_content_base_install();
     }
-
 
   /**
    * Test all read api methods with access control.
