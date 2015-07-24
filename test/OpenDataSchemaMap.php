@@ -172,10 +172,11 @@ class OpenDataSchemaMap  extends PHPUnit_Framework_TestCase
     $succesful = array();
 
     foreach ($uris as $uri) {
-      $r = json_decode($this->drupalGet($uri['uri'], $uri['options']));
-      $h = $this->drupalGetHeaders();
-      $this->assertTrue(strpos($h[':status'], '200') !== FALSE);
-      $succesful[] = $r;
+      $options = $uri['options'];
+      $options['absolute'] = TRUE;
+      $result = drupal_http_request(url($uri['uri'], $options));
+      $this->assertTrue($result->code == 200 ? TRUE : FALSE);
+      $succesful[] = $result;
     }
 
     // Return succesful querys for further assertions.
@@ -200,8 +201,8 @@ class OpenDataSchemaMap  extends PHPUnit_Framework_TestCase
     return array($endpoints[$callback]);
   }
 
-    public function testDataJsonRollback() {
+    /*public function testDataJsonRollback() {
       $this->rollback('dkan_migrate_base_example_data_json11');
-    }
+    }*/
 
 }
