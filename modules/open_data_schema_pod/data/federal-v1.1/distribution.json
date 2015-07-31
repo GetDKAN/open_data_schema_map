@@ -5,9 +5,7 @@
   "description": "Validates an entire collection of common core metadata JSON objects. Agencies produce said collections in the form of Data.json files.",
   "type": "object",
   "properties": {
-    "type": {
-      "title": "Metadata Context",
-      "description": "IRI for the JSON-LD data type. This should be dcat:Distribution for each Distribution"
+    "titlde": {
     }
   }
 }

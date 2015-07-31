@@ -4,7 +4,21 @@
  * @file
  * Provides Schema mapping for Project Open Data.
  */
+/**
+ * Implements hook_menu().
+ */
+function open_data_schema_pod_menu() {
+  $items['admin/config/services/odsm/validate/pod'] = array(
+    'title' => 'Project Open Data validation',
+    'page callback' => 'open_data_schema_pod_validation_page',
+    'page arguments' => array(),
+    'access arguments' => array('Administer Open Data Schema Mapper'),
+    'type' => MENU_NORMAL_ITEM, // MENU_CALLBACK, MENU_LOCAL_TASK, MENU_DEFAULT_LOCAL_TASK, MENU_LOCAL_ACTION, MENU_SUGGESTED_ITEM,
+    'file' => 'open_data_schema_pod.pages.inc',
+  );
 
+  return $items;
+}
 /**
  * Implements hook_open_data_schema().
  */
@@ -114,6 +128,7 @@ function open_data_schema_pod_open_data_schema_map_results_alter(&$result, $mach
       break;
 
     case 'pod_v1_1':
+      // See: https://project-open-data.cio.gov/v1.1/schema.
       $dataset_row = array();
       foreach ($result as $key => $dataset) {
         if (!isset($dataset['accessLevel']) || $dataset['accessLevel'] == '') {
@@ -121,6 +136,24 @@ function open_data_schema_pod_open_data_schema_map_results_alter(&$result, $mach
         }
         elseif (isset($dataset['accessLevel'])) {
           $dataset['accessLevel'] = strtolower($dataset['accessLevel']);
+        }
+        // License must be a URL.
+        if (isset($dataset['license']) && !filter_var($dataset['license'], FILTER_VALIDATE_URL)) {
+          // This function was introduced within the last year.
+          if (function_exists('dkan_dataset_content_types_license_allowed_values')) {
+            $values = dkan_dataset_content_types_license_subscribed_values();
+            if (isset($values[$dataset['license']]['uri'])) {
+              $dataset['license'] = $values[$dataset['license']]['uri'];
+            }
+          }
+        }
+        if (isset($dataset['dataQuality'])) {
+          if ($dataset['dataQuality'] == 'TRUE') {
+            $dataset['dataQuality'] = (bool) TRUE;
+          }
+          elseif ($dataset['dataQuality'] == 'FALSE') {
+            $dataset['dataQuality'] = (bool) FALSE;
+          }
         }
         if (isset($dataset['distribution'])) {
           foreach ($dataset['distribution'] as $num => $dist) {
@@ -184,7 +217,7 @@ function open_data_schema_pod_open_data_schema_fill_references($schema_name, &$s
         if (isset($schema['properties'][$key]['anyOf'])) {
           $json = $json . $schema['properties'][$key]['anyOf'][0]['items']['$ref'];
         }
-        else {
+        elseif(isset($schema['properties'][$key]['$ref'])) {
           $json = $json . $schema['properties'][$key]['$ref'];
         }
         $json = file_get_contents($json);
@@ -274,4 +307,39 @@ function open_data_schema_pod_accrual_iso_8601() {
     'Three times a year' => 'R/P4M',
     'Weekly' => 'R/P1W',
   );
+}
+
+/**
+ * Validates individual datasets.
+ */
+function open_data_schema_pod_process_validate($clear_cache = FALSE) {
+  include 'podValidator.php';
+  global $base_url;
+  if (!$clear_cache && $cache = cache_get('pod_validate_result')) {
+    $results = $cache->data;
+    $results['cache_date'] = $cache->created;
+  }
+  else {
+    $podValidator = new podValidator\validate($base_url . '/data.json');
+    $podValidator->processAll();
+    $count = $podValidator->datasetCount();
+    $ids = array();
+    $error_datasets = array();
+    $total_errors = 0;
+    if ($errors = $podValidator->getErrors()) {
+      $total_errors = count($errors);
+      foreach ($errors as $error) {
+        $error_datasets[$error['id']] = 1;
+      }
+      $errors = open_data_schema_pod_validation_process_errors($errors);
+    }
+    $results = array(
+      'errors' => $errors,
+      'count' => $count,
+      'total_errors' => $total_errors,
+      'error_datasets' => $error_datasets,
+    );
+    $cache = cache_set('pod_validate_result', $results, 'cache');
+  }
+  return $results;
 }
