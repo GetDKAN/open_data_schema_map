@@ -81,6 +81,7 @@
       "uniqueItems": true
     },
     "contactPoint": {
+      "$ref": "vcard.json"
     },
     "describedBy": {
       "title": "Data Dictionary",
@@ -164,7 +165,7 @@
           "items": {
             "$ref": "distribution.json",
             "minItems": 1,
-            "uniqueItems": true
+            "uniqueItems": true        
           }
         },
         {
@@ -322,6 +323,7 @@
       "uniqueItems": true
     },
     "publisher": {
+      "$ref": "organization.json"
     },
     "references": {
       "title": "Related Documents",

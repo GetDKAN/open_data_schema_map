@@ -12,7 +12,7 @@ class validate {
 
   function __construct($url) {
     $this->url = $url;
-    $this->errors = 0;
+    $this->errors = array();
   }
 
   public function getDataJSON()
@@ -45,12 +45,10 @@ class validate {
 
   public function process($id) {
     $retriever = new UriRetriever;
-    $schemaFolder = DRUPAL_ROOT . '/' . drupal_get_path('module', 'open_data_schema_pod') . '/data/federal-v1.1';
+    $schemaFolder = DRUPAL_ROOT . '/' . drupal_get_path('module', 'open_data_schema_pod') . '/data/v1.1';
     $schema = $retriever->retrieve('file://' . $schemaFolder . '/dataset.json');
     $data = $this->getDataset($id);
 
-    // If you use $ref or if you are unsure, resolve those references here
-    // This modifies the $schema object
     RefResolver::$maxDepth = 10;
     $refResolver = new RefResolver($retriever);
     $refResolver->resolve($schema, 'file://' . $schemaFolder . '/');
