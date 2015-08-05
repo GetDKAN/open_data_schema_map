@@ -312,15 +312,14 @@ function open_data_schema_pod_accrual_iso_8601() {
 /**
  * Validates individual datasets.
  */
-function open_data_schema_pod_process_validate($clear_cache = FALSE) {
+function open_data_schema_pod_process_validate($url, $clear_cache = FALSE) {
   include 'podValidator.php';
-  global $base_url;
   if (!$clear_cache && $cache = cache_get('pod_validate_result')) {
     $results = $cache->data;
     $results['cache_date'] = $cache->created;
   }
   else {
-    $podValidator = new podValidator\validate($base_url . '/data.json');
+    $podValidator = new podValidator\validate($url . '/data.json');
     $podValidator->processAll();
     $count = $podValidator->datasetCount();
     $ids = array();

@@ -13,7 +13,8 @@ function open_data_schema_pod_validation_page() {
   // Count.
   $render = array();
   $cache_form = array();
-  $results = open_data_schema_pod_process_validate();
+  global $base_url;
+  $results = open_data_schema_pod_process_validate($base_url);
   if (isset($results['cache_date'])) {
     $cache_form = drupal_get_form('open_data_schema_pod_validate_cache_clear', $results['cache_date']);
   }
