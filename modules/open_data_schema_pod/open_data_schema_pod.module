@@ -322,7 +322,7 @@ function open_data_schema_pod_process_validate($url, $clear_cache = FALSE) {
     $results['cache_date'] = $cache->created;
   }
   else {
-    $podValidator = new podValidator\validate($url . '/data.json');
+    $podValidator = new podValidator\validate($url);
     $podValidator->processAll();
     $count = $podValidator->datasetCount();
     $ids = array();
