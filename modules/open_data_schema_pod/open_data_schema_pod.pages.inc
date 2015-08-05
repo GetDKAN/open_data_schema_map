@@ -14,7 +14,7 @@ function open_data_schema_pod_validation_page() {
   $render = array();
   $cache_form = array();
   global $base_url;
-  $results = open_data_schema_pod_process_validate($base_url);
+  $results = open_data_schema_pod_process_validate($base_url . '/data.json');
   if (isset($results['cache_date'])) {
     $cache_form = drupal_get_form('open_data_schema_pod_validate_cache_clear', $results['cache_date']);
   }
