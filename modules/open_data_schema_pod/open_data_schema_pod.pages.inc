@@ -63,23 +63,3 @@ function open_data_schema_pod_validate_cache_clear_submit($form, &$form_state) {
   cache_clear_all('pod_validate_result', 'cache');
   drupal_set_message(t('The POD cache has been cleared.'));
 }
-
-/**
- *
- */
-function open_data_schema_pod_validation_process_errors($rows) {
-  foreach ($rows as $key => $row) {
-    if (!isset($ids[$row['id']])) {
-      $nid = entity_get_id_by_uuid('node', array($row['id']));
-      $nid = $nid[$row['id']];
-      $node = node_load($nid);
-      $ids[$row['id']] = $node;
-    }
-    else {
-      $node = $ids[$row['id']];
-    }
-    $rows[$key]['title'] = l($node->title,'node/' . $node->nid);
-  }
-  return $rows;
-}
-
