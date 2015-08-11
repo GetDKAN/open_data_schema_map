@@ -13,7 +13,7 @@ function open_data_schema_pod_menu() {
     'page callback' => 'open_data_schema_pod_validation_page',
     'page arguments' => array(),
     'access arguments' => array('Administer Open Data Schema Mapper'),
-    'type' => MENU_NORMAL_ITEM, // MENU_CALLBACK, MENU_LOCAL_TASK, MENU_DEFAULT_LOCAL_TASK, MENU_LOCAL_ACTION, MENU_SUGGESTED_ITEM,
+    'type' => MENU_NORMAL_ITEM,
     'file' => 'open_data_schema_pod.pages.inc',
   );
 
@@ -194,6 +194,7 @@ function open_data_schema_pod_open_data_schema_map_results_alter(&$result, $mach
         }
         if (variable_get('odsm_data_json_defaults', TRUE)) {
           odsm_add_data_JSON_defaults($dataset);
+        }
         if (isset($dataset['contactPoint']) && $dataset['contactPoint']['hasEmail'] == 'mailto:') {
           $dataset['contactPoint']['hasEmail'] = 'mailto:' . variable_get('site_mail', ini_get('sendmail_from'));
         }
@@ -425,4 +426,3 @@ function open_data_schema_pod_validation_process_errors($rows) {
   }
   return $rows;
 }
-
