@@ -131,11 +131,12 @@ function open_data_schema_pod_open_data_schema_map_results_alter(&$result, $mach
       // See: https://project-open-data.cio.gov/v1.1/schema.
       $dataset_row = array();
       foreach ($result as $key => $dataset) {
-        if (!isset($dataset['accessLevel']) || $dataset['accessLevel'] == '') {
-          $dataset['accessLevel'] = 'public';
-        }
-        elseif (isset($dataset['accessLevel'])) {
+        if (isset($dataset['accessLevel'])) {
           $dataset['accessLevel'] = strtolower($dataset['accessLevel']);
+        }
+        if (isset($dataset['contactPoint']['hasEmail']) &&
+          !filter_var($dataset['contactPoint']['hasEmail'], FILTER_VALIDATE_EMAIL)) {
+          $dataset['contactPoint']['hasEmail'] = '';
         }
         // License must be a URL.
         if (isset($dataset['license']) && !filter_var($dataset['license'], FILTER_VALIDATE_URL)) {
@@ -160,22 +161,25 @@ function open_data_schema_pod_open_data_schema_map_results_alter(&$result, $mach
         }
         if (isset($dataset['distribution'])) {
           foreach ($dataset['distribution'] as $num => $dist) {
-            if (!isset($dist['mediaType'])) {
-              $dist['mediaType'] = '';
-            }
-            if (!isset($dist['format'])) {
-              $dist['format'] = '';
-            }
-            if (!isset($dist['description'])) {
-              $dist['description'] = '';
-            }
             if ($dist['format'] && !$dist['mediaType']) {
               include_once DRUPAL_ROOT . '/includes/file.mimetypes.inc';
               $map = file_mimetype_mapping();
               $dataset['distribution'][$num]['mediaType'] = isset($map['mimetypes'][$map['extensions'][$dist['format']]]) ? $map['mimetypes'][$map['extensions'][$dist['format']]] : 'text/html';
             }
-            if (!$dist['description']) {
-              $dataset['distribution'][$num]['description'] = t('No description provided');
+            if ($dist['downloadURL'] && !$dist['mediaType']) {
+              if ($dist['format']) {
+                $media_type = recline_get_data_type($dist['format']);
+                $dist['mediaType'] = $media_type ? $media_type : t('unknown');
+              }
+              else {
+                $dist['mediaType'] = t('unknown');
+              }
+            }
+            // Remove empty items.
+            foreach ($dist as $i => $v) {
+              if (!$v) {
+                unset($dataset['distribution'][$num][$i]);
+              }
             }
           }
         }
@@ -188,6 +192,9 @@ function open_data_schema_pod_open_data_schema_map_results_alter(&$result, $mach
         if (isset($dataset['issued']) && strpos($dataset['issued'], ' - ')) {
           $dataset['issued'] = date("Y-m-d", strtotime(substr($dataset['issued'], 0, strpos($dataset['issued'], ' - '))));
         }
+        if (variable_get('odsm_data_json_defaults', TRUE)) {
+          odsm_add_data_JSON_defaults($dataset);
+        }
         array_push($dataset_row, $dataset);
         unset($result[$key]);
       }
@@ -197,7 +204,51 @@ function open_data_schema_pod_open_data_schema_map_results_alter(&$result, $mach
       $result['conformsTo'] = 'https://project-open-data.cio.gov/v1.1/schema';
       $result['describedBy'] = 'https://project-open-data.cio.gov/v1.1/schema/catalog.json';
       $result['dataset'] = $dataset_row;
+      dpm($result);
       break;
+  }
+}
+
+/**
+ * Adds POD required fields.
+ *
+ * The following fields are required by POD.
+ * - title
+ * - description
+ * - keyword
+ * - publisher
+ * - contactPoint
+ * - accessLevel
+ * - bureauCode
+ * - programCode
+ */
+function odsm_add_data_JSON_defaults(&$dataset) {
+  if (!$dataset['title']) {
+    $dataset['title'] = t("No title provided");
+  }
+  if (!$dataset['description']) {
+    $dataset['description'] = t("No description provided");
+  }
+  if (!$dataset['keyword']) {
+    $dataset['keyword'] = array(t("No keyword provided"));
+  }
+  if (!$dataset['contactPoint']['hasEmail']) {
+    $dataset['contactPoint']['hasEmail'] = 'mailto:noemailprovided@usa.gov';
+  }
+  if (!$dataset['contactPoint']['fn']) {
+    $dataset['contactPoint']['fn'] = t('unknown');
+  }
+  if (!$dataset['contactPoint']['fn']) {
+    $dataset['contactPoint']['fn'] = t('unknown');
+  }
+  if (!$dataset['accessLevel']) {
+    $dataset['accessLevel'] = 'public';
+  }
+  if (!$dataset['bureauCode']) {
+    $dataset['bureauCode'] = array('000:00');
+  }
+  if (!$dataset['programCode']) {
+    $dataset['programCode'] = array('000:000');
   }
 }
 
