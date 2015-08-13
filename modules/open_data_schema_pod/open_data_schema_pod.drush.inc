@@ -22,7 +22,7 @@ function open_data_schema_pod_drush_command() {
  */
 function open_data_schema_pod_drush_validate() {
   global $base_url;
-  $results = open_data_schema_pod_process_validate($base_url . '/data.json');
+  $results = open_data_schema_pod_process_validate($base_url . '/data.json', TRUE);
   if ($results['errors']) {
     drush_log('Data.json does not validate.', 'error');
   }

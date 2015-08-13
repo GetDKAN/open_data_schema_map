@@ -13,7 +13,7 @@ function open_data_schema_pod_menu() {
     'page callback' => 'open_data_schema_pod_validation_page',
     'page arguments' => array(),
     'access arguments' => array('Administer Open Data Schema Mapper'),
-    'type' => MENU_NORMAL_ITEM, // MENU_CALLBACK, MENU_LOCAL_TASK, MENU_DEFAULT_LOCAL_TASK, MENU_LOCAL_ACTION, MENU_SUGGESTED_ITEM,
+    'type' => MENU_NORMAL_ITEM,
     'file' => 'open_data_schema_pod.pages.inc',
   );
 
@@ -195,6 +195,18 @@ function open_data_schema_pod_open_data_schema_map_results_alter(&$result, $mach
         if (variable_get('odsm_data_json_defaults', TRUE)) {
           odsm_add_data_JSON_defaults($dataset);
         }
+        if (isset($dataset['contactPoint']) && $dataset['contactPoint']['hasEmail'] == 'mailto:') {
+          $dataset['contactPoint']['hasEmail'] = 'mailto:' . variable_get('site_mail', ini_get('sendmail_from'));
+        }
+        if (isset($dataset['publisher']) && !isset($dataset['publisher']['name'])) {
+          $name = parse_url($base_url, PHP_URL_HOST);
+          if (!is_null($name)) {
+            $dataset['publisher']['name'] = $name;
+          }
+          else {
+            $dataset['publisher']['name'] = variable_get('site_name', FALSE);
+          }
+        }
         array_push($dataset_row, $dataset);
         unset($result[$key]);
       }
@@ -204,7 +216,6 @@ function open_data_schema_pod_open_data_schema_map_results_alter(&$result, $mach
       $result['conformsTo'] = 'https://project-open-data.cio.gov/v1.1/schema';
       $result['describedBy'] = 'https://project-open-data.cio.gov/v1.1/schema/catalog.json';
       $result['dataset'] = $dataset_row;
-      dpm($result);
       break;
   }
 }
@@ -415,4 +426,3 @@ function open_data_schema_pod_validation_process_errors($rows) {
   }
   return $rows;
 }
-
