@@ -135,7 +135,7 @@ function open_data_schema_pod_open_data_schema_map_results_alter(&$result, $mach
           $dataset['accessLevel'] = strtolower($dataset['accessLevel']);
         }
         if (isset($dataset['temporal']) && $dataset['temporal'] == "/") {
-          unset(dataset['temporal']);
+          unset($dataset['temporal']);
         }
         if (isset($dataset['contactPoint']['hasEmail']) &&
           !filter_var($dataset['contactPoint']['hasEmail'], FILTER_VALIDATE_EMAIL)) {
