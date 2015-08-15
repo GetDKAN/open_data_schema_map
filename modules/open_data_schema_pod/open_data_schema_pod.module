@@ -237,31 +237,28 @@ function open_data_schema_pod_open_data_schema_map_results_alter(&$result, $mach
  * - programCode
  */
 function odsm_add_data_JSON_defaults(&$dataset) {
-  if (!$dataset['title']) {
+  if ((isset($dataset['title']) && !$dataset['title']) || !isset($dataset['title'])) {
     $dataset['title'] = t("No title provided");
   }
-  if (!$dataset['description']) {
+  if ((isset($dataset['description']) && !$dataset['description']) || !isset($dataset['description'])) {
     $dataset['description'] = t("No description provided");
   }
-  if (!$dataset['keyword']) {
+  if ((isset($dataset['keyword']) && !$dataset['keyword']) || !isset($dataset['keyword'])) {
     $dataset['keyword'] = array(t("No keyword provided"));
   }
-  if (!$dataset['contactPoint']['hasEmail']) {
+  if ((isset(dataset['contactPoint']['hasEmail']) && !$dataset['contactPoint']['hasEmail']) || !isset(dataset['contactPoint']['hasEmail'])) {
     $dataset['contactPoint']['hasEmail'] = 'mailto:noemailprovided@usa.gov';
   }
-  if (!$dataset['contactPoint']['fn']) {
+  if ((isset($dataset['contactPoint']['fn']) && !$dataset['contactPoint']['fn']) || !isset($dataset['contactPoint']['fn'])) {
     $dataset['contactPoint']['fn'] = t('unknown');
   }
-  if (!$dataset['contactPoint']['fn']) {
-    $dataset['contactPoint']['fn'] = t('unknown');
-  }
-  if (!$dataset['accessLevel']) {
+  if ((isset($dataset['accessLevel']) && !$dataset['accessLevel']) || !isset($dataset['accessLevel'])) {
     $dataset['accessLevel'] = 'public';
   }
-  if (!$dataset['bureauCode']) {
+  if ((isset($dataset['bureauCode']) && !$dataset['bureauCode']) || !isset($dataset['bureauCode'])) {
     $dataset['bureauCode'] = array('000:00');
   }
-  if (!$dataset['programCode']) {
+  if ((isset($dataset['programCode']) && !$dataset['programCode']) || !isset($dataset['programCode'])) {
     $dataset['programCode'] = array('000:000');
   }
 }
