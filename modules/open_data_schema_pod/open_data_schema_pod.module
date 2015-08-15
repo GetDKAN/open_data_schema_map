@@ -246,7 +246,7 @@ function odsm_add_data_JSON_defaults(&$dataset) {
   if ((isset($dataset['keyword']) && !$dataset['keyword']) || !isset($dataset['keyword'])) {
     $dataset['keyword'] = array(t("No keyword provided"));
   }
-  if ((isset(dataset['contactPoint']['hasEmail']) && !$dataset['contactPoint']['hasEmail']) || !isset(dataset['contactPoint']['hasEmail'])) {
+  if ((isset($dataset['contactPoint']['hasEmail']) && !$dataset['contactPoint']['hasEmail']) || !isset($dataset['contactPoint']['hasEmail'])) {
     $dataset['contactPoint']['hasEmail'] = 'mailto:noemailprovided@usa.gov';
   }
   if ((isset($dataset['contactPoint']['fn']) && !$dataset['contactPoint']['fn']) || !isset($dataset['contactPoint']['fn'])) {
