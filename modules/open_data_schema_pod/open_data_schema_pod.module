@@ -202,6 +202,7 @@ function open_data_schema_pod_open_data_schema_map_results_alter(&$result, $mach
           $dataset['contactPoint']['hasEmail'] = 'mailto:' . variable_get('site_mail', ini_get('sendmail_from'));
         }
         if (isset($dataset['publisher']) && !isset($dataset['publisher']['name'])) {
+          global $base_url;
           $name = parse_url($base_url, PHP_URL_HOST);
           if (!is_null($name)) {
             $dataset['publisher']['name'] = $name;
