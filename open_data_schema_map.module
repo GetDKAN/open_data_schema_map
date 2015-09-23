@@ -1019,7 +1019,7 @@ function open_data_schema_map_render_api($api, $query = NULL, $queries = NULL) {
   // This is easier to debug than drupal_alter().
   $modules = module_implements('open_data_schema_map_results_alter');
   // Make SURE pod is last.
-  if (in_array('open_data_schema_pod', $modules) && end($modules) != 'open_data_schama_pod') {
+  if (in_array('open_data_schema_pod', $modules) && end($modules) != 'open_data_schema_pod') {
     $temp = array();
     foreach ($modules as $module) {
       if ($module != 'open_data_schema_pod') {
