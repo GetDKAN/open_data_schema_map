@@ -30,6 +30,9 @@ class OpenDataSchemaMapAPIWebTestCase extends DrupalWebTestCase {
   public function setUp() {
     // Use current database.
     $this->setup = TRUE;
+    features_rebuild();
+    $this->fixJsonEndpoint();
+    dkan_default_content_base_install();
   }
 
   /**
