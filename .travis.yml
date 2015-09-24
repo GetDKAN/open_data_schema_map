@@ -60,7 +60,7 @@ before_script:
 
 script:
   # Run test suite
-  - php scripts/run-tests.sh --url http://healthdagov.local/ --class 'OpenDataSchemaMapAPIWebTestCase'
+  - php scripts/run-tests.sh --php `which php` --url http://healthdagov.local/ --class 'OpenDataSchemaMapAPIWebTestCase'
 
 notifications:
   slack:
