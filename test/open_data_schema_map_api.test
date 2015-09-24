@@ -28,35 +28,14 @@ class OpenDataSchemaMapAPIWebTestCase extends DrupalWebTestCase {
    * Setup testcase.
    */
   public function setUp() {
-    $args = func_get_args();
+    // Use current database.
+    $this->setup = TRUE;
+  }
 
-    // Build the list of required modules which can be altered by passing in an
-    // array of module names to setUp().
-    if (isset($args[0])) {
-      if (is_array($args[0])) {
-        $modules = $args[0];
-      }
-      else {
-        $modules = $args;
-      }
-    }
-    else {
-      $modules = array();
-    }
-
-    $modules[] = 'dkan_dataset';
-    $modules[] = 'dkan_dataset_groups';
-    $modules[] = 'dkan_dataset_content_types';
-    $modules[] = 'open_data_schema_map';
-    $modules[] = 'open_data_schema_map_dkan';
-    $modules[] = 'dkan_default_content';
-
-    $modules = array_unique($modules);
-    parent::setUp($modules);
-    features_rebuild();
-    // Fix problem with . in the url on simpletest run.
-    $this->fixJsonEndpoint();
-    dkan_default_content_base_install();
+  /**
+   * Overides parent::tearDown().
+   */
+  public function tearDown() {
   }
 
   /**

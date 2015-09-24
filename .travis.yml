@@ -60,7 +60,7 @@ before_script:
 
 script:
   # Run test suite
-  - drush test-run --verbose --xml 'Open Data Schema Map' --uri=http://127.0.0.1:8888
+  - php scripts/run-tests.sh --url http://healthdagov.local/ --class 'OpenDataSchemaMapAPIWebTestCase'
 
 notifications:
   slack:
