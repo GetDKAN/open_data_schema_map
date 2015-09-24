@@ -50,6 +50,7 @@ before_script:
 
   # Enable modules.
   - drush --yes pm-enable dkan_dataset_content_types open_data_schema_map open_data_schema_map_dkan
+  - drush --yes pm-enable dkan_default_content
   # Clean up
   - drush cc all
   - drush rr
@@ -60,7 +61,7 @@ before_script:
 
 script:
   # Run test suite
-  - drush test-run --verbose --xml 'Open Data Schema Map' --uri=http://127.0.0.1:8888
+  - php scripts/run-tests.sh --php `which php` --url  http://127.0.0.1:8888 --verbose --color --class 'OpenDataSchemaMapAPIWebTestCase'
 
 notifications:
   slack:
