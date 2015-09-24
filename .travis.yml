@@ -50,7 +50,7 @@ before_script:
 
   # Enable modules.
   - drush --yes pm-enable dkan_dataset_content_types open_data_schema_map open_data_schema_map_dkan
-  - drush --en pm-enable dkan_default_content
+  - drush --yes pm-enable dkan_default_content
   # Clean up
   - drush cc all
   - drush rr
