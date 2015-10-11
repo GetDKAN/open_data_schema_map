@@ -43,14 +43,19 @@ class OpenDataSchemaMap  extends PHPUnit_Framework_TestCase
 
     // Get all package_list succesful responses.
     $responses = $this->runQuerys('ckan_package_list');
+
     // Test specifics to package_list for every succesful response.
+    $uuids = array();
     foreach ($responses as $r) {
       $this->runCommonTest($r, 'Return a list of the names');
-      $uuids = $r->result;
+      $data = drupal_json_decode($r->data);
+      $uuids = $data['result'];
     }
+
     foreach ($uuids as $uuid) {
       // Get all package_revision_list succesful responses.
       $responses = $this->runQuerys('ckan_package_revision_list', $uuid);
+
       foreach ($responses as $r) {
         $this->runCommonTest($r, 'Return a dataset (package)');
         foreach ($r->result as $package) {
@@ -63,7 +68,8 @@ class OpenDataSchemaMap  extends PHPUnit_Framework_TestCase
       $responses = $this->runQuerys('ckan_package_show', $uuid);
       foreach ($responses as $r) {
         $this->runCommonTest($r, 'Return the metadata of a dataset');
-        $this->runPackageTests($r->result);
+        $data = drupal_json_decode($r->data);
+        $this->runPackageTests($data['result']);
       }
     }
 
@@ -71,15 +77,17 @@ class OpenDataSchemaMap  extends PHPUnit_Framework_TestCase
     $responses = $this->runQuerys('ckan_current_package_list_with_resources');
     foreach ($responses as $r) {
       $this->runCommonTest($r, 'Return a list of the site\'s datasets');
-      $this->runPackageTests($r->result);
+      $data = drupal_json_decode($r->data);
+      $this->runPackageTests($data['result']);
     }
+    return;
 
     // Get all group_list succesful responses.
     $responses = $this->runQuerys('ckan_group_list');
-    $uuids = array();
     foreach ($responses as $r) {
       $this->runCommonTest($r, 'Return a list of the names of the site\'s groups');
-      $uuids = $r->result;
+      $data = drupal_json_decode($r->data);
+      $uuids = $data['result'];
     }
 
     foreach ($uuids as $uuid) {
@@ -100,11 +108,12 @@ class OpenDataSchemaMap  extends PHPUnit_Framework_TestCase
    *   A string to match against the returned help string.
    */
   protected function runCommonTest($result, $text) {
-    if (isset($result->result)  && count($result->result)) {
-      $this->assertTrue($result->result);
-      $this->assertTrue($result->success);
+    $data = drupal_json_decode($result->data);
+    if (isset($data['result'])  && count($data['result'])) {
+      $this->assertTrue(count($data['result']) > 0);
+      $this->assertTrue($data['success']);
     }
-    $this->assertTrue(strpos($result->help, $text) !== FALSE);
+    $this->assertTrue(strpos($data['help'], $text) !== FALSE);
   }
 
   /**
@@ -132,19 +141,19 @@ class OpenDataSchemaMap  extends PHPUnit_Framework_TestCase
    *   A package object.
    */
   protected function runPackageTest($package) {
-    $this->assertTrue($package->metadata_created);
-    $this->assertTrue($package->metadata_modified);
-    $this->assertTrue($package->id);
-    $this->assertTrue($package->resources);
+    $this->assertTrue(!empty($package['metadata_created']));
+    $this->assertTrue(!empty($package['metadata_modified']));
+    $this->assertTrue(!empty($package['id']));
+    $this->assertTrue(!empty($package['resources']));
 
     // Loop every resource.
     foreach ($package->resources as $resource) {
-      $this->assertTrue($resource->name);
-      $this->assertTrue($resource->id);
-      $this->assertTrue(property_exists($resource, 'revision_id'));
-      $this->assertTrue($resource->created);
+      $this->assertTrue(!empty($resource['name']));
+      $this->assertTrue(!empty($resource['id']));
+      $this->assertTrue(isset($resource['revision_id']));
+      $this->assertTrue(!empty($resource['created']));
       // Using property exists until find correct token for this field.
-      $this->assertTrue(property_exists($resource, 'state'));
+      $this->assertTrue(isset($resource['state']));
     }
   }
 
