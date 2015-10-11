@@ -75,19 +75,21 @@ class OpenDataSchemaMap  extends PHPUnit_Framework_TestCase
 
     // Get all current_package_list_with_resources succesful responses.
     $responses = $this->runQuerys('ckan_current_package_list_with_resources');
+
     foreach ($responses as $r) {
       $this->runCommonTest($r, 'Return a list of the site\'s datasets');
       $data = drupal_json_decode($r->data);
-      $this->runPackageTests($data['result']);
+      $result = isset($data['result']['result']) ? $data['result']['result'][0] : $data['result'][0];
+      $this->runPackageTests($result);
     }
-    return;
 
     // Get all group_list succesful responses.
     $responses = $this->runQuerys('ckan_group_list');
     foreach ($responses as $r) {
       $this->runCommonTest($r, 'Return a list of the names of the site\'s groups');
       $data = drupal_json_decode($r->data);
-      $uuids = $data['result'];
+      $result = isset($data['result']['result']) ? $data['result']['result'][0] : $data['result'][0];
+      $uuids = $result;
     }
 
     foreach ($uuids as $uuid) {
