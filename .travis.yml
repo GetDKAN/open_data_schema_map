@@ -58,6 +58,7 @@ before_script:
   - drush --quiet --yes --root=$PWD runserver :8888 > /dev/null 2>&1 &
   - sleep 4
   - drush cache-clear drush
+  - drush status
 
 script:
   # Run test suite
