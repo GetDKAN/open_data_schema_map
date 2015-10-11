@@ -57,10 +57,11 @@ before_script:
   # start a web server on port 8888, run in the background; wait for initialization
   - drush --quiet --yes --root=$PWD runserver :8888 > /dev/null 2>&1 &
   - sleep 4
+  - drush en open_data_schema_map --yes
   - drush cache-clear drush
   - drush status
+  - drush pmi open_data_schema_map
   - cd "`drush core-status root --format=list`/`drush pmi open_data_schema_map --fields=path --format=list`"
-  - composer install
 
 script:
   # Run test suite
