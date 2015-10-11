@@ -59,6 +59,8 @@ before_script:
   - sleep 4
   - drush cache-clear drush
   - drush status
+  - cd "`drush core-status root --format=list`/`drush pmi open_data_schema_map --fields=path --format=list`"
+  - composer install
 
 script:
   # Run test suite
