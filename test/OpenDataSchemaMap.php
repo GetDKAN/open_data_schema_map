@@ -185,8 +185,11 @@ class OpenDataSchemaMap  extends PHPUnit_Framework_TestCase
     foreach ($uris as $uri) {
       $options = $uri['options'];
       $options['absolute'] = TRUE;
+      if ($base_url_port = getenv('BASE_URL_PORT')) {
+        global $base_url;
+        $options['base_url'] = $base_url . ':' . $base_url_port;
+      }
       $url = url($uri['uri'], $options);
-      var_dump($url);
       $result = drupal_http_request($url);
       $this->assertTrue($result->code == 200 ? TRUE : FALSE);
       $succesful[] = $result;

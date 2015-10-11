@@ -3,6 +3,9 @@ language: php
 php:
   - 5.5
 
+env:
+  - BASE_URL_PORT=8888
+
 mysql:
   database: open_data_schema_map_test
   username: root
