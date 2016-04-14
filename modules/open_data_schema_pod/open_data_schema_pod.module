@@ -209,7 +209,7 @@ function open_data_schema_pod_open_data_schema_map_results_alter(&$result, $mach
           // Remove completely if invalid. An empy hasEmail validates while a poorly formed or invalid email does not.
           else {
             watchdog('open_data_schema_map_od', 'Dataset %dataset contact point email: %email is not valid. Added default value for empty emails.', array('%dataset' => $dataset['title'], '%email' => $dataset['contactPoint']['hasEmail']), WATCHDOG_NOTICE, $link = NULL);
-            $dataset['contactPoint']['hasEmail'] = variable_get('pod_default_email', 'noemailprovided@usa.gov');
+            $dataset['contactPoint']['hasEmail'] = 'mailto:' . variable_get('pod_default_email', 'noemailprovided@usa.gov');
           }
         }
         if (isset($dataset['publisher']) && !isset($dataset['publisher']['name'])) {
