@@ -1,0 +1,21 @@
+<?php
+
+/**
+ * @file
+ * Provides Schema mapping for DCAT.
+ */
+
+/**
+ * Implements hook_open_data_schema().
+ */
+function open_data_schema_dcat_open_data_schema() {
+  $schemas_path = DRUPAL_ROOT . '/' . drupal_get_path('module', 'open_data_schema_dcat') . '/data/';
+  return array(
+    array(
+      'short_name' => 'dcat',
+      'title' => 'DCAT-AP',
+      'schema_file' => $schemas_path . 'dcatap-1.1.json',
+      'description' => t('DCAT Schema. See https://gitlab.com/european-data-portal/ckan-dcatap-schema/blob/master/ckan-dcatap-1.1.json for more awesome details.'),
+    ),
+  );
+}
