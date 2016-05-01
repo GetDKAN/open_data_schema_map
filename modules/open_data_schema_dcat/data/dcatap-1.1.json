@@ -2,84 +2,204 @@
     "$schema": "http://json-schema.org/draft-04/schema#",
     "id": "http://jsonschema.net",
     "type": "object",
-    "title": "European Data Portal CKAN Schema",
-    "description": "European Data Portal CKAN Schema - Based on DCAT-AP Draft 5",
-    "name": "/",
+    "title": "European Data Portal DKAN Schema",
+    "description": "European Data Portal DKAN Schema - Based on DCAT-AP Draft 5",
+    "title": "/",
     "required": ["title", "notes"],
     "properties": {
-      "metadata_conforms_to": {
-        "id": "http://jsonschema.net/metadata_conforms_to",
+      "@rdf:about": {
+        "id": "http://jsonschema.net/@rdf:about",
         "type": "string",
-        "name": "metadata_conforms_to"
+        "title": "rdf:about"
       },
-      "issued": {
-        "id": "http://jsonschema.net/issued",
+      "dct:title": {
+        "id": "http://jsonschema.net/dct:title",
         "type": "string",
-        "name": "issued"
+        "title": "title"
       },
-      "publisher": {
-        "id": "http://jsonschema.net/publisher",
-        "type": "object",
-        "name": "publisher",
-        "additionalProperties": false,
-        "properties": {
-          "resource": {
-            "id": "http://jsonschema.net/publisher/resource",
-            "type": "string",
-            "name": "resource"
-          },
-          "publisher_type": {
-            "id": "http://jsonschema.net/publisher/publisher_type",
-            "type": "string",
-            "name": "publisher_type"
-          },
-          "type": {
-            "id": "http://jsonschema.net/publisher/type",
-            "type": "string",
-            "name": "type"
-          },
-          "email": {
-            "id": "http://jsonschema.net/publisher/email",
-            "type": "string",
-            "name": "email"
-          },
-          "name": {
-            "id": "http://jsonschema.net/publisher/name",
-            "type": "string",
-            "name": "name"
+      "dct:description": {
+        "id": "http://jsonschema.net/dct:description",
+        "type": "string",
+        "title": "description"
+      },
+      "dcat:keyword": {
+        "id": "http://jsonschema.net/dcat:keyword",
+        "type": "array",
+        "title": "dcat:keyword",
+        "items": {
+          "id": "http://jsonschema.net/tags/0",
+          "type": "object",
+          "title": "item",
+          "properties": {
+            "title": {
+              "id": "http://jsonschema.net/tags/0/title",
+              "type": "string",
+              "title": "title"
+            }
           }
         }
+      },
+      "dcat:theme": {
+        "id": "http://jsonschema.net/dcat:theme",
+        "type": "string",
+        "title": "theme",
+      },
+      "dct:identifier": {
+        "id": "http://jsonschema.net/dct:identifier",
+        "type": "string",
+        "title": "indentifier"
+      },
+      "dct:issued": {
+        "id": "http://jsonschema.net/dct:issued",
+        "type": "string",
+        "title": "issued"
+      },
+      "dct:modified": {
+        "id": "http://jsonschema.net/dct:modified",
+        "type": "string",
+        "title": "modified"
+      },
+      "owl:versionInfo": {
+        "id": "http://jsonschema.net/owl:versionInfo",
+        "type": "string",
+        "title": "versionInfo"
+      },
+      "adms:versionNotes": {
+        "id": "http://jsonschema.net/adms:versionNotes",
+        "type": "string",
+        "title": "versionNotes"
+      },
+      "dct:language": {
+        "id": "http://jsonschema.net/dct:language",
+        "type": "array",
+        "title": "language",
+        "items": {
+          "type": "string"
+        }
+      },
+      "dcat:landingPage": {
+        "id": "http://jsonschema.net/dcat:landingPage",
+        "type": "string",
+        "title": "landingPage"
+      },
+      "dct:accrualPeriodicity": {
+        "id": "http://jsonschema.net/dct:accrualPeriodicity",
+        "type": "string",
+        "title": "accrualPeriodicity"
+      },
+      "dct:conformsTo": {
+        "id": "http://jsonschema.net/dct:conformsTo",
+        "type": "array",
+        "title": "conformsTo",
+        "items": {
+          "type": "string"
+        }
+      },
+      "dct:accessRights": {
+        "id": "http://jsonschema.net/dct:accessRights",
+        "type": "string",
+        "title": "accessRights"
+      },
+      "foaf:page": {
+        "id": "http://jsonschema.net/foaf:page",
+        "type": "array",
+        "title": "foaf page",
+        "items": {
+          "type": "string"
+        }
+      },
+      "dct:provenance": {
+        "id": "http://jsonschema.net/dct:provenance",
+        "type": "string",
+        "title": "Provenance"
+      },
+      "dct:type": {
+        "id": "http://jsonschema.net/dct:type",
+        "type": "string",
+        "title": "Type"
+      },
+      "dct:hasVersion": {
+        "id": "http://jsonschema.net/dct:hasVersion",
+        "type": "array",
+        "title": "hasVersion",
+        "items": {
+          "type": "string"
+        }
+      },
+      "dct:isVersionOf": {
+        "id": "http://jsonschema.net/dct:isVersionOf",
+        "type": "array",
+        "title": "VersionOf",
+        "items": {
+          "type": "string"
+        }
+      },
+      "dct:source": {
+        "id": "http://jsonschema.net/dct:source",
+        "type": "array",
+        "title": "Source",
+        "items": {
+          "type": "string"
+        }
+      },
+      "adms:sample": {
+        "id": "http://jsonschema.net/adms:sample",
+        "type": "array",
+        "title": "Sample",
+        "items": {
+          "type": "string"
+        }
+      },
+      "dct:spatial": {
+        "id": "http://jsonschema.net/dct:spatial",
+        "type": "string",
+        "title": "Spatial"
+      },
+      "dct:temporal": {
+        "id": "http://jsonschema.net/dct:temporal",
+        "type": "string",
+        "title": "Temporal"
+      },
+      "dct:publisher": {
+        "id": "http://jsonschema.net/dct:publisher",
+        "type": "string",
+        "title": "Publisher"
+      },
+      "dcat:contactPoint": {
+        "id": "http://jsonschema.net/dcat:contactPoint",
+        "type": "string",
+        "title": "ContactPoint"
       },
       "relation": {
         "id": "http://jsonschema.net/relation",
         "type": "array",
         "title": "Relation schema.",
         "description": "An explanation about the puropose of this instance described by this schema.",
-        "name": "relation",
+        "title": "relation",
         "items": {
           "id": "http://jsonschema.net/relation/0",
           "type": "string",
-          "name": "item"
+          "title": "item"
         }
       },
       "metadata_language": {
         "id": "http://jsonschema.net/metadata_language",
         "type": "array",
-        "name": "metadata_language",
+        "title": "metadata_language",
         "items": {
           "id": "http://jsonschema.net/metadata_language/0",
           "type": "object",
-          "name": "item",
+          "title": "item",
           "properties": {
             "label": {
               "id": "http://jsonschema.net/resources/0/language/0/label",
               "type": "string",
-              "name": "label"
+              "title": "label"
             },
             "resource": {
               "id": "http://jsonschema.net/resources/0/language/0/resource",
               "type": "string",
-              "name": "resource"
+              "title": "resource"
             }
           }
         }
@@ -87,21 +207,21 @@
       "metadata_created": {
         "id": "http://jsonschema.net/metadata_created",
         "type": "string",
-        "name": "metadata_created"
+        "title": "metadata_created"
       },
       "dcat_spatial": {
         "id": "http://jsonschema.net/dcat_spatial",
         "type": "array",
-        "name": "dcat_spatial",
+        "title": "dcat_spatial",
         "items": {
           "id": "http://jsonschema.net/dcat_spatial/0",
           "type": "object",
-          "name": "item",
+          "title": "item",
           "properties": {
             "label": {
               "id": "http://jsonschema.net/dcat_spatial/0/label",
               "type": "string",
-              "name": "label"
+              "title": "label"
             }
           }
         }
@@ -109,22 +229,22 @@
       "conforms_to": {
         "id": "http://jsonschema.net/conforms_to",
         "type": "array",
-        "name": "conforms_to",
+        "title": "conforms_to",
         "items": {
           "id": "http://jsonschema.net/conforms_to/0",
           "type": "object",
-          "name": "item",
+          "title": "item",
           "additionalProperties": false,
           "properties": {
             "label": {
               "id": "http://jsonschema.net/conforms_to/0/label",
               "type": "string",
-              "name": "label"
+              "title": "label"
             },
             "resource": {
               "id": "http://jsonschema.net/conforms_to/1/resource",
               "type": "string",
-              "name": "resource"
+              "title": "resource"
             }
           }
         }
@@ -132,26 +252,26 @@
       "metadata_modified": {
         "id": "http://jsonschema.net/metadata_modified",
         "type": "string",
-        "name": "metadata_modified"
+        "title": "metadata_modified"
       },
       "temporal": {
         "id": "http://jsonschema.net/temporal",
         "type": "array",
-        "name": "temporal",
+        "title": "temporal",
         "items": {
           "id": "http://jsonschema.net/temporal/0",
           "type": "object",
-          "name": "item",
+          "title": "item",
           "properties": {
             "start_date": {
               "id": "http://jsonschema.net/temporal/0/start_date",
               "type": "string",
-              "name": "start_date"
+              "title": "start_date"
             },
             "end_date": {
               "id": "http://jsonschema.net/temporal/0/end_date",
               "type": "string",
-              "name": "end_date"
+              "title": "end_date"
             }
           }
         }
@@ -161,22 +281,22 @@
         "type": "array",
         "title": "Provenance schema.",
         "description": "An explanation about the puropose of this instance described by this schema.",
-        "name": "provenance",
+        "title": "provenance",
         "items": {
           "id": "http://jsonschema.net/provenance/0",
           "type": "object",
-          "name": "item",
+          "title": "item",
           "additionalProperties": false,
           "properties": {
             "label": {
               "id": "http://jsonschema.net/provenance/0/label",
               "type": "string",
-              "name": "label"
+              "title": "label"
             },
             "resource": {
               "id": "http://jsonschema.net/provenance/1/resource",
               "type": "string",
-              "name": "resource"
+              "title": "resource"
             }
           }
         }
@@ -184,60 +304,60 @@
       "access_rights": {
         "id": "http://jsonschema.net/access_rights",
         "type": "object",
-        "name": "access_rights",
+        "title": "access_rights",
         "additionalProperties": false,
         "properties": {
           "resource": {
             "id": "http://jsonschema.net/access_rights/resource",
             "type": "string",
-            "name": "resource"
+            "title": "resource"
           },
           "label": {
             "id": "http://jsonschema.net/access_rights/label",
             "type": "string",
-            "name": "label"
+            "title": "label"
           }
         }
       },
       "source": {
         "id": "http://jsonschema.net/source",
         "type": "array",
-        "name": "source",
+        "title": "source",
         "items": {
           "id": "http://jsonschema.net/source/0",
           "type": "string",
-          "name": "item"
+          "title": "item"
         }
       },
       "contact_point": {
         "id": "http://jsonschema.net/contact_point",
         "type": "array",
-        "name": "contact_point",
+        "title": "contact_point",
         "items": {
           "id": "http://jsonschema.net/contact_point/0",
           "type": "object",
-          "name": "item",
+          "title": "item",
           "additionalProperties": false,
           "properties": {
             "type": {
               "id": "http://jsonschema.net/contact_point/0/type",
               "type": "string",
-              "name": "type"
+              "title": "type"
             },
             "resource": {
               "id": "http://jsonschema.net/contact_point/0/resource",
               "type": "string",
-              "name": "resource"
+              "title": "resource"
             },
             "email": {
               "id": "http://jsonschema.net/contact_point/0/email",
               "type": "string",
-              "name": "email"
+              "title": "email"
             },
-            "name": {
-              "id": "http://jsonschema.net/contact_point/0/name",
+            "title": {
+              "id": "http://jsonschema.net/contact_point/0/title",
               "type": "string",
-              "name": "name"
+              "title": "title"
             }
           }
         }
@@ -245,42 +365,42 @@
       "resources": {
         "id": "http://jsonschema.net/resources",
         "type": "array",
-        "name": "resources",
+        "title": "resources",
         "items": {
           "id": "http://jsonschema.net/resources/0",
           "type": "object",
-          "name": "item",
+          "title": "item",
           "required": ["url"],
           "properties": {
             "issued": {
               "id": "http://jsonschema.net/resources/0/issued",
               "type": "string",
-              "name": "issued"
+              "title": "issued"
             },
             "size": {
               "id": "http://jsonschema.net/resources/0/size",
               "type": ["integer", "null"],
-              "name": "size"
+              "title": "size"
             },
             "conforms_to": {
               "id": "http://jsonschema.net/conforms_to",
               "type": "array",
-              "name": "conforms_to",
+              "title": "conforms_to",
               "items": {
                 "id": "http://jsonschema.net/conforms_to/0",
                 "type": "object",
-                "name": "item",
+                "title": "item",
                 "additionalProperties": false,
                 "properties": {
                   "label": {
                     "id": "http://jsonschema.net/conforms_to/0/label",
                     "type": "string",
-                    "name": "label"
+                    "title": "label"
                   },
                   "resource": {
                     "id": "http://jsonschema.net/conforms_to/1/resource",
                     "type": "string",
-                    "name": "resource"
+                    "title": "resource"
                   }
                 }
               }
@@ -288,93 +408,93 @@
             "download_url": {
               "id": "http://jsonschema.net/resources/0/download_url",
               "type": "array",
-              "name": "download_url",
+              "title": "download_url",
               "items": {
                 "id": "http://jsonschema.net/resources/0/download_url/0",
                 "type": "string",
-                "name": "item"
+                "title": "item"
               }
             },
             "mimetype": {
               "id": "http://jsonschema.net/resources/0/mime_type",
               "type": ["string", "null"],
-              "name": "mime_type"
+              "title": "mime_type"
             },
             "status": {
               "id": "http://jsonschema.net/resources/0/status",
               "type": "object",
-              "name": "status",
+              "title": "status",
               "additionalProperties": false,
               "properties": {
                 "label": {
                   "id": "http://jsonschema.net/resources/0/status/label",
                   "type": "string",
-                  "name": "label"
+                  "title": "label"
                 },
                 "resource": {
                   "id": "http://jsonschema.net/resources/0/status/resource",
                   "type": "string",
-                  "name": "resource"
+                  "title": "resource"
                 }
               }
             },
             "description": {
               "id": "http://jsonschema.net/resources/0/description",
               "type": "string",
-              "name": "description"
+              "title": "description"
             },
             "format": {
               "id": "http://jsonschema.net/resources/0/format",
               "type": "string",
-              "name": "format"
+              "title": "format"
             },
-            "name": {
-              "id": "http://jsonschema.net/resources/0/name",
+            "title": {
+              "id": "http://jsonschema.net/resources/0/title",
               "type": "string",
-              "name": "name"
+              "title": "title"
             },
             "license": {
               "id": "http://jsonschema.net/resources/0/license",
               "type": "object",
-              "name": "license",
+              "title": "license",
               "additionalProperties": false,
               "properties": {
                 "type": {
                   "id": "http://jsonschema.net/resources/0/license/type",
                   "type": "string",
-                  "name": "type"
+                  "title": "type"
                 },
                 "label": {
                   "id": "http://jsonschema.net/resources/0/license/label",
                   "type": "string",
-                  "name": "label"
+                  "title": "label"
                 },
                 "resource": {
                   "id": "http://jsonschema.net/resources/0/license/resource",
                   "type": "string",
-                  "name": "resource"
+                  "title": "resource"
                 }
               }
             },
             "language": {
               "id": "http://jsonschema.net/resources/0/language",
               "type": "array",
-              "name": "language",
+              "title": "language",
               "items": {
                 "id": "http://jsonschema.net/resources/0/language/0",
                 "type": "object",
-                "name": "item",
+                "title": "item",
                 "additionalProperties": false,
                 "properties": {
                   "label": {
                     "id": "http://jsonschema.net/resources/0/language/0/label",
                     "type": "string",
-                    "name": "label"
+                    "title": "label"
                   },
                   "resource": {
                     "id": "http://jsonschema.net/resources/0/language/0/resource",
                     "type": "string",
-                    "name": "resource"
+                    "title": "resource"
                   }
                 }
               }
@@ -382,52 +502,52 @@
             "checksum": {
               "id": "http://jsonschema.net/resources/0/checksum",
               "type": "object",
-              "name": "checksum",
+              "title": "checksum",
               "additionalProperties": false,
               "properties": {
                 "checksum_value": {
                   "id": "http://jsonschema.net/resources/0/checksum/checksum_value",
                   "type": "string",
-                  "name": "checksum_value"
+                  "title": "checksum_value"
                 },
                 "algorithm": {
                   "id": "http://jsonschema.net/resources/0/checksum/algorithm",
                   "type": "string",
-                  "name": "algorithm"
+                  "title": "algorithm"
                 }
               }
             },
             "rights": {
               "id": "http://jsonschema.net/resources/0/rights",
               "type": "object",
-              "name": "rights",
+              "title": "rights",
               "additionalProperties": false,
               "properties": {
                 "label": {
                   "id": "http://jsonschema.net/resources/0/rights/label",
                   "type": "string",
-                  "name": "label"
+                  "title": "label"
                 },
                 "resource": {
                   "id": "http://jsonschema.net/resources/0/rights/resource",
                   "type": "string",
-                  "name": "resource"
+                  "title": "resource"
                 }
               }
             },
             "modified": {
               "id": "http://jsonschema.net/resources/0/modified",
               "type": "string",
-              "name": "modified"
+              "title": "modified"
             },
             "page": {
               "id": "http://jsonschema.net/resources/0/page",
               "type": "array",
-              "name": "page",
+              "title": "page",
               "items": {
                 "id": "http://jsonschema.net/resources/0/page/0",
                 "type": "string",
-                "name": "item"
+                "title": "item"
               }
             }
           }
@@ -436,104 +556,87 @@
       "other_identifier": {
         "id": "http://jsonschema.net/other_identifier",
         "type": "array",
-        "name": "other_identifier",
+        "title": "other_identifier",
         "items": {
           "id": "http://jsonschema.net/other_identifier/0",
           "type": "string",
-          "name": "item"
+          "title": "item"
         }
       },
       "version_info": {
         "id": "http://jsonschema.net/version_info",
         "type": "string",
-        "name": "version_info"
-      },
-      "tags": {
-        "id": "http://jsonschema.net/tags",
-        "type": "array",
-        "name": "tags",
-        "items": {
-          "id": "http://jsonschema.net/tags/0",
-          "type": "object",
-          "name": "item",
-          "properties": {
-            "name": {
-              "id": "http://jsonschema.net/tags/0/name",
-              "type": "string",
-              "name": "name"
-            }
-          }
-        }
+        "title": "version_info"
       },
       "dct_type": {
         "id": "http://jsonschema.net/dct_type",
         "type": "string",
-        "name": "dct_type"
+        "title": "dct_type"
       },
       "has_version": {
         "id": "http://jsonschema.net/has_version",
         "type": "array",
-        "name": "has_version",
+        "title": "has_version",
         "items": {
           "id": "http://jsonschema.net/has_version/0",
           "type": "string",
-          "name": "item"
+          "title": "item"
         }
       },
       "is_version_of": {
         "id": "http://jsonschema.net/is_version_of",
         "type": "array",
-        "name": "is_version_of",
+        "title": "is_version_of",
         "items": {
           "id": "http://jsonschema.net/is_version_of/0",
           "type": "string",
-          "name": "item"
+          "title": "item"
         }
       },
       "version_notes": {
         "id": "http://jsonschema.net/version_notes",
         "type": "string",
-        "name": "version_notes"
+        "title": "version_notes"
       },
       "groups": {
         "id": "http://jsonschema.net/groups",
         "type": "array",
-        "name": "groups",
+        "title": "groups",
         "items": {}
       },
       "sample": {
         "id": "http://jsonschema.net/sample",
         "type": "array",
-        "name": "sample",
+        "title": "sample",
         "items": {
           "id": "http://jsonschema.net/sample/0",
           "type": "string",
-          "name": "item"
+          "title": "item"
         }
       },
-      "name": {
-        "id": "http://jsonschema.net/name",
+      "title": {
+        "id": "http://jsonschema.net/title",
         "type": "string",
-        "name": "name"
+        "title": "title"
       },
       "language": {
         "id": "http://jsonschema.net/language",
         "type": "array",
-        "name": "language",
+        "title": "language",
         "items": {
           "id": "http://jsonschema.net/language/0",
           "type": "object",
-          "name": "0",
+          "title": "0",
           "properties": {
             "label": {
               "id": "http://jsonschema.net/resources/0/language/0/label",
               "type": "string",
-              "name": "label"
+              "title": "label"
             },
             "resource": {
               "id": "http://jsonschema.net/resources/0/language/0/resource",
               "type": "string",
-              "name": "resource"
+              "title": "resource"
             }
           }
         }
@@ -541,41 +644,36 @@
       "url": {
         "id": "http://jsonschema.net/url",
         "type": ["string", "null"],
-        "name": "url"
+        "title": "url"
       },
       "notes": {
         "id": "http://jsonschema.net/notes",
         "type": "string",
-        "name": "notes"
+        "title": "notes"
       },
       "modified": {
         "id": "http://jsonschema.net/modified",
         "type": "string",
-        "name": "modified"
-      },
-      "title": {
-        "id": "http://jsonschema.net/title",
-        "type": "string",
-        "name": "title"
+        "title": "modified"
       },
       "identifier": {
         "id": "http://jsonschema.net/identifier",
         "type": "array",
-        "name": "identifier",
+        "title": "identifier",
         "items": {
           "id": "http://jsonschema.net/identifier/0",
           "type": "string",
-          "name": "item"
+          "title": "item"
         }
       },
       "page": {
         "id": "http://jsonschema.net/page",
         "type": "array",
-        "name": "page",
+        "title": "page",
         "items": {
           "id": "http://jsonschema.net/page/0",
           "type": "string",
-          "name": "item"
+          "title": "item"
         }
       }
     }

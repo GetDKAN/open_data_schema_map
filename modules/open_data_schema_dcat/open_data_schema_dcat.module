@@ -19,3 +19,22 @@ function open_data_schema_dcat_open_data_schema() {
     ),
   );
 }
+
+/**
+ * Implements hook_open_data_schema_map_xml_output_render_data_alter().
+ */
+function open_data_schema_dcat_open_data_schema_map_xml_output_render_data_alter(&$xml, &$api) {
+  //If is dcat schema then add attributes on the xml root
+  if ($api->api_schema == 'dcat') {
+    $xml['@xmlns:foaf'] = "http://xmlns.com/foaf/0.1/";
+    $xml['@xmlns:owl'] = "http://www.w3.org/2002/07/owl#";
+    $xml['@xmlns:rdfs'] = "http://www.w3.org/2000/01/rdf-schema#";
+    $xml['@xmlns:rdf'] = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+    $xml['@xmlns:dcat'] = "http://www.w3.org/ns/dcat#";
+    $xml['@xmlns:dct'] = "http://purl.org/dc/terms/";
+    $xml['@xmlns:adms'] = "http://www.w3.org/ns/adms#";
+    $xml['@xmlns:dc'] = "http://purl.org/dc/elements/1.1/";
+    $xml['@xmlns:time'] = "http://www.w3.org/2006/time#";
+    $xml['@xmlns:dbpedia'] = "http://dbpedia.org/ontology/";
+  }
+}
