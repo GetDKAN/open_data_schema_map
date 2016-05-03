@@ -24,6 +24,8 @@ function open_data_schema_dcat_open_data_schema() {
  * Implements hook_open_data_schema_map_xml_output_render_data_alter().
  */
 function open_data_schema_dcat_open_data_schema_map_xml_output_render_data_alter(&$xml, &$api) {
+  global $base_url;
+
   //If is dcat schema then add attributes on the xml root
   if ($api->api_schema == 'dcat') {
     $xml['@xmlns:foaf'] = "http://xmlns.com/foaf/0.1/";
@@ -35,6 +37,18 @@ function open_data_schema_dcat_open_data_schema_map_xml_output_render_data_alter
     $xml['@xmlns:adms'] = "http://www.w3.org/ns/adms#";
     $xml['@xmlns:dc'] = "http://purl.org/dc/elements/1.1/";
     $xml['@xmlns:time'] = "http://www.w3.org/2006/time#";
-    $xml['@xmlns:dbpedia'] = "http://dbpedia.org/ontology/";
+
+    //Add catalog information
+    $catalog = array(
+      'dct:title' => variable_get('site_name', t('Dataset')),
+      'dct:description' =>  variable_get('site_slogan', t('Description')),
+//      'dct:issued' => 'Issued',
+//      'dct:modified' => 'Modified',
+//      'dct:language' =>  'Language',
+//      'dct:license' => 'License',
+//      'dct:spatial' => 'Spatial',
+      'foaf:homepage' => $base_url . '/search/type/dataset',
+    );
+    $xml = array('dcat:Catalog' => $catalog) + $xml;
   }
 }
