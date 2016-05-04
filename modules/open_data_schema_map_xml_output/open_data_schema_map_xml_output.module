@@ -4,7 +4,8 @@
  * @file
  * Provides XML output for Open Data Schema Map.
  */
-include __DIR__ . '/vendor/autoload.php';
+$module_path = drupal_get_path('module', 'open_data_schema_map_xml_output');
+include implode('/', array($module_path, 'autoload.php'));
 
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
@@ -12,6 +13,20 @@ use Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer;
 
 define("DEFAULT_XML_ROOT", "records");
 define("DEFAULT_XML_TAG", "record");
+
+/**
+ * Implements hook_libraries_info().
+ */
+function open_data_schema_map_xml_output_libraries_info() {
+  $libraries['symfonyserializer'] = array(
+    'name' => 'Simfony Serializer',
+    'vendor url' => 'https://github.com/symfony/serializer',
+    'download url' => 'https://github.com/symfony/serializer/zipball/master',
+    'version' => 'master',
+    'files' => array(),
+  );
+  return $libraries;
+}
 
 /**
  * Implements hook_odsm_form_alter().
@@ -85,13 +100,13 @@ function open_data_schema_map_xml_output_render($api, $result) {
   $xml[$xml_defaulttag] = $result;
   unset($xml[$xml_defaulttag]['key']);
 
-  // Serialize
   $encoders = array(
     new XmlEncoder($xml_root)
   );
+  
   $normalizers = array(new GetSetMethodNormalizer());
   $serializer = new Serializer($normalizers, $encoders);
-
+  
   return $serializer->serialize($xml, 'xml');
 }
 
