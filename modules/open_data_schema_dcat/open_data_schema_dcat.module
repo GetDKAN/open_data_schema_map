@@ -21,6 +21,50 @@ function open_data_schema_dcat_open_data_schema() {
 }
 
 /**
+ * Implements hook_open_data_schema_fill_references().
+ */
+function open_data_schema_dcat_open_data_schema_fill_references($schema_name, &$schema) {
+  $module_path = DRUPAL_ROOT . '/' . drupal_get_path('module', 'open_data_schema_dcat');
+  switch ($schema_name) {
+    case 'dcat':
+      $references = array(
+        'dcat:Distribution',
+      );
+      $files = array();
+      // Process $ref keys to include referenced json file.
+      foreach ($references as $key) {
+        $json = $module_path . '/data/';
+        if (isset($schema['properties'][$key]['anyOf'])) {
+          $json = $json . $schema['properties'][$key]['anyOf'][0]['items']['$ref'];
+        }
+        elseif(isset($schema['properties'][$key]['$ref'])) {
+          $json = $json . $schema['properties'][$key]['$ref'];
+        }
+        $json = file_get_contents($json);
+        $json = drupal_json_decode($json);
+        unset($json['$schema']);
+        unset($json['id']);
+        if (isset($schema['properties'][$key]['anyOf'])) {
+          unset($json['title']);
+          unset($schema['properties'][$key]['anyOf'][0]['items']['$ref']);
+          if (isset($schema['properties'][$key]['anyOf'][0]['items']['minItems'])) {
+            $schema['properties'][$key]['anyOf'][0]['minItems'] = $schema['properties'][$key]['anyOf'][0]['items']['minItems'];
+          }
+          if ($schema['properties'][$key]['anyOf'][0]['items']['uniqueItems']) {
+            $schema['properties'][$key]['anyOf'][0]['uniqueItems'] = $schema['properties'][$key]['anyOf'][0]['items']['uniqueItems'];
+          }
+          $schema['properties'][$key]['anyOf'][0]['uniqueItems'] = $schema['properties'][$key]['anyOf'][0]['items']['uniqueItems'];
+          $schema['properties'][$key]['anyOf'][0]['items'] = $json;
+        }
+        else {
+          $schema['properties'][$key] = $json;
+        }
+      }
+      break;
+  }
+}
+
+/**
  * Implements hook_open_data_schema_map_xml_output_render_data_alter().
  */
 function open_data_schema_dcat_open_data_schema_map_xml_output_render_data_alter(&$xml, &$api) {
