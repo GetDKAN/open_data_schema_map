@@ -96,3 +96,14 @@ function open_data_schema_dcat_open_data_schema_map_xml_output_render_data_alter
     $xml = array('dcat:Catalog' => $catalog) + $xml;
   }
 }
+
+/**
+ * Implements hook_page_alter().
+ */
+function open_data_schema_dcat_page_alter(&$page) {
+  //If is the homepage then add the alternative url for catalog.xml
+
+  if (drupal_is_front_page()) {
+    drupal_add_html_head_link(array('rel' => 'alternate', 'type' => 'application/rdf+xml', 'href' => url('catalog.xml', array('absolute' => TRUE))));
+  }
+}
