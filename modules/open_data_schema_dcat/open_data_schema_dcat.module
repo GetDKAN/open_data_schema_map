@@ -121,7 +121,8 @@ function open_data_schema_dcat_page_alter(&$page) {
 
   if (is_object($node) && $node->type == 'dataset') {
     $uuid = $node->uuid;
-    drupal_add_html_head_link(array('rel' => 'alternate', 'type' => 'application/rdf+xml', 'href' => url('catalog.xml', array('absolute' => TRUE, 'query' => array('dct:identifier' => $uuid)))));
+    $alias = drupal_get_path_alias('node/' . $node->nid);
+    drupal_add_html_head_link(array('rel' => 'alternate', 'type' => 'application/rdf+xml', 'href' => url($alias . '.xml', array('absolute' => TRUE))));
   }
 }
 
