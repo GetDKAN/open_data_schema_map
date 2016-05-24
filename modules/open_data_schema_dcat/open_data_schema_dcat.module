@@ -17,6 +17,12 @@ function open_data_schema_dcat_open_data_schema() {
       'schema_file' => $schemas_path . 'dcatap-1.1.json',
       'description' => t('DCAT Schema. See https://gitlab.com/european-data-portal/ckan-dcatap-schema/blob/master/ckan-dcatap-1.1.json for more awesome details.'),
     ),
+    array(
+      'short_name' => 'dcat_dataset',
+      'title' => 'DCAT-AP (Dataset)',
+      'schema_file' => $schemas_path . 'dataset-1.1.json',
+      'description' => t('DCAT Schema (Dataset). See https://gitlab.com/european-data-portal/ckan-dcatap-schema/blob/master/ckan-dcatap-1.1.json for more awesome details.'),
+    ),
   );
 }
 
@@ -27,6 +33,7 @@ function open_data_schema_dcat_open_data_schema_fill_references($schema_name, &$
   $module_path = DRUPAL_ROOT . '/' . drupal_get_path('module', 'open_data_schema_dcat');
   switch ($schema_name) {
     case 'dcat':
+    case 'dcat_dataset':
       $references = array(
         'dcat:Distribution',
       );
@@ -71,7 +78,7 @@ function open_data_schema_dcat_open_data_schema_map_xml_output_render_data_alter
   global $base_url;
 
   //If is dcat schema then add attributes on the xml root
-  if ($api->api_schema == 'dcat') {
+  if ($api->api_schema == 'dcat' || $api->api_schema == 'dcat_dataset') {
     $xml['@xmlns:foaf'] = "http://xmlns.com/foaf/0.1/";
     $xml['@xmlns:owl'] = "http://www.w3.org/2002/07/owl#";
     $xml['@xmlns:rdfs'] = "http://www.w3.org/2000/01/rdf-schema#";
@@ -82,18 +89,20 @@ function open_data_schema_dcat_open_data_schema_map_xml_output_render_data_alter
     $xml['@xmlns:dc'] = "http://purl.org/dc/elements/1.1/";
     $xml['@xmlns:time'] = "http://www.w3.org/2006/time#";
 
-    //Add catalog information
-    $catalog = array(
-      'dct:title' => variable_get('site_name', t('Dataset')),
-      'dct:description' =>  variable_get('site_slogan', t('Description')),
-//      'dct:issued' => 'Issued',
-//      'dct:modified' => 'Modified',
-//      'dct:language' =>  'Language',
-//      'dct:license' => 'License',
-//      'dct:spatial' => 'Spatial',
-      'foaf:homepage' => $base_url . '/search/type/dataset',
-    );
-    $xml = array('dcat:Catalog' => $catalog) + $xml;
+    if ($api->api_schema == 'dcat') {
+      //Add catalog information
+      $catalog = array(
+        'dct:title' => variable_get('site_name', t('Dataset')),
+        'dct:description' =>  variable_get('site_slogan', t('Description')),
+  //      'dct:issued' => 'Issued',
+  //      'dct:modified' => 'Modified',
+  //      'dct:language' =>  'Language',
+  //      'dct:license' => 'License',
+  //      'dct:spatial' => 'Spatial',
+        'foaf:homepage' => $base_url . '/search/type/dataset',
+      );
+      $xml = array('dcat:Catalog' => $catalog) + $xml;
+    }
   }
 }
 
@@ -113,5 +122,29 @@ function open_data_schema_dcat_page_alter(&$page) {
   if (is_object($node) && $node->type == 'dataset') {
     $uuid = $node->uuid;
     drupal_add_html_head_link(array('rel' => 'alternate', 'type' => 'application/rdf+xml', 'href' => url('catalog.xml', array('absolute' => TRUE, 'query' => array('dct:identifier' => $uuid)))));
+  }
+}
+
+/**
+ * Implements hook_url_inbound_alter().
+ */
+function open_data_schema_dcat_url_inbound_alter(&$path, $original_path, $path_language) {
+  $extension = pathinfo($path, PATHINFO_EXTENSION);
+
+  if ($extension == 'xml') {
+    //Is trying to get dcat information from dataset?
+    $path_alias = preg_replace('/\\.[^.\\s]{3,4}$/', '', $path);
+    $internal_path = drupal_lookup_path('source', $path_alias, $path_language);
+    $internal_path = explode('/', $internal_path);
+
+    if (count($internal_path) == 2 && $internal_path[0] == 'node' && is_numeric($internal_path[1])) {
+      $dataset = node_load($internal_path[1]);
+
+      if ($dataset->type == 'dataset') {
+        //Use dcat dataset endpoint
+        $path = 'catalog/dataset.xml';
+        $_GET['dct:identifier'] = $dataset->uuid;
+      }
+    }
   }
 }
