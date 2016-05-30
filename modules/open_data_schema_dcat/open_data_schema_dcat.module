@@ -149,3 +149,16 @@ function open_data_schema_dcat_url_inbound_alter(&$path, $original_path, $path_l
     }
   }
 }
+
+/**
+ * Implements hook_url_outbound_alter().
+ */
+function open_data_schema_dcat_url_outbound_alter(&$path, &$options, $original_path) {
+  if (preg_match('|^catalog/dataset\.xml(/.*)?|', $path, $matches)) {
+    $uuid = $options['query']['dct:identifier'];
+    $node = current(entity_uuid_load('node', array($uuid)));
+    $path_alias = drupal_lookup_path('alias', 'node/' . $node->nid);
+
+    $path = "$path_alias" . ".xml";
+  }
+}
