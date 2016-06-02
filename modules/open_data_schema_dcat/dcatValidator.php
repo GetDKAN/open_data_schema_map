@@ -1,8 +1,15 @@
 <?php
 
-namespace podValidator;
+namespace dcatValidator;
 
 include __DIR__ . '/../../vendor/autoload.php';
+$module_path = drupal_get_path('module', 'open_data_schema_map_xml_output');
+include implode('/', array($module_path, 'autoload.php'));
+
+use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\Encoder\XmlEncoder;
+use Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer;
+
 
 use JsonSchema\Uri\UriRetriever;
 use JsonSchema\RefResolver;
@@ -15,17 +22,33 @@ class validate {
     $this->errors = array();
   }
 
-  public function getDataJSON()
+  public function getDataRDF()
   {
     if (!isset($this->dataset)) {
       $this->dataset = array();
-      $data = json_decode(file_get_contents($this->url));
-      $this->dataJSON = $data;
+      $fileContents = file_get_contents($this->url);
+      $xml = $fileContents;
+      $fileContents = str_replace(array("\n", "\r", "\t"), '', $fileContents);
+      $fileContents = trim(str_replace('"', "'", $fileContents));
 
-      foreach($this->dataJSON->dataset as $dataset) {
+$xml_root = DEFAULT_XML_ROOT;
+        $encoders = array(
+    new XmlEncoder($xml_root)
+  );
+
+  $normalizers = array(new GetSetMethodNormalizer());
+  $serializer = new Serializer($normalizers, $encoders);
+  $object = $serializer->deserialize($xml, 'XmlEncoder', 'array');
+print_r($xml); exit;
+      $simpleXml = simplexml_load_string($fileContents);
+      $json = json_encode($simpleXml);
+      $data = json_decode($json, TRUE);
+      $this->dataRDF = $data;
+
+      foreach($this->dataRDF->dataset as $dataset) {
         $this->dataset[$dataset->identifier] = $dataset;
       }
-      $this->dataJSON->dataset = $this->dataset;
+      $this->dataRDF->dataset = $this->dataset;
     }
   }
 
@@ -37,7 +60,7 @@ class validate {
   public function getIdentifiers()
   {
     $this->identifers = array();
-    $data = $this->dataJSON;
+    $data = $this->dataRDF;
     foreach ($data->dataset as $dataset) {
       $this->identifiers[] = $dataset->identifier;
     }
@@ -45,8 +68,8 @@ class validate {
 
   public function process($id) {
     $retriever = new UriRetriever;
-    $schemaFolder = DRUPAL_ROOT . '/' . drupal_get_path('module', 'open_data_schema_pod') . '/data/v1.1';
-    $schema = $retriever->retrieve('file://' . $schemaFolder . '/dataset.json');
+    $schemaFolder = DRUPAL_ROOT . '/' . drupal_get_path('module', 'open_data_schema_dcat') . '/data';
+    $schema = $retriever->retrieve('file://' . $schemaFolder . '/distribution.json');
     $data = $this->getDataset($id);
 
     RefResolver::$maxDepth = 10;
@@ -59,12 +82,12 @@ class validate {
 
   public function datasetCount()
   {
-    $this->getDataJSON();
+    $this->getDataRDF();
     return count($this->dataset);
   }
 
   public function processAll() {
-    $this->getDataJSON();
+    $this->getDataRDF();
     $this->getIdentifiers();
     $this->validated = array();
     foreach ($this->identifiers as $id) {

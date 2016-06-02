@@ -6,6 +6,19 @@
  */
 
 /**
+ * Implements hook_open_data_schema_map_validation().
+ */
+function open_data_schema_dcat_open_data_schema_map_validation() {
+  return array(
+    'title' => 'DCAT validation',
+    'name' => 'dcat',
+    'page callback' => 'open_data_schema_dcat_validation_page',
+    'file' => 'open_data_schema_dcat.pages.inc',
+    'file path' => drupal_get_path('module', 'open_data_schema_dcat'),
+  );
+}
+
+/**
  * Implements hook_open_data_schema().
  */
 function open_data_schema_dcat_open_data_schema() {
@@ -155,10 +168,46 @@ function open_data_schema_dcat_url_inbound_alter(&$path, $original_path, $path_l
  */
 function open_data_schema_dcat_url_outbound_alter(&$path, &$options, $original_path) {
   if (preg_match('|^catalog/dataset\.xml(/.*)?|', $path, $matches)) {
-    $uuid = $options['query']['dct:identifier'];
-    $node = current(entity_uuid_load('node', array($uuid)));
-    $path_alias = drupal_lookup_path('alias', 'node/' . $node->nid);
+    if (isset($options['query']['dct:identifier'])) {
+      $uuid = $options['query']['dct:identifier'];
+      $node = current(entity_uuid_load('node', array($uuid)));
+      $path_alias = drupal_lookup_path('alias', 'node/' . $node->nid);
 
-    $path = "$path_alias" . ".xml";
+      $path = "$path_alias" . ".xml";
+    }
   }
+}
+
+/**
+ * Validates individual datasets.
+ */
+function open_data_schema_dcat_process_validate($url, $clear_cache = FALSE) {
+  include 'dcatValidator.php';
+  if (!$clear_cache && $cache = cache_get('dcat_validate_result')) {
+    $results = $cache->data;
+    $results['cache_date'] = $cache->created;
+  }
+  else {
+    $dcatValidator = new dcatValidator\validate($url);
+    $dcatValidator->processAll();
+    $count = $dcatValidator->datasetCount();
+    $ids = array();
+    $error_datasets = array();
+    $total_errors = 0;
+    if ($errors = $podValidator->getErrors()) {
+      $total_errors = count($errors);
+      foreach ($errors as $error) {
+        $error_datasets[$error['id']] = 1;
+      }
+      $errors = open_data_schema_validation_process_errors($errors);
+    }
+    $results = array(
+      'errors' => $errors,
+      'count' => $count,
+      'total_errors' => $total_errors,
+      'error_datasets' => $error_datasets,
+    );
+    $cache = cache_set('dcat_validate_result', $results, 'cache');
+  }
+  return $results;
 }
