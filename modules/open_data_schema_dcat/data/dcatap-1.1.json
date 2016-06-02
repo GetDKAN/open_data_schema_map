@@ -165,9 +165,18 @@
         "title": "Publisher"
       },
       "dcat:contactPoint": {
-        "id": "http://jsonschema.net/dcat:contactPoint",
-        "type": "string",
-        "title": "ContactPoint"
+        "title": "ContactPoint",
+        "anyOf": [
+          {
+            "type": "array",
+            "id": "http://jsonschema.net/dcat:contactPoint",
+            "items": {
+              "$ref": "vcard.json",
+              "minItems": 1,
+              "uniqueItems": true
+            }
+          }
+        ]
       },
       "dcat:Distribution": {
         "title": "Distribution",
