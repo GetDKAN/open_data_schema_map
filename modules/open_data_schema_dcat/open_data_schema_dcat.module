@@ -90,6 +90,18 @@ function open_data_schema_dcat_open_data_schema_map_xml_output_render_data_alter
     $xml['@xmlns:dc'] = "http://purl.org/dc/elements/1.1/";
     $xml['@xmlns:time'] = "http://www.w3.org/2006/time#";
 
+    //Fix some data output (datetimes format, ...).
+    if (!empty($xml['dcat:Dataset'])) {
+      foreach ($xml['dcat:Dataset'] as &$dataset) {
+         if (isset($dataset['dct:temporal'])) {
+            $dataset['dct:temporal'][0]['schema:startDate']['@rdf:datatype'] = 'http://www.w3.org/2001/XMLSchema#date';
+            $dataset['dct:temporal'][0]['schema:endDate']['@rdf:datatype'] = 'http://www.w3.org/2001/XMLSchema#date';
+            $dataset['dct:temporal']['dct:PeriodOfTime'] = $dataset['dct:temporal'];
+            unset ($dataset['dct:temporal']);
+          }
+      }
+    }
+
     if ($api->api_schema == 'dcat') {
       //Add catalog information
       $catalog = array(

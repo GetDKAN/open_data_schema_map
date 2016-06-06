@@ -156,8 +156,29 @@
       },
       "dct:temporal": {
         "id": "http://jsonschema.net/dct:temporal",
-        "type": "string",
-        "title": "Temporal"
+        "title": "Temporal",
+        "anyOf": [
+          {
+            "type": "array",
+            "items": {
+              "id": "http://jsonschema.net/dct:temporal/0",
+              "type": "object",
+              "title": "item",
+              "properties": {
+                "schema:startDate": {
+                  "id": "http://jsonschema.net/dct:temporal/0/startDate",
+                  "type": "string",
+                  "title": "start Date"
+                },
+                "schema:endDate": {
+                  "id": "http://jsonschema.net/dct:temporal/0/endDate",
+                  "type": "string",
+                  "title": "End Date"
+                }
+              }
+            }
+          }
+        ]
       },
       "dct:publisher": {
         "id": "http://jsonschema.net/dct:publisher",
