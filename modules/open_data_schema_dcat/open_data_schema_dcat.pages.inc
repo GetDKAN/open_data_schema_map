@@ -14,7 +14,7 @@ function open_data_schema_dcat_validation_page() {
   $render = array();
   $cache_form = array();
   global $base_url;
-  $results = open_data_schema_dcat_process_validate($base_url . '/catalog.xml');
+  $results = open_data_schema_dcat_process_validate($base_url . '/catalog.json');
   if (isset($results['cache_date'])) {
     $cache_form = drupal_get_form('open_data_schema_dcat_validate_cache_clear', $results['cache_date']);
   }

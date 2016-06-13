@@ -26,29 +26,13 @@ class validate {
   {
     if (!isset($this->dataset)) {
       $this->dataset = array();
-      $fileContents = file_get_contents($this->url);
-      $xml = $fileContents;
-      $fileContents = str_replace(array("\n", "\r", "\t"), '', $fileContents);
-      $fileContents = trim(str_replace('"', "'", $fileContents));
+      $data = json_decode(file_get_contents($this->url));
 
-$xml_root = DEFAULT_XML_ROOT;
-        $encoders = array(
-    new XmlEncoder($xml_root)
-  );
-
-  $normalizers = array(new GetSetMethodNormalizer());
-  $serializer = new Serializer($normalizers, $encoders);
-  $object = $serializer->deserialize($xml, 'XmlEncoder', 'array');
-print_r($xml); exit;
-      $simpleXml = simplexml_load_string($fileContents);
-      $json = json_encode($simpleXml);
-      $data = json_decode($json, TRUE);
       $this->dataRDF = $data;
 
-      foreach($this->dataRDF->dataset as $dataset) {
-        $this->dataset[$dataset->identifier] = $dataset;
+      foreach($this->dataRDF as $dataset) {
+        $this->dataset[$dataset->{"dct:identifier"}] = $dataset;
       }
-      $this->dataRDF->dataset = $this->dataset;
     }
   }
 
@@ -61,8 +45,8 @@ print_r($xml); exit;
   {
     $this->identifers = array();
     $data = $this->dataRDF;
-    foreach ($data->dataset as $dataset) {
-      $this->identifiers[] = $dataset->identifier;
+    foreach ($data as $dataset) {
+      $this->identifiers[] = $dataset->{"dct:identifier"};
     }
   }
 
@@ -88,6 +72,7 @@ print_r($xml); exit;
 
   public function processAll() {
     $this->getDataRDF();
+    $retriever = new UriRetriever;
     $this->getIdentifiers();
     $this->validated = array();
     foreach ($this->identifiers as $id) {

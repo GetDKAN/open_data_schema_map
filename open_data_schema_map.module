@@ -1105,3 +1105,68 @@ function open_data_schema_validation_process_errors($rows) {
   }
   return $rows;
 }
+
+/**
+ * Implements hook_tokens_alter().
+ */
+function open_data_schema_map_tokens_alter(array &$replacements, array $context) {
+  if (isset($replacements['[node:field-odfe-program-code]']) && !empty($context['data']['node']->field_odfe_program_code['und'])) {
+    $field = array();
+    foreach ($context['data']['node']->field_odfe_program_code['und'] as $key => $item) {
+      $field[] = str_replace("-", ":", $item['value']);
+    }
+    $replacements['[node:field-odfe-program-code]'] = implode(", ", $field);
+  }
+  if (isset($replacements['[node:field_related_content]']) && isset($context['data']['node']->field_related_content['und'])) {
+    $field = array();
+    foreach ($context['data']['node']->field_related_content['und'] as $key => $item) {
+      $field[] = $item['url'];
+    }
+    $replacements['[node:field_related_content]'] = implode(", ", $field);
+  }
+  if (isset($replacements['[node:field-frequency]']) && isset($context['data']['node']->field_frequency['und'])) {
+    $replacements['[node:field-frequency]'] = open_data_schema_map_accrual_iso_8601_value($replacements['[node:field-frequency]']);
+  }
+}
+
+/**
+ * Provides value for human readable name.
+ */
+function open_data_schema_map_accrual_iso_8601_value($name) {
+  if ($name == 'Annually') {
+    $name = 'Annual';
+  }
+  $iso = open_data_schema_map_accrual_iso_8601();
+  if (isset($iso[$name])) {
+    return $iso[$name];
+  }
+  else {
+    return '';
+  }
+}
+
+/**
+ * Provides iso 8601 accrual periodicity.
+ */
+function open_data_schema_map_accrual_iso_8601() {
+  return array(
+    'Decennial' => 'R/P10Y',
+    'Quadrennial' => 'R/P4Y',
+    'Annual' => 'R/P1Y',
+    'Bimonthly' => 'R/P2M',
+    'Semiweekly' => 'R/P3.5D',
+    'Daily' => 'R/P1D',
+    'Biweekly' => 'R/P2W',
+    'Semiannual' => 'R/P6M',
+    'Biennial' => 'R/P2Y',
+    'Triennial' => 'R/P3Y',
+    'Three times a week' => 'R/P0.33W',
+    'Three times a month' => 'R/P0.33M',
+    'Continuously updated' => 'R/PT1S',
+    'Monthly' => 'R/P1M',
+    'Quarterly' => ' R/P3M',
+    'Semimonthly' => 'R/P0.5M',
+    'Three times a year' => 'R/P4M',
+    'Weekly' => 'R/P1W',
+  );
+}

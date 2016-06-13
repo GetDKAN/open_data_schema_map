@@ -49,6 +49,7 @@ function open_data_schema_dcat_open_data_schema_fill_references($schema_name, &$
     case 'dcat_dataset':
       $references = array(
         'dcat:Distribution',
+        'dcat:contactPoint',
       );
       $files = array();
       // Process $ref keys to include referenced json file.
@@ -101,20 +102,36 @@ function open_data_schema_dcat_open_data_schema_map_xml_output_render_data_alter
     $xml['@xmlns:adms'] = "http://www.w3.org/ns/adms#";
     $xml['@xmlns:dc'] = "http://purl.org/dc/elements/1.1/";
     $xml['@xmlns:time'] = "http://www.w3.org/2006/time#";
+    $xml['@xmlns:dcterms'] = "http://purl.org/dc/terms/";
+    $xml['@xmlns:vcard'] = "http://www.w3.org/2006/vcard/ns#";
+
+    //Fix some data output (datetimes format, ...).
+    if (!empty($xml['dcat:Dataset'])) {
+      foreach ($xml['dcat:Dataset'] as &$dataset) {
+         if (isset($dataset['dct:temporal'])) {
+            $dataset['dct:temporal'][0]['schema:startDate']['@rdf:datatype'] = 'http://www.w3.org/2001/XMLSchema#date';
+            $dataset['dct:temporal'][0]['schema:endDate']['@rdf:datatype'] = 'http://www.w3.org/2001/XMLSchema#date';
+            $dataset['dct:temporal']['dct:PeriodOfTime'] = $dataset['dct:temporal'];
+            unset ($dataset['dct:temporal']);
+          }
+      }
+    }
 
     if ($api->api_schema == 'dcat') {
       //Add catalog information
       $catalog = array(
         'dct:title' => variable_get('site_name', t('Dataset')),
         'dct:description' =>  variable_get('site_slogan', t('Description')),
-  //      'dct:issued' => 'Issued',
-  //      'dct:modified' => 'Modified',
-  //      'dct:language' =>  'Language',
-  //      'dct:license' => 'License',
-  //      'dct:spatial' => 'Spatial',
+        'dcterms:publisher' => array('@rdf:nodeID' => "_n0"),
         'foaf:homepage' => $base_url . '/search/type/dataset',
+        'rdf:type' => array('@rdf:resource' => 'http://www.w3.org/ns/dcat#Dataset'),
       );
-      $xml = array('dcat:Catalog' => $catalog) + $xml;
+
+      $publisher = array(
+        'rdf:Description' => array('@rdf:nodeID' => '_n0', 'foaf:name' => 'DKAN', 'rdf:type' => array('@rdf:resource' => 'http://xmlns.com/foaf/0.1/Agent'))
+      );
+
+      $xml = array('dcat:Catalog' => $catalog) + $xml + $publisher;
     }
   }
 }
@@ -194,7 +211,7 @@ function open_data_schema_dcat_process_validate($url, $clear_cache = FALSE) {
     $ids = array();
     $error_datasets = array();
     $total_errors = 0;
-    if ($errors = $podValidator->getErrors()) {
+    if ($errors = $dcatValidator->getErrors()) {
       $total_errors = count($errors);
       foreach ($errors as $error) {
         $error_datasets[$error['id']] = 1;
