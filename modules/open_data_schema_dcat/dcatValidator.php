@@ -2,7 +2,7 @@
 
 namespace dcatValidator;
 
-include __DIR__ . '/../../vendor/autoload.php';
+include __DIR__ . '/../../vendor_json/autoload.php';
 $module_path = drupal_get_path('module', 'open_data_schema_map_xml_output');
 include implode('/', array($module_path, 'autoload.php'));
 
