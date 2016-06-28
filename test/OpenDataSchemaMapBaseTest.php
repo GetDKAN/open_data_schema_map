@@ -2,14 +2,22 @@
 class OpenDataSchemaMapBaseTest  extends PHPUnit_Framework_TestCase
 {
 
-  public static function setUpBeforeClass()
-  {
+  public static function setUpBeforeClass() {
     // Change /data.json path to /json during tests.
     $data_json = open_data_schema_map_api_load('data_json_1_1');
     $data_json->endpoint = 'json';
     drupal_write_record('open_data_schema_map', $data_json, 'id');
     drupal_static_reset('open_data_schema_map_api_load_all');
     menu_rebuild();
+  }
+
+  public static function tearDownAfterClass() {
+    // Restore /data.json path
+    $data_json = open_data_schema_map_api_load('data_json_1_1');
+    $data_json->endpoint = 'data.json';
+    drupal_write_record('open_data_schema_map', $data_json, 'id');
+    drupal_static_reset('open_data_schema_map_api_load_all');
+    menu_rebuild(); 
   }
 
   /**
@@ -191,7 +199,6 @@ class OpenDataSchemaMapBaseTest  extends PHPUnit_Framework_TestCase
         $options['base_url'] = $base_url . ':' . $base_url_port;
       }
       $url = url($uri['uri'], $options);
-      var_dump($url);
       $result = drupal_http_request($url);
       $this->assertTrue($result->code == 200 ? TRUE : FALSE);
       $succesful[] = $result;
