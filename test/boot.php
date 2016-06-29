@@ -13,9 +13,7 @@ require __DIR__ . '/../vendor/autoload.php';
 $dir = implode('/', array(__DIR__, '..', '..', 'docroot'));
 
 // Host.
-$uri = getenv('DKAN_WEB_1_ENV_VIRTUAL_HOST') ? 'http://' . getenv('DKAN_WEB_1_ENV_VIRTUAL_HOST') : 'http://127.0.0.1:8888';
-
-var_dump($uri);
+$uri = getenv('DKAN_WEB_1_PORT_80_TCP') ? str_replace('tcp://', 'http://', getenv('DKAN_WEB_1_PORT_80_TCP')) : 'http://127.0.0.1:8888';
 
 $driver = new DrupalDriver($dir, $uri);
 $driver->setCoreFromVersion();
