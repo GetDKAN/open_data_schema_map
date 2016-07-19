@@ -655,7 +655,7 @@ function open_data_schema_map_json_4($schema, $api, $defaults) {
       $form[$item] = array(
         '#title' => $data['title'],
         '#type' => 'fieldset',
-        '#description' => $data['description'],
+        '#description' => isset($data['description']) ? $data['description'] : '',
       );
       $form[$item]['odsm_entity_reference'] = array(
         '#title' => $item . ' Multivalue Field',
