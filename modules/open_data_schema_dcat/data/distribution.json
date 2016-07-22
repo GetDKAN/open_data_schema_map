@@ -58,6 +58,14 @@
       "id": "http://jsonschema.net/dcat:Distribution/0/dcat:byteSize",
       "type": "string",
       "title": "byteSize"
+    },
+    "foaf:page": {
+      "id": "http://jsonschema.net/foaf:page",
+      "type": "array",
+      "title": "foaf page",
+      "items": {
+        "type": "string"
+      }
     }
   }
 }

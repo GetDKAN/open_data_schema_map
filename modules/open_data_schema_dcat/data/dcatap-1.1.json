@@ -99,14 +99,6 @@
         "type": "string",
         "title": "accessRights"
       },
-      "foaf:page": {
-        "id": "http://jsonschema.net/foaf:page",
-        "type": "array",
-        "title": "foaf page",
-        "items": {
-          "type": "string"
-        }
-      },
       "dct:provenance": {
         "id": "http://jsonschema.net/dct:provenance",
         "type": "string",
