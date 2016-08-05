@@ -160,6 +160,8 @@ function open_data_schema_dcat_page_alter(&$page) {
  * Implements hook_url_inbound_alter().
  */
 function open_data_schema_dcat_url_inbound_alter(&$path, $original_path, $path_language) {
+  // While the path for single-dataset endpoints appears to be catalog/dataset.xml
+  // in admin/config/services/odsm, it gets rewritten as [dataset URL].xml
   $extension = pathinfo($path, PATHINFO_EXTENSION);
 
   if ($extension == 'xml') {
@@ -184,6 +186,7 @@ function open_data_schema_dcat_url_inbound_alter(&$path, $original_path, $path_l
  * Implements hook_url_outbound_alter().
  */
 function open_data_schema_dcat_url_outbound_alter(&$path, &$options, $original_path) {
+  // See above. Rewites outbound links for dataset-specific endpoints
   if (preg_match('|^catalog/dataset\.xml(/.*)?|', $path, $matches)) {
     if (isset($options['query']['dct:identifier'])) {
       $uuid = $options['query']['dct:identifier'];
