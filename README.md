@@ -3,9 +3,9 @@
 Open Data Schema Map
 ====================
 
-This module provides a flexible way to expose your Drupal content via APIs following specific Open Data schemas. Currently, the [CKAN](http://docs.ckan.org/en/ckan-1.8/domain-model-dataset.html) and [Project Open Data schemas](http://project-open-data.github.io/schema/) are provided, but new schemas can be easily added through your own modules. A user interface is in place to create endpoints and map fields from the chosen schema to Drupal content using tokens.
+This module provides a flexible way to expose your Drupal content via APIs following specific Open Data schemas. Currently, the [CKAN](http://docs.ckan.org/en/ckan-1.8/domain-model-dataset.html), [Project Open Data](http://project-open-data.github.io/schema/) and [DCAT-AP](https://joinup.ec.europa.eu/asset/dcat_application_profile/description) schemas are provided, but new schemas can be easily added through your own modules. A user interface is in place to create endpoints and map fields from the chosen schema to Drupal content using tokens.
 
-DKAN-specific implementation: https://github.com/NuCivic/open_data_schema_map_dkan
+This module was developed as part of the DKAN project, but will work on an Drupal 7 site. The DKAN-specific mappings live here: https://github.com/NuCivic/open_data_schema_map_dkan
 
 ## Basic concepts
 
@@ -50,19 +50,19 @@ The results of the API call can be filtered by a particular field via arguments 
 
 ### Field Mapping
 
-The API form presents you with a field for each field in your schema. Map the fields using Drupal's token system. Note: using more than one token in a single field may produce unexpected results and is not recommended. 
+The API form presents you with a field for each field in your schema. Map the fields using Drupal's token system. Note: using more than one token in a single field may produce unexpected results and is not recommended.
 
 #### Multi-value fields
 
 For Drupal multi-value entity reference fields, the schema can use an array to instruct the API to iterate over each value and map the referenced data to multiple schema fields. For instance, in the CKAN schema, tags are described like this in schema_ckan.json:
 
-```    
+```
       "tags": {
       "title":"Tags",
       "description":"",
       "anyOf": [
         {
-          "type": "array",                    
+          "type": "array",
           "items": {
             "type": "object",
             "properties": {
@@ -115,7 +115,7 @@ We've isolated xml output into its own module. A few reasons why:
 
 + It relies on a composer dependency
 + This module is distributed with dkan, a drupal installation profile, and we don't have a way of installing composer dependencies while building the distro with ```drush make```
-+ We don't want to force all this trouble on users that just want ***json output*** 
++ We don't want to force all this trouble on users that just want ***json output***
 
 Because of all this, if you still want to use xml output for your odsm endpoints (we don't judge), you need to:
 
@@ -155,7 +155,7 @@ The above command triggers the processing for the endpoint defined for the data_
 public://odsm_cache_data_json_1_1
 ```
 
-The command `odsm-filecache` is a direct callback to `open_data_schema_map_file_cache_endpoint` which wraps ` open_data_schema_map_render_api` with some logic for dumping output to a file. 
+The command `odsm-filecache` is a direct callback to `open_data_schema_map_file_cache_endpoint` which wraps ` open_data_schema_map_render_api` with some logic for dumping output to a file.
 
 In order to enable the cached version of an API endpoint you need to run the command above replacing `data_json_1_1` with
 the machine  name of the ODSM endpoint to be cached.
@@ -172,7 +172,7 @@ If you can, please cross-reference commits in this repo to the corresponding iss
 
 ```
 NuCivic/dkan#issue_id
-``` 
+```
 
 to any commit message or comment replacing **issue_id** with the corresponding issue id.
 
