@@ -390,7 +390,9 @@ function open_data_schema_pod_accrual_iso_8601() {
  * Validates individual datasets.
  */
 function open_data_schema_pod_process_validate($url, $clear_cache = FALSE) {
-  include 'podValidator.php';
+  if (!class_exists('podValidator\validate')) {
+    include 'podValidator.php';
+  }
   if (!$clear_cache && $cache = cache_get('pod_validate_result')) {
     $results = $cache->data;
     $results['cache_date'] = $cache->created;
