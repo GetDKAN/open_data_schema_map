@@ -35,20 +35,6 @@ function open_data_schema_map_xml_output_schema_alter(&$schema) {
 }
 
 /**
- * Implements hook_libraries_info().
- */
-function open_data_schema_map_xml_output_libraries_info() {
-  $libraries['symfonyserializer'] = array(
-    'name' => 'Simfony Serializer',
-    'vendor url' => 'https://github.com/symfony/serializer',
-    'download url' => 'https://github.com/symfony/serializer/zipball/master',
-    'version' => 'master',
-    'files' => array(),
-  );
-  return $libraries;
-}
-
-/**
  * Implements hook_odsm_form_alter().
  */
 function open_data_schema_map_xml_output_odsm_form_alter(&$form, $api) {

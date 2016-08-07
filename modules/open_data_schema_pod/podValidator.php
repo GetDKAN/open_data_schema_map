@@ -2,7 +2,7 @@
 
 namespace podValidator;
 
-include __DIR__ . '/../../vendor_json/autoload.php';
+include __DIR__ . '/../../autoload.php';
 
 use JsonSchema\Uri\UriRetriever;
 use JsonSchema\RefResolver;

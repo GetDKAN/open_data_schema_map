@@ -6,7 +6,4 @@
     "config": {
         "bin-dir": "bin"
     },
-    "require": {
-       "justinrainbow/json-schema": "~1.3"
-    }
 }

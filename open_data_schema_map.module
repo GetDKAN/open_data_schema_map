@@ -148,6 +148,30 @@ function open_data_schema_map_permission() {
     ));
 }
 
+
+/**
+ * Implements hook_libraries_info().
+ */
+function open_data_schema_map_libraries_info() {
+  $libraries['symfonyserializer'] = array(
+    'name' => 'Simfony Serializer',
+    'vendor url' => 'https://github.com/symfony/serializer',
+    'download url' => 'https://github.com/symfony/serializer/zipball/master',
+    'version' => 'master',
+    'files' => array(),
+  );
+
+  $libraries['json-schema'] = array(
+    'name' => 'Justinrainbow JSON-Schema',
+    'vendor url' => 'https://github.com/justinrainbow/json-schema.git',
+    'download url' => 'https://github.com/justinrainbow/json-schema/tree/master/src/JsonSchema',
+    'version' => 'master',
+    'files' => array(),
+  );
+
+  return $libraries;
+}
+
 /**
  * Registers declared schemas.
  */
