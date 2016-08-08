@@ -8,4 +8,4 @@ libraries[symfonyserializer][download][url] = "https://github.com/symfony/serial
 libraries[json-schema][type] = libraries
 libraries[json-schema][download][type] = "git"
 libraries[json-schema][download][url] = "https://github.com/justinrainbow/json-schema.git"
-libraries[json-schema][download][branch] = 1.3.7
+libraries[json-schema][download][tag] = 1.3.7
