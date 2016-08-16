@@ -1,23 +1,31 @@
 <?php
-class OpenDataSchemaMap  extends PHPUnit_Framework_TestCase
+class OpenDataSchemaMapBaseTest  extends PHPUnit_Framework_TestCase
 {
 
-    public static function setUpBeforeClass()
-    {
-      // Change /data.json path to /json during tests.
-      $data_json = open_data_schema_map_api_load('data_json_1_1');
-      $data_json->endpoint = 'json';
-      drupal_write_record('open_data_schema_map', $data_json, 'id');
-      drupal_static_reset('open_data_schema_map_api_load_all');
-      menu_rebuild();
-    }
+  public static function setUpBeforeClass() {
+    // Change /data.json path to /json during tests.
+    $data_json = open_data_schema_map_api_load('data_json_1_1');
+    $data_json->endpoint = 'json';
+    drupal_write_record('open_data_schema_map', $data_json, 'id');
+    drupal_static_reset('open_data_schema_map_api_load_all');
+    menu_rebuild();
+  }
+
+  public static function tearDownAfterClass() {
+    // Restore /data.json path
+    $data_json = open_data_schema_map_api_load('data_json_1_1');
+    $data_json->endpoint = 'data.json';
+    drupal_write_record('open_data_schema_map', $data_json, 'id');
+    drupal_static_reset('open_data_schema_map_api_load_all');
+    menu_rebuild(); 
+  }
 
   /**
    * Test all read api methods with access control.
    */
   public function testDkanDatasetAPIRead() {
     // Get all data.json succesful responses.
-    $responses = $this->runQuerys('data_json_1_1');
+    $responses = $this->runQueries('data_json_1_1');
     // Get all data.json sucessful responses.
     foreach ($responses as $r) {
       // There should be only one item.
@@ -28,21 +36,21 @@ class OpenDataSchemaMap  extends PHPUnit_Framework_TestCase
     }
 
     // Get all site_read succesful responses.
-    $responses = $this->runQuerys('ckan_site_read');
+    $responses = $this->runQueries('ckan_site_read');
     // Test specifics to site_read for every succesful response.
     foreach ($responses as $r) {
       $this->runCommonTest($r, 'Return');
     }
 
     // Get all revision_list succesful responses.
-    $responses = $this->runQuerys('ckan_revision_list');
+    $responses = $this->runQueries('ckan_revision_list');
     // Test specifics to revision_list for every succesful response.
     foreach ($responses as $r) {
       $this->runCommonTest($r, 'Return a list of the IDs');
     }
 
     // Get all package_list succesful responses.
-    $responses = $this->runQuerys('ckan_package_list');
+    $responses = $this->runQueries('ckan_package_list');
 
     // Test specifics to package_list for every succesful response.
     $uuids = array();
@@ -54,7 +62,7 @@ class OpenDataSchemaMap  extends PHPUnit_Framework_TestCase
 
     foreach ($uuids as $uuid) {
       // Get all package_revision_list succesful responses.
-      $responses = $this->runQuerys('ckan_package_revision_list', $uuid);
+      $responses = $this->runQueries('ckan_package_revision_list', $uuid);
 
       foreach ($responses as $r) {
         $this->runCommonTest($r, 'Return a dataset (package)');
@@ -65,7 +73,7 @@ class OpenDataSchemaMap  extends PHPUnit_Framework_TestCase
       }
 
       // Get all package_show succesful responses.
-      $responses = $this->runQuerys('ckan_package_show', $uuid);
+      $responses = $this->runQueries('ckan_package_show', $uuid);
       foreach ($responses as $r) {
         $this->runCommonTest($r, 'Return the metadata of a dataset');
         $data = drupal_json_decode($r->data);
@@ -74,7 +82,7 @@ class OpenDataSchemaMap  extends PHPUnit_Framework_TestCase
     }
 
     // Get all current_package_list_with_resources succesful responses.
-    $responses = $this->runQuerys('ckan_current_package_list_with_resources');
+    $responses = $this->runQueries('ckan_current_package_list_with_resources');
 
     foreach ($responses as $r) {
       $this->runCommonTest($r, 'Return a list of the site\'s datasets');
@@ -84,7 +92,7 @@ class OpenDataSchemaMap  extends PHPUnit_Framework_TestCase
     }
 
     // Get all group_list succesful responses.
-    $responses = $this->runQuerys('ckan_group_list');
+    $responses = $this->runQueries('ckan_group_list');
     foreach ($responses as $r) {
       $this->runCommonTest($r, 'Return a list of the names of the site\'s groups');
       $data = drupal_json_decode($r->data);
@@ -94,7 +102,7 @@ class OpenDataSchemaMap  extends PHPUnit_Framework_TestCase
 
     foreach ($uuids as $uuid) {
       // Get all group_package_show succesful responses.
-      $responses = $this->runQuerys('ckan_group_package_show', $uuid);
+      $responses = $this->runQueries('ckan_group_package_show', $uuid);
       foreach ($responses as $r) {
         $this->runCommonTest($r, 'Return the datasets (packages) of a group');
       }
@@ -167,8 +175,9 @@ class OpenDataSchemaMap  extends PHPUnit_Framework_TestCase
    * @param string $uuid
    *   unique identifier for a specific group, resource or dataset query
    */
-  protected function runQuerys($slug, $uuid = FALSE) {
+  protected function runQueries($slug, $uuid = FALSE) {
     $uris = $this->getHookMenuItems($slug);
+    
     foreach ($uris as $key => $uri) {
       $uris[$key] = array('uri' => $uri, 'options' => array());
       if ($uuid) {
