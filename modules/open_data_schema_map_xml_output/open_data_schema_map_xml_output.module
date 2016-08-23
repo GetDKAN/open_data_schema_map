@@ -94,7 +94,6 @@ function open_data_schema_map_xml_output_odsm_output_format() {
 
 function open_data_schema_map_xml_output_render($api, $result) {
   // We are returning XML, so tell the browser.
-  drupal_add_http_header('Content-Type', 'application/xml');
   $xml_root = DEFAULT_XML_ROOT;
   $xml_defaulttag = DEFAULT_XML_TAG;
   if (isset($api->xml_root) && $api->xml_root != '') {
@@ -114,10 +113,10 @@ function open_data_schema_map_xml_output_render($api, $result) {
   $encoders = array(
     new XmlEncoder($xml_root)
   );
-  
+
   $normalizers = array(new GetSetMethodNormalizer());
   $serializer = new Serializer($normalizers, $encoders);
-  
+
   return $serializer->serialize($xml, 'xml');
 }
 
