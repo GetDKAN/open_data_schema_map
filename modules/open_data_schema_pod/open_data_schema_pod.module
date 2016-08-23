@@ -5,6 +5,8 @@
  * Provides Schema mapping for Project Open Data.
  */
 
+require_once('podValidator.php');
+
 /**
  * Implements hook_open_data_schema_map_validation().
  */
@@ -324,7 +326,6 @@ function open_data_schema_pod_open_data_schema_fill_references($schema_name, &$s
  * Validates individual datasets.
  */
 function open_data_schema_pod_process_validate($url, $clear_cache = FALSE) {
-  include 'podValidator.php';
   if (!$clear_cache && $cache = cache_get('pod_validate_result')) {
     $results = $cache->data;
     $results['cache_date'] = $cache->created;
