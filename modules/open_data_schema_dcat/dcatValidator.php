@@ -3,7 +3,7 @@
 namespace dcatValidator;
 
 include __DIR__ . '/../../autoload.php';
-$module_path = drupal_get_path('module', 'open_data_schema_map_xml_output');
+$module_path = drupal_get_path('module', 'open_data_schema_map');
 include implode('/', array($module_path, 'autoload.php'));
 
 use Symfony\Component\Serializer\Serializer;

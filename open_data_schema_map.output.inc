@@ -66,7 +66,7 @@ function open_data_schema_map_odsm_output_format() {
       ),
     ),
     'xml' => array(
-      'callback' => 'open_data_schema_map_xml_output_render',
+      'callback' => 'open_data_schema_map_xml_output',
       'headers' => array(
         'Content-Type' => 'application/xml',
       ),
@@ -107,7 +107,7 @@ function open_data_schema_map_json_pretty_output($api, $results) {
  * XML output format logic
  */
 
-function open_data_schema_map_xml_output_render($api, $result) {
+function open_data_schema_map_xml_output($api, $result) {
   // We are returning XML, so tell the browser.
   $xml_root = DEFAULT_XML_ROOT;
   $xml_defaulttag = DEFAULT_XML_TAG;
@@ -123,7 +123,7 @@ function open_data_schema_map_xml_output_render($api, $result) {
   unset($xml[$xml_defaulttag]['key']);
 
   //Allow alter xml before create the output
-  drupal_alter('open_data_schema_map_xml_output_render_data', $xml, $api);
+  drupal_alter('open_data_schema_map_xml_output', $xml, $api);
 
   $encoders = array(
     new XmlEncoder($xml_root)
