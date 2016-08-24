@@ -1,8 +1,11 @@
 core = 7.x
 api = 2
 
-projects[open_data_schema_map_dkan][type] = module
-projects[open_data_schema_map_dkan][download][type] = git
-projects[open_data_schema_map_dkan][download][url] = https://github.com/NuCivic/open_data_schema_map_dkan.git
-projects[open_data_schema_map_dkan][download][branch] = master
-projects[open_data_schema_map_dkan][subdir] = contrib
+libraries[symfonyserializer][type] = libraries
+libraries[symfonyserializer][download][type] = "git"
+libraries[symfonyserializer][download][url] = "https://github.com/symfony/serializer.git"
+
+libraries[json-schema][type] = libraries
+libraries[json-schema][download][type] = "git"
+libraries[json-schema][download][url] = "https://github.com/justinrainbow/json-schema.git"
+libraries[json-schema][download][tag] = 1.3.7
