@@ -10,7 +10,8 @@ $library_path=implode(
     'libraries',
     'json-schema',
     'src',
-    'JsonSchema'
+    'JsonSchema',
+    'symfonyserializer',
   )
 );
 
@@ -19,4 +20,5 @@ $baseDir = $vendorDir;
 
 return array(
   'JsonSchema\\' => array($library_path),
+  'Symfony\\Component\\Serializer\\' => array($library_path),
 );
