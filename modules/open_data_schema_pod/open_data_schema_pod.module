@@ -164,7 +164,7 @@ function open_data_schema_pod_open_data_schema_map_results_alter(&$result, $mach
         }
         if (isset($dataset['distribution'])) {
           foreach ($dataset['distribution'] as $num => $dist) {
-            if ($dist['format'] && !$dist['mediaType']) {
+            if ($dist['format'] && $dist['format'] != 'data' && !$dist['mediaType']) {
               include_once DRUPAL_ROOT . '/includes/file.mimetypes.inc';
               $map = file_mimetype_mapping();
               $dataset['distribution'][$num]['mediaType'] = isset($map['mimetypes'][$map['extensions'][$dist['format']]]) ? $map['mimetypes'][$map['extensions'][$dist['format']]] : 'text/html';
