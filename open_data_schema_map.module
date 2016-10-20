@@ -1165,6 +1165,9 @@ function open_data_schema_map_tokens_alter(array &$replacements, array $context)
   if (isset($replacements['[node:field-frequency]']) && isset($context['data']['node']->field_frequency['und'])) {
     $replacements['[node:field-frequency]'] = open_data_schema_map_accrual_iso_8601_value($replacements['[node:field-frequency]']);
   }
+  if (isset($replacements['[node:field-data-dictionary]'])) {
+    $replacements['[node:field-data-dictionary]'] = check_url($context['data']['node']->field_data_dictionary[LANGUAGE_NONE][0]['value']);
+  }
 }
 
 /**
