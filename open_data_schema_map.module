@@ -962,6 +962,9 @@ function open_data_schema_mapper_field_type_check($value, $token) {
       }
     }
   }
+  elseif ($token['type'] == 'boolean') {
+    $value = (boolean)$value;
+  }
   elseif ($token['type'] == 'object') {
     // TODO: make object.
   }
