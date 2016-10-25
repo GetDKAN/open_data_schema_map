@@ -3,6 +3,7 @@
 - Sync up versioning to DKAN
 - Stop trying to determine the media type for resources in POD when format is set to "data". This was causing errors and we should trust the "format" field.
 - Add DCAT support
+- Fix dataQuality field in POD to display true boolean
 
 7.x-1.0 2016-08-24
 ------------------
