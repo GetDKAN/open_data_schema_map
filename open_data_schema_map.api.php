@@ -129,3 +129,15 @@ function hook_open_data_schema_map_args_alter(&$token, &$arg) {
     $token[1] = 'nid';
   }
 }
+
+/**
+ * Alter a data array before it is serialized into XML. Intended for adding
+ * attributes on XLM root and similar tasks.
+ * @param  array &$xml The data to be serialized into an XML endpoint
+ * @param  object &$api API object being rendered
+ */
+function hook_open_data_schema_map_xml_output(&$xml, &$api) {
+  if ($api->api_schema == 'dcat' || $api->api_schema == 'dcat_dataset') {
+    $xml['@xmlns:foaf'] = "http://xmlns.com/foaf/0.1/";
+  }
+}

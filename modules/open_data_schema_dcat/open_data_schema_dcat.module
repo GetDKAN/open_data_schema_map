@@ -86,9 +86,9 @@ function open_data_schema_dcat_open_data_schema_fill_references($schema_name, &$
 }
 
 /**
- * Implements hook_open_data_schema_map_xml_output_render_data_alter().
+ * Implements hook_open_data_schema_map_xml_output().
  */
-function open_data_schema_dcat_open_data_schema_map_xml_output_render_data_alter(&$xml, &$api) {
+function open_data_schema_dcat_open_data_schema_map_xml_output(&$xml, &$api) {
   global $base_url;
 
   //If is dcat schema then add attributes on the xml root

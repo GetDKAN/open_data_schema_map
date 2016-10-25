@@ -6,8 +6,13 @@
  */
 
 $module_path = drupal_get_path('module', 'open_data_schema_map');
-require_once $module_path . '/open_data_schema_map.file_cache.inc';
 
+use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\Encoder\XmlEncoder;
+use Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer;
+
+define("DEFAULT_XML_ROOT", "records");
+define("DEFAULT_XML_TAG", "record");
 
 class OpenDataSchemaMapException extends Exception {
 
@@ -992,12 +997,12 @@ function open_data_schema_map_endpoint_special_arg(&$args, $type) {
  */
 function open_data_schema_map_open_data_schema_map_args_alter(&$field, &$arg) {
   if ($arg['token']['value'] == '[node:url:arg:last]' || $arg['token']['value'] == '[node:url:args:last]') {
-    // Query against a like statement to reduce forloop 
+    // Query against a like statement to reduce forloop
     $result = db_select('url_alias', 'url')
               ->fields('url', array('source', 'alias'))
               ->condition('alias', '%/' . $arg['query'], 'LIKE')
               ->execute()
-              ->fetchAll(); 
+              ->fetchAll();
     $field[1] = 'nid';
     foreach ($result as $result) {
       $alias = explode('/', $result->alias);

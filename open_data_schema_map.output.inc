@@ -35,6 +35,7 @@ function open_data_schema_map_output_format_load($name) {
  */
 function open_data_schema_map_retrieve_output_formats() {
   $output_formats = array();
+  // Provide a hook for other modules to add output formats
   foreach (module_implements('odsm_output_format') as $module) {
     $module_outputs = $module . '_odsm_output_format';
     $module_outputs = $module_outputs();
@@ -62,6 +63,12 @@ function open_data_schema_map_odsm_output_format() {
       'callback' => 'open_data_schema_map_json_pretty_output',
       'headers' => array(
         'Content-Type' => 'application/json',
+      ),
+    ),
+    'xml' => array(
+      'callback' => 'open_data_schema_map_xml_output',
+      'headers' => array(
+        'Content-Type' => 'application/xml',
       ),
     ),
   );
@@ -95,3 +102,37 @@ function open_data_schema_map_json_pretty_output($api, $results) {
     return drupal_json_encode_helper($results);
   }
 }
+
+/**
+ * XML output format logic
+ */
+
+function open_data_schema_map_xml_output($api, $result) {
+  // We are returning XML, so tell the browser.
+  $xml_root = DEFAULT_XML_ROOT;
+  $xml_defaulttag = DEFAULT_XML_TAG;
+  if (isset($api->xml_root) && $api->xml_root != '') {
+    $xml_root = $api->xml_root;
+  }
+  if (isset($api->xml_defaulttag) && $api->xml_defaulttag != '') {
+    $xml_defaulttag = $api->xml_defaulttag;
+  }
+
+  $xml = array();
+  $xml[$xml_defaulttag] = $result;
+  unset($xml[$xml_defaulttag]['key']);
+
+  //Allow alter xml before create the output
+  drupal_alter('open_data_schema_map_xml_output', $xml, $api);
+
+  $encoders = array(
+    new XmlEncoder($xml_root)
+  );
+
+  $normalizers = array(new GetSetMethodNormalizer());
+  $serializer = new Serializer($normalizers, $encoders);
+
+  return $serializer->serialize($xml, 'xml');
+}
+
+

@@ -10,7 +10,8 @@ $library_path=implode(
     'libraries',
     'json-schema',
     'src',
-    'JsonSchema'
+    'JsonSchema',
+    'symfonyserializer'
   )
 );
 

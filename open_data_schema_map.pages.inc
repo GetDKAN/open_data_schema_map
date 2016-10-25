@@ -24,7 +24,12 @@ function open_data_schema_map_page_overview() {
     $data['delete'] = isset($data['callback']) ? '' : l(t('delete'), 'admin/config/services/odsm/delete/' . $data['machine_name']);
     unset($data['machine_name']);
     unset($data['callback']);
+    unset($data['xml_root']);
+    unset($data['xml_defaulttag']);
 
+
+    // Additional modules may want to add schemas or other elements that modify
+    // the overview page.
     foreach (module_implements('odsm_page_overview_alter') as $module) {
       $function = $module . '_odsm_page_overview_alter';
       $function($data);
@@ -214,6 +219,35 @@ function open_data_schema_map_manage(array $form, array &$form_state, $api = NUL
     '#required' => TRUE,
     '#weight' => 2,
   );
+
+  // Additional XML options; invisible unless "xml" selected
+  $form['xml_root'] = array(
+    '#title' => 'XML Root',
+    '#type' => 'textfield',
+    '#description' => t('(XML only) Enter the XML Root Name (default: records).'),
+    '#required' => FALSE,
+    '#default_value' => $api->xml_root,
+    '#weight' => 3,
+    '#states' => array(
+      'visible' => array(
+        ':input[name="outputformat"]' => array('value' => 'xml'),
+      ),
+    ),
+  );
+  $form['xml_defaulttag'] = array(
+    '#title' => 'XML Default Node',
+    '#type' => 'textfield',
+    '#description' => t('(XML only) Enter the XML Default Node Name (default: record).'),
+    '#required' => FALSE,
+    '#default_value' => $api->xml_defaulttag,
+    '#weight' => 4,
+    '#states' => array(
+      'visible' => array(
+        ':input[name="outputformat"]' => array('value' => 'xml'),
+      ),
+    ),
+  );
+
 
   $form['enabled'] = array(
     '#title' => 'Enabled',
@@ -430,6 +464,7 @@ function open_data_schema_map_endpoint($api) {
   }
 
   // Check if a file cache exists, and simply return this if it does
+  module_load_include('inc', 'open_data_schema_map', 'open_data_schema_map.file_cache')
   if (open_data_schema_map_file_cache_exits($api)) {
     $filename = open_data_schema_map_file_cache_name_helper($api);
     drupal_add_http_header('Expires', gmdate('D, d M Y H:i:s \G\M\T', time() + 3600));
