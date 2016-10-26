@@ -4,6 +4,10 @@
 - Stop trying to determine the media type for resources in POD when format is set to "data". This was causing errors and we should trust the "format" field.
 - Add DCAT support
 
+7.x-1.12.12
+-----------
+- Added support for federal and non-federal on POD validation.
+
 7.x-1.0 2016-08-24
 ------------------
 
