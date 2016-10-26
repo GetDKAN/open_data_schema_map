@@ -61,7 +61,6 @@ class validate {
 
   public function processAll() {
     $this->getDataRDF();
-    $retriever = new UriRetriever;
     $this->getIdentifiers();
     $this->validated = array();
     foreach ($this->identifiers as $id) {
