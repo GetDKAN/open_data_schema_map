@@ -9,4 +9,4 @@ libraries[symfonyserializer][download][branch] = master
 libraries[json-schema][type] = libraries
 libraries[json-schema][download][type] = "git"
 libraries[json-schema][download][url] = "https://github.com/justinrainbow/json-schema.git"
-libraries[json-schema][download][tag] = 1.3.7
+libraries[json-schema][download][tag] = 4.0.0
