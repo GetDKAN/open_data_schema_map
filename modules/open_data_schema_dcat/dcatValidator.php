@@ -49,7 +49,7 @@ class validate {
     $schemaFolder = DRUPAL_ROOT . '/' . drupal_get_path('module', 'open_data_schema_dcat') . '/data';
     $data = $this->getDataset($id);
     $validator = new JsonSchema\Validator;
-    $validator->check($data, (object)['$ref' => 'file://' . $schemaFolder . '/distribution.json')]);
+    $validator->check($data, (object)['$ref' => 'file://' . $schemaFolder . '/distribution.json']);
     return $validator;
   }
 
