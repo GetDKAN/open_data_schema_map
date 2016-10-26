@@ -106,32 +106,41 @@ function open_data_schema_dcat_open_data_schema_map_xml_output_render_data_alter
     $xml['@xmlns:vcard'] = "http://www.w3.org/2006/vcard/ns#";
 
     //Fix some data output (datetimes format, ...).
-    if (!empty($xml['dcat:Dataset'])) {
-      foreach ($xml['dcat:Dataset'] as &$dataset) {
-         if (isset($dataset['dct:temporal'])) {
-            $dataset['dct:temporal'][0]['schema:startDate']['@rdf:datatype'] = 'http://www.w3.org/2001/XMLSchema#date';
-            $dataset['dct:temporal'][0]['schema:endDate']['@rdf:datatype'] = 'http://www.w3.org/2001/XMLSchema#date';
-            $dataset['dct:temporal']['dct:PeriodOfTime'] = $dataset['dct:temporal'];
-            unset ($dataset['dct:temporal']);
-          }
+    if (!empty($xml['dcat:dataset'])) {
+      foreach ($xml['dcat:dataset'] as &$dataset) {
+        if (isset($dataset['dct:temporal'])) {
+          $dataset['dct:temporal'][0]['schema:startDate']['@rdf:datatype'] = 'http://www.w3.org/2001/XMLSchema#date';
+          $dataset['dct:temporal'][0]['schema:endDate']['@rdf:datatype'] = 'http://www.w3.org/2001/XMLSchema#date';
+          $dataset['dct:temporal']['dct:PeriodOfTime'] = $dataset['dct:temporal'];
+          unset ($dataset['dct:temporal']);
+        }
+        $datasets_url[] = array('@rdf:resource' => 'http://google.es');
       }
     }
 
     if ($api->api_schema == 'dcat') {
+      $datasets_url = array();
+
+      if (!empty($xml['dcat:dataset'])) {
+        foreach ($xml['dcat:dataset'] as &$dataset) {
+          $datasets_url[] = array('@rdf:resource' => $dataset['@rdf:about']);
+        }
+      }
+
+
       //Add catalog information
+      $publisher = array('@rdf:about' => 'http://orgs.vocab.org/some-org', 'foaf:name' => 'DKAN', 'foaf:homepage' => $base_url, 'dct:type' => array('@rdf:resource' => 'http://purl.org/adms/publishertype/NonProfitOrganisation'));
       $catalog = array(
         'dct:title' => variable_get('site_name', t('Dataset')),
         'dct:description' =>  variable_get('site_slogan', t('Description')),
-        'dcterms:publisher' => array('@rdf:nodeID' => "_n0"),
+        'dcterms:publisher' => array('foaf:Organization' => $publisher),
         'foaf:homepage' => $base_url . '/search/type/dataset',
-        'rdf:type' => array('@rdf:resource' => 'http://www.w3.org/ns/dcat#Dataset'),
       );
 
-      $publisher = array(
-        'rdf:Description' => array('@rdf:nodeID' => '_n0', 'foaf:name' => 'DKAN', 'rdf:type' => array('@rdf:resource' => 'http://xmlns.com/foaf/0.1/Agent'))
-      );
+      //Add dataset information
+      $catalog = $catalog + array('dcat:dataset' => $datasets_url);
 
-      $xml = array('dcat:Catalog' => $catalog) + $xml + $publisher;
+      $xml = array('dcat:Catalog' => $catalog) + $xml;
     }
   }
 }
