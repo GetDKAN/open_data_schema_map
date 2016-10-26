@@ -9,6 +9,7 @@ include implode('/', array($module_path, 'autoload.php'));
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer;
+use JsonSchema\Validator;
 
 class validate {
 
@@ -48,7 +49,7 @@ class validate {
   public function process($id) {
     $schemaFolder = DRUPAL_ROOT . '/' . drupal_get_path('module', 'open_data_schema_dcat') . '/data';
     $data = $this->getDataset($id);
-    $validator = new JsonSchema\Validator;
+    $validator = new Validator;
     $validator->check($data, (object)['$ref' => 'file://' . $schemaFolder . '/distribution.json']);
     return $validator;
   }

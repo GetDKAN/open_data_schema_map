@@ -3,7 +3,7 @@
 namespace podValidator;
 
 include __DIR__ . '/../../autoload.php';
-
+use JsonSchema\Validator;
 class validate {
 
   function __construct($url) {
@@ -42,7 +42,7 @@ class validate {
   public function process($id) {
     $schemaFolder = DRUPAL_ROOT . '/' . drupal_get_path('module', 'open_data_schema_pod') . '/data/v1.1';
     $data = $this->getDataset($id);
-    $validator = new JsonSchema\Validator;
+    $validator = new Validator;
     $validator->check($data, (object)['$ref' => 'file://' . $schemaFolder . '/dataset.json']);
     return $validator;
   }
