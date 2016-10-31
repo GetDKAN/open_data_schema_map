@@ -51,7 +51,6 @@ function open_data_schema_map_xml_output_odsm_form_alter(&$form, $api) {
       ),
     ),
   );
-
   $form['xml_defaulttag'] = array(
     '#title' => 'XML Default Node',
     '#type' => 'textfield',
@@ -118,5 +117,11 @@ function open_data_schema_map_xml_output_render($api, $result) {
   $normalizers = array(new GetSetMethodNormalizer());
   $serializer = new Serializer($normalizers, $encoders);
 
-  return $serializer->serialize($xml, 'xml');
+  $output =  $serializer->serialize($xml, 'xml');
+
+  //Allow alter xml after create the output
+  drupal_alter('open_data_schema_map_xml_output_post_render_data', $output, $api);
+
+  return $output;
 }
+
