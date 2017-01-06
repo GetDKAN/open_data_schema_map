@@ -1,3 +1,7 @@
+7.x-1.12.14
+-----------
+- Add support for validation of data.json files from sites with self-signed certificates.
+
 7.x-1.12.12
 -----------
 - Added support for federal and non-federal on POD validation.
