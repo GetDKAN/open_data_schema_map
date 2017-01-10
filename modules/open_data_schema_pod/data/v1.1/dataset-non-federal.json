@@ -1,16 +1,12 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "id": "https://project-open-data.cio.gov/v1.1/schema/dataset.json#",
+  "id": "https://project-open-data.cio.gov/v1.1/schema/dataset-non-federal.json#",
   "title": "Project Open Data Dataset",
   "description": "The metadata format for all federal open data. Validates a single JSON object entry (as opposed to entire Data.json catalog).",
   "type": "object",
   "required": [
-    "bureauCode",
-    "programCode",
     "title",
     "description",
-    "keyword",
-    "modified",
     "publisher",
     "contactPoint",
     "identifier",
@@ -62,10 +58,6 @@
         },
         {
           "type": "null"
-        },
-        {
-          "type": "string",
-          "pattern": "^(\\[\\[REDACTED).*?(\\]\\])$"
         }
       ]
     },
@@ -81,7 +73,7 @@
       "uniqueItems": true
     },
     "contactPoint": {
-      "$ref": "vcard.json"
+      "$ref": "vcard-non-federal.json"
     },
     "describedBy": {
       "title": "Data Dictionary",
@@ -93,10 +85,6 @@
         },
         {
           "type": "null"
-        },
-        {
-          "type": "string",
-          "pattern": "^(\\[\\[REDACTED).*?(\\]\\])$"
         }
       ]
     },
@@ -110,10 +98,6 @@
         },
         {
           "type": "null"
-        },
-        {
-          "type": "string",
-          "pattern": "^(\\[\\[REDACTED).*?(\\]\\])$"
         }
       ]
     },
@@ -127,10 +111,6 @@
         },
         {
           "type": "null"
-        },
-        {
-          "type": "string",
-          "pattern": "^(\\[\\[REDACTED).*?(\\]\\])$"
         }
       ]
     },
@@ -143,10 +123,6 @@
         },
         {
           "type": "null"
-        },
-        {
-          "type": "string",
-          "pattern": "^(\\[\\[REDACTED).*?(\\]\\])$"
         }
       ]
     },
@@ -170,10 +146,6 @@
         },
         {
           "type": "null"
-        },
-        {
-          "type": "string",
-          "pattern": "^(\\[\\[REDACTED).*?(\\]\\])$"
         }
       ]
     },
@@ -193,30 +165,18 @@
         },
         {
           "type": "null"
-        },
-        {
-          "type": "string",
-          "pattern": "^(\\[\\[REDACTED).*?(\\]\\])$"
         }
       ]
     },
     "keyword": {
       "title": "Tags",
       "description": "Tags (or keywords) help users discover your dataset; please include terms that would be used by technical and non-technical users.",
-      "anyOf":[
-        {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "minItems": 1
-        },
-        {
-          "type": "string",
-          "pattern": "^(\\[\\[REDACTED).*?(\\]\\])$"
-        }
-      ]
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
     },
     "landingPage": {
       "title": "Homepage URL",
@@ -228,10 +188,6 @@
         },
         {
           "type": "null"
-        },
-        {
-          "type": "string",
-          "pattern": "^(\\[\\[REDACTED).*?(\\]\\])$"
         }
       ]
     },
@@ -248,10 +204,6 @@
         },
         {
           "type": "null"
-        },
-        {
-          "type": "string",
-          "pattern": "^(\\[\\[REDACTED).*?(\\]\\])$"
         }
       ]
     },
@@ -265,10 +217,6 @@
         },
         {
           "type": "null"
-        },
-        {
-          "type": "string",
-          "pattern": "^(\\[\\[REDACTED).*?(\\]\\])$"
         }
       ]
     },
@@ -287,10 +235,6 @@
         {
           "type": "string",
           "pattern": "^(R\\d*\\/)?([\\+-]?\\d{4}(?!\\d{2}\\b))((-?)((0[1-9]|1[0-2])(\\4([12]\\d|0[1-9]|3[01]))?|W([0-4]\\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\\d|[12]\\d{2}|3([0-5]\\d|6[1-6])))([T\\s]((([01]\\d|2[0-3])((:?)[0-5]\\d)?|24\\:?00)([\\.,]\\d+(?!:))?)?(\\18[0-5]\\d([\\.,]\\d+)?)?([zZ]|([\\+-])([01]\\d|2[0-3]):?([0-5]\\d)?)?)?)?(\\/)P(?:\\d+(?:\\.\\d+)?Y)?(?:\\d+(?:\\.\\d+)?M)?(?:\\d+(?:\\.\\d+)?W)?(?:\\d+(?:\\.\\d+)?D)?(?:T(?:\\d+(?:\\.\\d+)?H)?(?:\\d+(?:\\.\\d+)?M)?(?:\\d+(?:\\.\\d+)?S)?)?$"
-        },
-        {
-          "type": "string",
-          "pattern": "^(\\[\\[REDACTED).*?(\\]\\])$"
         }
       ]
     },
@@ -304,10 +248,6 @@
         },
         {
           "type": "null"
-        },
-        {
-          "type": "string",
-          "pattern": "^(\\[\\[REDACTED).*?(\\]\\])$"
         }
       ]
     },
@@ -332,26 +272,14 @@
         {
           "type": "array",
           "items": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uri"
-              },
-              {
-                "type": "string",
-                "pattern": "^(\\[\\[REDACTED).*?(\\]\\])$"
-              }
-            ]
+            "type": "string",
+            "format": "uri"
           },
           "minItems": 1,
           "uniqueItems": true
         },
         {
           "type": "null"
-        },
-        {
-          "type": "string",
-          "pattern": "^(\\[\\[REDACTED).*?(\\]\\])$"
         }
       ]
     },
@@ -399,10 +327,6 @@
         },
         {
           "type": "null"
-        },
-        {
-          "type": "string",
-          "pattern": "^(\\[\\[REDACTED).*?(\\]\\])$"
         }
       ]
     },
@@ -413,9 +337,6 @@
         {
           "type": "string",
           "minLength": 1
-        },
-        {
-          "type": "null"
         }
       ]
     },
@@ -434,10 +355,6 @@
         },
         {
           "type": "null"
-        },
-        {
-          "type": "string",
-          "pattern": "^(\\[\\[REDACTED).*?(\\]\\])$"
         }
       ]
     },
