@@ -1,5 +1,6 @@
-7.x-1.x
+7.x-1.12.14
 -----------
+- Add support for validation of data.json files from sites with self-signed certificates.
 - Fix exported feature component not reverting correctly.
 
 7.x-1.12.12
