@@ -154,6 +154,23 @@ function open_data_schema_pod_open_data_schema_map_results_alter(&$result, $mach
             unset($dataset['license']);
           }
         }
+        // Language must display the key not the label.
+        if (isset($dataset['language'])) {
+          // List of language code options.
+          if (function_exists('dkan_dataset_content_types_allowed_language_values')) {
+            $values = dkan_dataset_content_types_allowed_language_values();
+            $languages = array();
+            foreach ($dataset['language'] as $delta => $value) {
+              $key = array_search($dataset['language'][$delta], $values);
+              if ($key) {
+                $languages[] = $key;
+              }
+            }
+            if ($languages) {
+              $dataset['language'] = $languages;
+            }
+          }
+        }
         if (isset($dataset['dataQuality'])) {
           if ($dataset['dataQuality'] == 'TRUE') {
             $dataset['dataQuality'] = (bool) TRUE;
