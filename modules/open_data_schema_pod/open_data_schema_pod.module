@@ -156,18 +156,17 @@ function open_data_schema_pod_open_data_schema_map_results_alter(&$result, $mach
         }
         // Language must display the key not the label.
         if (isset($dataset['language'])) {
-          // List of language code options.
           if (function_exists('dkan_dataset_content_types_allowed_language_values')) {
+            // Convert language label to the key from the list of language code options.
             $values = dkan_dataset_content_types_allowed_language_values();
-            $languages = array();
             foreach ($dataset['language'] as $delta => $value) {
               $key = array_search($dataset['language'][$delta], $values);
               if ($key) {
-                $languages[] = $key;
+                $dataset['language'][$delta] = $key;
               }
-            }
-            if ($languages) {
-              $dataset['language'] = $languages;
+              else {
+                unset($dataset['license'][$delta]);
+              }
             }
           }
         }
