@@ -161,12 +161,7 @@ function open_data_schema_pod_open_data_schema_map_results_alter(&$result, $mach
             $values = dkan_dataset_content_types_allowed_language_values();
             foreach ($dataset['language'] as $delta => $value) {
               $key = array_search($dataset['language'][$delta], $values);
-              if ($key) {
-                $dataset['language'][$delta] = $key;
-              }
-              else {
-                unset($dataset['license'][$delta]);
-              }
+              $dataset['language'][$delta] = $key;
             }
           }
         }
