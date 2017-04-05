@@ -5,7 +5,7 @@
  * Provides Schema mapping for Project Open Data.
  */
 
-require_once('podValidator.php');
+require_once 'podValidator.php';
 
 /**
  * Implements hook_open_data_schema_map_validation().
@@ -224,7 +224,8 @@ function open_data_schema_pod_open_data_schema_map_results_alter(&$result, $mach
           if (filter_var($dataset['contactPoint']['hasEmail'], FILTER_VALIDATE_EMAIL)) {
             $dataset['contactPoint']['hasEmail'] = 'mailto:' . $dataset['contactPoint']['hasEmail'];
           }
-          // Remove completely if invalid. An empy hasEmail validates while a poorly formed or invalid email does not.
+          // Remove completely if invalid. An empty hasEmail validates
+          // while a poorly formed or invalid email does not.
           else {
             watchdog('open_data_schema_map_od', 'Dataset %dataset contact point email: %email is not valid. Added default value for empty emails.', array('%dataset' => $dataset['title'], '%email' => $dataset['contactPoint']['hasEmail']), WATCHDOG_NOTICE, $link = NULL);
             $dataset['contactPoint']['hasEmail'] = 'mailto:' . variable_get('pod_default_email', 'noemailprovided@usa.gov');
@@ -262,7 +263,7 @@ function open_data_schema_pod_open_data_schema_map_results_alter(&$result, $mach
  * - keyword
  * - publisher
  * - contactPoint
- * - accessLevel
+ * - accessLevel.
  */
 function odsm_add_data_JSON_defaults(&$dataset) {
   if ((isset($dataset['title']) && !$dataset['title']) || !isset($dataset['title'])) {
@@ -304,7 +305,7 @@ function open_data_schema_pod_open_data_schema_fill_references($schema_name, &$s
         if (isset($schema['properties'][$key]['anyOf'])) {
           $json = $json . $schema['properties'][$key]['anyOf'][0]['items']['$ref'];
         }
-        elseif(isset($schema['properties'][$key]['$ref'])) {
+        elseif (isset($schema['properties'][$key]['$ref'])) {
           $json = $json . $schema['properties'][$key]['$ref'];
         }
         $json = file_get_contents($json);
