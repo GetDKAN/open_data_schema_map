@@ -160,8 +160,8 @@ function open_data_schema_pod_open_data_schema_map_results_alter(&$result, $mach
             // Convert language label to the key from the list of language code options.
             $values = dkan_dataset_content_types_allowed_language_values();
             foreach ($dataset['language'] as $delta => $value) {
-              $key = array_search($dataset['language'][$delta], $values);
-              $dataset['language'][$delta] = $key;
+              $key_language = array_search($dataset['language'][$delta], $values);
+              $dataset['language'][$delta] = $key_language;
             }
           }
         }
