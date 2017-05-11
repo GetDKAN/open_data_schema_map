@@ -866,12 +866,14 @@ function open_data_schema_map_endpoint_args(&$map, $queries, $args = array()) {
  * Process entities using api.
  */
 function open_data_schema_map_endpoint_process_map($ids, $api) {
+  // Needs as much ram as possible to store the parsed content.
+  ini_set('memory_limit', '-1');
+
   $output = array();
   if ($ids) {
-    $schema = open_data_schema_map_schema_load($api->api_schema);
-    foreach ($ids as $key => $id) {
+    $entities = entity_load($api->type, $id);
+    foreach ($entities as $entity) {
       $result = array();
-      $entity = entity_load_single($api->type, $id);
       open_data_schema_map_endpoint_process_map_recursion($result, $api->mapping, $api->type, $entity);
       $output[] = $result;
     }
