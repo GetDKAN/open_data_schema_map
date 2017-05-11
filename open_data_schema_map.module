@@ -7,8 +7,9 @@
 
 $module_path = drupal_get_path('module', 'open_data_schema_map');
 require_once $module_path . '/open_data_schema_map.file_cache.inc';
-
-
+/**
+ *
+ */
 class OpenDataSchemaMapException extends Exception {
 
   /**
@@ -55,6 +56,7 @@ class OpenDataSchemaMapException extends Exception {
 
     }
   }
+
 }
 
 /**
@@ -117,7 +119,7 @@ function open_data_schema_map_menu() {
     'file' => 'open_data_schema_map.pages.inc',
   );
 
-  //Read validation implementation and add to menu.
+  // Read validation implementation and add to menu.
   foreach (module_implements('open_data_schema_map_validation') as $module) {
     $data = module_invoke($module, 'open_data_schema_map_validation');
     $path = 'admin/config/services/odsm/validate/' . $data['name'];
@@ -145,9 +147,9 @@ function open_data_schema_map_permission() {
       'title' => t('Administer Open Data Schema Mapper'),
       'description' => t('Make and update open data schema maps'),
       'restrict access' => TRUE,
-    ));
+    ),
+  );
 }
-
 
 /**
  * Implements hook_libraries_info().
@@ -232,7 +234,10 @@ function open_data_schema_map_form_recursion(&$form, $schema, $api, $defaults = 
     if (count($value) == count($value, COUNT_RECURSIVE)) {
       $desc = isset($value['description']) ? $value['description'] : '';
       $description = t('Machine name: %machine_name field type: %type description: %desc', array(
-        '%machine_name' => $key, '%type' => $value['type'], '%desc' => $desc));
+        '%machine_name' => $key,
+        '%type' => $value['type'],
+        '%desc' => $desc,
+      ));
       $default = isset($defaults[$key]) ? $defaults[$key] : '';
       $form[$key] = array(
         '#title' => $value['title'],
@@ -436,7 +441,7 @@ function open_data_schema_map_schema_load($schema_name) {
  * @param array $args
  *   - query: current value of query.
  *   - value: value field
- *   - token: token to get data from
+ *   - token: token to get data from.
  *
  * @return array
  *   An array of dataset nodes.
@@ -503,6 +508,7 @@ function open_data_schema_map_schema_options_callback($id) {
   }
   return NULL;
 }
+
 /**
  * Discovers callback for schema type.
  */
@@ -965,7 +971,7 @@ function open_data_schema_mapper_field_type_check($value, $token) {
     }
   }
   elseif ($token['type'] == 'boolean') {
-    $value = (boolean)$value;
+    $value = (boolean) $value;
   }
   elseif ($token['type'] == 'object') {
     // TODO: make object.
@@ -994,12 +1000,12 @@ function open_data_schema_map_endpoint_special_arg(&$args, $type) {
  */
 function open_data_schema_map_open_data_schema_map_args_alter(&$field, &$arg) {
   if ($arg['token']['value'] == '[node:url:arg:last]' || $arg['token']['value'] == '[node:url:args:last]') {
-    // Query against a like statement to reduce forloop 
+    // Query against a like statement to reduce forloop.
     $result = db_select('url_alias', 'url')
-              ->fields('url', array('source', 'alias'))
-              ->condition('alias', '%/' . $arg['query'], 'LIKE')
-              ->execute()
-              ->fetchAll(); 
+      ->fields('url', array('source', 'alias'))
+      ->condition('alias', '%/' . $arg['query'], 'LIKE')
+      ->execute()
+      ->fetchAll();
     $field[1] = 'nid';
     foreach ($result as $result) {
       $alias = explode('/', $result->alias);
@@ -1130,7 +1136,7 @@ function open_data_schema_map_additional_fields_add($fields, $api) {
   return $api;
 }
 
- /*
+/**
  * Adds node links to errors.
  */
 function open_data_schema_validation_process_errors($rows) {
@@ -1144,7 +1150,7 @@ function open_data_schema_validation_process_errors($rows) {
     else {
       $node = $ids[$row['id']];
     }
-    $rows[$key]['title'] = l($node->title,'node/' . $node->nid);
+    $rows[$key]['title'] = l($node->title, 'node/' . $node->nid);
   }
   return $rows;
 }
