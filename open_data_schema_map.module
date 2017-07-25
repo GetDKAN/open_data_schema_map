@@ -1221,7 +1221,7 @@ function open_data_schema_map_accrual_iso_8601() {
     'Three times a month' => 'R/P0.33M',
     'Continuously updated' => 'R/PT1S',
     'Monthly' => 'R/P1M',
-    'Quarterly' => ' R/P3M',
+    'Quarterly' => 'R/P3M',
     'Semimonthly' => 'R/P0.5M',
     'Three times a year' => 'R/P4M',
     'Weekly' => 'R/P1W',
