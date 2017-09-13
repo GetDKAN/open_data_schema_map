@@ -84,7 +84,7 @@ function open_data_schema_map_menu() {
     'title' => 'Open Data Schema Mapper',
     'description' => 'Map Drupal structures to Open Data specfications',
     'page callback' => 'open_data_schema_map_page_overview',
-    'access arguments' => array('administer open data schema mapper.'),
+    'access arguments' => array('administer open data schema mapper'),
     'file' => 'open_data_schema_map.pages.inc',
   );
   $items[$pre . '/overview'] = array(
@@ -96,7 +96,7 @@ function open_data_schema_map_menu() {
     'description' => 'Add a new API Endpoint',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('open_data_schema_map_manage'),
-    'access arguments' => array('administer open data schema mapper.'),
+    'access arguments' => array('administer open data schema mapper'),
     'file' => 'open_data_schema_map.pages.inc',
     'type' => MENU_LOCAL_ACTION,
   );
@@ -105,7 +105,7 @@ function open_data_schema_map_menu() {
     'description' => 'Edit an existing API Endpoint',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('open_data_schema_map_manage', 5),
-    'access arguments' => array('administer open data schema mapper.'),
+    'access arguments' => array('administer open data schema mapper'),
     'file' => 'open_data_schema_map.pages.inc',
   );
   $items[$pre . '/delete/%open_data_schema_map_api'] = array(
@@ -113,7 +113,7 @@ function open_data_schema_map_menu() {
     'description' => 'Delete an existing API Endpoint',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('open_data_schema_map_delete', 5),
-    'access arguments' => array('administer open data schema mapper.'),
+    'access arguments' => array('administer open data schema mapper'),
     'file' => 'open_data_schema_map.pages.inc',
   );
 
@@ -126,7 +126,7 @@ function open_data_schema_map_menu() {
       'title' => $data['title'],
       'page callback' => $data['page callback'],
       'page arguments' => array(),
-      'access arguments' => array('Administer Open Data Schema Mapper'),
+      'access arguments' => array('administer open data schema mapper'),
       'type' => MENU_NORMAL_ITEM,
       'file' => $data['file'],
       'file path' => $data['file path'],
@@ -1169,7 +1169,10 @@ function open_data_schema_map_tokens_alter(array &$replacements, array $context)
     $replacements['[node:field-frequency]'] = open_data_schema_map_accrual_iso_8601_value($replacements['[node:field-frequency]']);
   }
   if (isset($replacements['[node:field-data-dictionary]'])) {
-    $replacements['[node:field-data-dictionary]'] = check_url($context['data']['node']->field_data_dictionary[LANGUAGE_NONE][0]['value']);
+    //Check if is a url.
+    $url = check_url($context['data']['node']->field_data_dictionary[LANGUAGE_NONE][0]['value']);
+    $output = valid_url($url, TRUE) ? $url : $context['data']['node']->field_data_dictionary[LANGUAGE_NONE][0]['value'];
+    $replacements['[node:field-data-dictionary]'] = $output;
   }
 }
 
