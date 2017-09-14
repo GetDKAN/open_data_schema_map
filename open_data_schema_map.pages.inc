@@ -30,8 +30,6 @@ function open_data_schema_map_page_overview() {
       $function($data);
     }
     // TODO: report features status.
-    // $data['configuration'] = theme('entity_status',
-    // array('status' => $data['features']));
     $data['enabled'] = $data['enabled'] ? t('Enabled') : t('Disabled');
     $list[] = $data;
   }
@@ -44,8 +42,8 @@ function open_data_schema_map_page_overview() {
   $header[] = t('Endpoint');
   $header[] = t('Output Format');
   $header[] = t('Edit');
+  $header[] = t('Cache');
   $header[] = t('Delete');
-  // $header[] = t('Configuration');
   $rows = $list;
   return array(
     '#theme' => 'table',
@@ -419,17 +417,17 @@ function open_data_schema_map_add_type(&$values, $mapping) {
 }
 
 /**
- * Main endpoint callback
+ * Main endpoint callback.
  */
 function open_data_schema_map_endpoint($api) {
-  // Start by setting the content type header based on the API settings
+  // Start by setting the content type header based on the API settings.
   if ($output_format = open_data_schema_map_output_format_load($api->outputformat)) {
-    foreach($output_format['headers'] as $key => $value) {
+    foreach ($output_format['headers'] as $key => $value) {
       drupal_add_http_header($key, $value);
     }
   }
 
-  // Check if a file cache exists, and simply return this if it does
+  // Check if a file cache exists, and simply return this if it does.
   if (open_data_schema_map_file_cache_exits($api)) {
     $filename = open_data_schema_map_file_cache_name_helper($api);
     drupal_add_http_header('Expires', gmdate('D, d M Y H:i:s \G\M\T', time() + 3600));
@@ -438,7 +436,7 @@ function open_data_schema_map_endpoint($api) {
     readfile($filename);
   }
 
-  // If not, render the results and output with the appropriate formatter
+  // If not, render the results and output with the appropriate formatter.
   else {
     $render = open_data_schema_map_render_api($api);
     $headers = $render['headers'];
