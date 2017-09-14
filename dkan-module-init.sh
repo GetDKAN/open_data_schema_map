@@ -3,7 +3,7 @@
 DKAN_MODULE=`ls *.info | cut -d'.' -f1`
 
 # DKAN branch or tag to use.
-DKAN_VERSION="7.x-1.13.6"
+DKAN_VERSION="7.x-1.13.7"
 
 COMPOSER_PATH="$HOME/.config/composer/vendor/bin"
 
