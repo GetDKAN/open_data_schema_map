@@ -36,8 +36,9 @@ function open_data_schema_map_file_cache_admin_link_label($api) {
     $filename = open_data_schema_map_file_cache_name_helper($api);
     $stat = stat($filename);
     $seconds_in_hour = 3600;
-
-    $hours = floor((time() - $stat['ctime']) / $seconds_in_hour);
+    $time = time();
+    $elapsed_time = $time > $stat['ctime'] ? $time - $stat['ctime'] : 0;
+    $hours = floor($elapsed_time / $seconds_in_hour);
     $label = "$hours " . t('hrs');
   }
   return $label;
@@ -72,6 +73,14 @@ function open_data_schema_map_file_cache_endpoint($machine_name) {
     }
   }
 }
+
+/**
+ * API wrapper for open_data_schema_map_file_cache_endpoint.
+ */
+ function open_data_schema_map_file_cache_create($api) {
+    open_data_schema_map_file_cache_endpoint($api->machine_name);
+ }
+
 
 /**
  * Delete a specific api endpoint file cache.
@@ -110,7 +119,7 @@ function open_data_schema_map_cache_manage_submit(array $form, array &$form_stat
   $op = $form_state['input']['op'];
 
   if ($op == t('Create') || $op == t('Rebuild')) {
-    open_data_schema_map_file_cache_endpoint($api->machine_name);
+    open_data_schema_map_file_cache_create($api);
     drupal_set_message(t('A cache file for the %name api endpoint has been created.', array('%name' => $api->name)));
   }
   elseif ($op == t('Delete')) {
