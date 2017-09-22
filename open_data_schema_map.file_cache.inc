@@ -28,20 +28,45 @@ function open_data_schema_map_file_cache_admin_link($api) {
 }
 
 /**
- * Generat a label for api endpoint file cache admin page link.
+ * Get cache age in hours or false if none exists.
  */
-function open_data_schema_map_file_cache_admin_link_label($api) {
-  $label = 'none';
+function open_data_schema_map_file_cache_age($api) {
   if (open_data_schema_map_file_cache_exits($api)) {
     $filename = open_data_schema_map_file_cache_name_helper($api);
     $stat = stat($filename);
     $seconds_in_hour = 3600;
     $time = time();
     $elapsed_time = $time > $stat['ctime'] ? $time - $stat['ctime'] : 0;
-    $hours = floor($elapsed_time / $seconds_in_hour);
-    $label = "$hours " . t('hrs');
+    return floor($elapsed_time / $seconds_in_hour);
+  }
+
+  return FALSE;
+}
+
+/**
+ * Generate a label for api endpoint file cache admin page link.
+ */
+function open_data_schema_map_file_cache_admin_link_label($api) {
+  $label = 'none';
+  $age = open_data_schema_map_file_cache_age($api);
+
+  if (is_numeric($age)) {
+    $label = "$age " . t('hrs');
   }
   return $label;
+}
+
+/**
+ * Generate a status for api endpoint file cache admin page.
+ */
+function open_data_schema_map_file_cache_status($api) {
+  $status = t('Not cached');
+  $age = open_data_schema_map_file_cache_age($api);
+
+  if (is_numeric($age)) {
+    $status = "$age " . t('hours ago');
+  }
+  return $status;
 }
 
 /**
@@ -77,10 +102,9 @@ function open_data_schema_map_file_cache_endpoint($machine_name) {
 /**
  * API wrapper for open_data_schema_map_file_cache_endpoint.
  */
- function open_data_schema_map_file_cache_create($api) {
-    open_data_schema_map_file_cache_endpoint($api->machine_name);
- }
-
+function open_data_schema_map_file_cache_create($api) {
+  open_data_schema_map_file_cache_endpoint($api->machine_name);
+}
 
 /**
  * Delete a specific api endpoint file cache.
@@ -99,6 +123,18 @@ function open_data_schema_map_cache_manage(array $form, array &$form_state, $api
   $name = $api->name;
   $title = "$name Cache";
   drupal_set_title($title, FALSE);
+  $form['help'] = array(
+    '#type' => 'item',
+    '#markup' => "The Open Data Schema Map filecache writes an open data endpoint such as data.json to disk, so that it does not need to be generated upon every request. See the <a href='http://docs.getdkan.com/en/latest/components/open-data-schema.html#the-odsm-file-cache'>documentation</a> for instructions on automating this process. Use the controls on this page to manually generate or remove this API's filecache.",
+  );
+
+  $status_label = t("Filecache status");
+  $status = open_data_schema_map_file_cache_status($api);
+
+  $form['status'] = array(
+    '#type' => 'item',
+    '#markup' => "<strong>$status_label:</strong> $status",
+  );
 
   if (open_data_schema_map_file_cache_exits($api)) {
     $form['rebuild'] = array('#type' => 'submit', '#value' => t('Rebuild'));
