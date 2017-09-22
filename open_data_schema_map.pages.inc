@@ -39,8 +39,8 @@ function open_data_schema_map_page_overview() {
   $header[] = t('Schema');
   $header[] = t('Entity');
   $header[] = t('Bundle');
-  $header[] = t('Endpoint');
   $header[] = t('Output Format');
+  $header[] = t('Endpoint');
   $header[] = t('Edit');
   $header[] = t('Cache');
   $header[] = t('Delete');
