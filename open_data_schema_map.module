@@ -8,6 +8,7 @@
 $module_path = drupal_get_path('module', 'open_data_schema_map');
 require_once $module_path . '/open_data_schema_map.file_cache.inc';
 
+define('OPEN_DATA_SCHEMA_MAP_ADMIN_PATH', 'admin/config/services/odsm');
 
 class OpenDataSchemaMapException extends Exception {
 
@@ -62,7 +63,7 @@ class OpenDataSchemaMapException extends Exception {
  */
 function open_data_schema_map_menu() {
   $items = array();
-  $pre = 'admin/config/services/odsm';
+  $pre = OPEN_DATA_SCHEMA_MAP_ADMIN_PATH;
 
   $apis = open_data_schema_map_api_load_all();
   if ($apis) {
@@ -108,6 +109,14 @@ function open_data_schema_map_menu() {
     'access arguments' => array('administer open data schema mapper'),
     'file' => 'open_data_schema_map.pages.inc',
   );
+  $items[$pre . '/cache/%open_data_schema_map_api'] = array(
+    'title' => 'API Cache File',
+    'description' => 'Administer an existing API Endpoint File Cache',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('open_data_schema_map_cache_manage', 5),
+    'access arguments' => array('administer open data schema mapper'),
+    'file' => 'open_data_schema_map.file_cache.inc',
+  );
   $items[$pre . '/delete/%open_data_schema_map_api'] = array(
     'title' => 'Delete API',
     'description' => 'Delete an existing API Endpoint',
@@ -117,10 +126,10 @@ function open_data_schema_map_menu() {
     'file' => 'open_data_schema_map.pages.inc',
   );
 
-  //Read validation implementation and add to menu.
+  // Read validation implementation and add to menu.
   foreach (module_implements('open_data_schema_map_validation') as $module) {
     $data = module_invoke($module, 'open_data_schema_map_validation');
-    $path = 'admin/config/services/odsm/validate/' . $data['name'];
+    $path = OPEN_DATA_SCHEMA_MAP_ADMIN_PATH . '/validate/' . $data['name'];
 
     $items[$path] = array(
       'title' => $data['title'],
@@ -347,6 +356,7 @@ function open_data_schema_map_api_table() {
     unset($apis[$num]->mapping);
     unset($apis[$num]->arguments);
     $apis[$num]->edit = l(t('edit'), 'admin/config/services/odsm/edit/' . $api->machine_name);
+    $apis[$num]->cache = open_data_schema_map_file_cache_admin_link($api);
   }
   return $apis;
 }

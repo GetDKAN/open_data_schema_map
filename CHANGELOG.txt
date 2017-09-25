@@ -1,3 +1,6 @@
+7.x-1.14
+-------
+- #95 Add UI for odsm cache admin.
 
 7.x-1.13.4
 ----------
