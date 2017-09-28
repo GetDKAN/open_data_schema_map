@@ -318,6 +318,15 @@ function open_data_schema_map_manage(array $form, array &$form_state, $api = NUL
     }
     $form['mapping'] = $form['mapping'] + open_data_schema_map_schema_map_form($schema, $api);
 
+    if (in_array($api->machine_name, _open_data_schema_map_get_available_filters('machine_name'))) {
+      $form['filter_enabled'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Apply Data Federation Filters'),
+        '#description' => t('Check to apply filters configured in the') . ' ' . l(t('Data Federation Filters'), '/admin/config/services/odsm/settings') . ' ' . t('settings'),
+        '#weight' => 6,
+      );
+    }
+
     // Load defaults.
     $form['name']['#default_value'] = $api->name;
     $form['machine_name']['#default_value'] = $api->machine_name;
@@ -328,12 +337,12 @@ function open_data_schema_map_manage(array $form, array &$form_state, $api = NUL
     $form['enabled']['#default_value'] = $api->enabled;
     $form['api_schema']['#default_value'] = $api->api_schema;
     $form['arguments']['#default_value'] = $api->arguments;
+    $form['filter_enabled']['#default_value'] = $api->filter_enabled;
 
     $form['id'] = array(
       '#type' => 'hidden',
       '#value' => $api->id,
     );
-
   }
   if ($api) {
     $form['submit'] = array(
