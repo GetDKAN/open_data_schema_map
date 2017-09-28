@@ -56,6 +56,16 @@ function open_data_schema_map_page_overview() {
 
 /**
  * Callback for delete page.
+ *
+ * @param array $form
+ *   Form array
+ * @param array $form_state
+ *   Form state array
+ * @param object $api
+ *   API Object
+ *
+ * @return array
+ *   Form Array
  */
 function open_data_schema_map_delete(array $form, array &$form_state, $api = NULL) {
   if (isset($api->callback)) {
@@ -73,6 +83,11 @@ function open_data_schema_map_delete(array $form, array &$form_state, $api = NUL
 
 /**
  * Submit function for deleting an API.
+ *
+ * @param array $form
+ *   Form array
+ * @param array $form_state
+ *   Form state array
  */
 function open_data_schema_map_delete_submit(array $form, array &$form_state) {
   $api = $form['#api'];
@@ -90,8 +105,19 @@ function open_data_schema_map_delete_submit(array $form, array &$form_state) {
 
 /**
  * Callback for primary menu page.
+ *
+ * @param array $form
+ *   Form array
+ * @param array $form_state
+ *   Form state array
+ * @param object $api
+ *   API Object
+ *
+ * @return array
+ *   Form Array
  */
 function open_data_schema_map_manage(array $form, array &$form_state, $api = NULL) {
+  $entity_list = array();
   if (isset($api->callback)) {
     $form['in_code'] = array(
       '#type' => 'item',
@@ -334,6 +360,14 @@ function open_data_schema_map_manage(array $form, array &$form_state, $api = NUL
 
 /**
  * Creates form for schema fields.
+ *
+ * @param array $schema
+ *   Schema array
+ * @param object $api
+ *   API Object
+ *
+ * @return array
+ *   Form array
  */
 function open_data_schema_map_schema_map_form($schema, $api) {
   $function = open_data_schema_map_schema_types_callback($schema['$schema']);
@@ -347,6 +381,14 @@ function open_data_schema_map_schema_map_form($schema, $api) {
 
 /**
  * Form AJAX handler.
+ *
+ * @param array $form
+ *   Form array
+ * @param array $form_state
+ *   Form state array
+ *
+ * @return array
+ *   Bundle array
  */
 function open_data_schema_map_bundle_ajax_callback(array $form, array &$form_state) {
   return $form['bundle'];
@@ -354,6 +396,14 @@ function open_data_schema_map_bundle_ajax_callback(array $form, array &$form_sta
 
 /**
  * Form AJAX handler.
+ *
+ * @param array $form
+ *   Form array
+ * @param array $form_state
+ *   Form state array
+ *
+ * @return array
+ *   Arguments array
  */
 function open_data_schema_mapper_args_ajax_callback(array $form, array &$form_state) {
   return $form['arguments'];
@@ -361,6 +411,11 @@ function open_data_schema_mapper_args_ajax_callback(array $form, array &$form_st
 
 /**
  * Submit function for api map.
+ *
+ * @param array $form
+ *   Form array
+ * @param array $form_state
+ *   Form state array
  */
 function open_data_schema_map_manage_submit($form, $form_state) {
   $db_schema = drupal_get_schema('open_data_schema_map');
@@ -403,6 +458,11 @@ function open_data_schema_map_manage_submit($form, $form_state) {
 
 /**
  * Adds field type to field definition.
+ *
+ * @param array $values
+ *   Values array
+ * @param array $mapping
+ *   Mapping array
  */
 function open_data_schema_map_add_type(&$values, $mapping) {
   foreach ($values as $api_field => $token) {
@@ -418,6 +478,9 @@ function open_data_schema_map_add_type(&$values, $mapping) {
 
 /**
  * Main endpoint callback.
+ *
+ * @param object $api
+ *   API object
  */
 function open_data_schema_map_endpoint($api) {
   // Start by setting the content type header based on the API settings.

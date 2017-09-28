@@ -10,10 +10,16 @@ require_once $module_path . '/open_data_schema_map.file_cache.inc';
 
 define('OPEN_DATA_SCHEMA_MAP_ADMIN_PATH', 'admin/config/services/odsm');
 
+/**
+ * Class OpenDataSchemaMapException
+ */
 class OpenDataSchemaMapException extends Exception {
+  private $data;
 
   /**
    * Override Exception constructor to add data parameter.
+   *
+   * {@inheritdoc}
    */
   public function __construct($message, $code = 0, $data = NULL) {
     parent::__construct($message, $code);
@@ -207,16 +213,24 @@ function open_data_schema_map_help($path, $arg) {
       return t('Create APIs using Drupal entities that map to Open Data specifications. See !docs for more instructions.',
      array('!docs' => l(t('documentation'), 'https://github.com/NuCivic/open_data_schema_map#open-data-schema-map')));
   }
+  return NULL;
 }
 
 /**
  * Provides form type from field type.
+ *
+ * @param string $field_type
+ *   Field type
+ *
+ * @return string
+ *   Form type
  */
 function open_data_schema_map_form_field_type($field_type) {
   switch ($field_type) {
     case "string":
       return 'textfield';
   }
+  return '';
 }
 
 /**
@@ -230,6 +244,9 @@ function open_data_schema_map_form_field_type($field_type) {
  *   $api object which is passed around because procedural.
  * @param array $defaults
  *   Array of defaults which matches up with the $schema.
+ *
+ * @return array
+ *   Form array
  */
 function open_data_schema_map_form_recursion(&$form, $schema, $api, $defaults = NULL) {
   $entity_ref_fields = open_data_schema_map_entity_ref_fields($api->type, $api->bundle);
@@ -277,6 +294,11 @@ function open_data_schema_map_form_recursion(&$form, $schema, $api, $defaults = 
 
 /**
  * Recursive function that walks throw tokens to output rows.
+ *
+ * @param array $rows
+ *   Output rows
+ * @param array $token_info
+ *   Tokens
  */
 function open_data_schema_map_token_rows(&$rows, $token_info) {
   if (isset($token_info['children'])) {
@@ -302,6 +324,12 @@ function open_data_schema_map_token_rows(&$rows, $token_info) {
 
 /**
  * Creates token tree for single token.
+ *
+ * @param string $token
+ *   Token
+ *
+ * @return string
+ *   Rendered token
  */
 function open_data_schema_map_token_tree($token) {
   module_load_include('inc', 'token', 'token.pages');
@@ -342,7 +370,7 @@ function open_data_schema_map_token_tree($token) {
     $element['#attributes']['class'][] = 'token-click-insert';
     return drupal_render($element);
   }
-
+  return '';
 }
 
 /**
@@ -366,6 +394,9 @@ function open_data_schema_map_api_table() {
  *
  * @param string $machine_name
  *   API machine name.
+ *
+ * @return bool
+ *   Returns FALSE
  */
 function open_data_schema_map_api_exist($machine_name) {
   return FALSE;
@@ -412,10 +443,17 @@ function open_data_schema_map_api_load($machine_name) {
     $record->arguments = unserialize($record->arguments);
     return $record;
   }
+  return NULL;
 }
 
 /**
  * Loads schema from file.
+ *
+ * @param string $schema_name
+ *   Schema name
+ *
+ * @return array
+ *   Schema array
  */
 function open_data_schema_map_schema_load($schema_name) {
   $schemas = &drupal_static(__FUNCTION__, array());
@@ -437,11 +475,11 @@ function open_data_schema_map_schema_load($schema_name) {
 /**
  * Retrieves public, published dataset nodes.
  *
- * @param string $api
+ * @param object $api
  *   Api object.
- * @param string $limit
+ * @param int $limit
  *   Number of results to return.
- * @param string $offset
+ * @param int $offset
  *   Offset of results to return.
  * @param array $args
  *   - query: current value of query.
@@ -495,6 +533,12 @@ function open_data_schema_map_endpoint_query($api, $limit = 0, $offset = 0, $arg
 
 /**
  * Returns array from token.
+ *
+ * @param string $token
+ *   Token
+ *
+ * @return array
+ *   Array from token
  */
 function open_data_schema_map_discover_field($token) {
   $token = rtrim(trim($token, '['), ']');
@@ -503,6 +547,12 @@ function open_data_schema_map_discover_field($token) {
 
 /**
  * Discovers callback for argument options.
+ *
+ * @param string $id
+ *   Argument option
+ *
+ * @return string
+ *   Callback
  */
 function open_data_schema_map_schema_options_callback($id) {
   $schema_types = open_data_schema_map_schema_types();
@@ -513,8 +563,15 @@ function open_data_schema_map_schema_options_callback($id) {
   }
   return NULL;
 }
+
 /**
  * Discovers callback for schema type.
+ *
+ * @param string $id
+ *   Schema type
+ *
+ * @return string
+ *   Callback
  */
 function open_data_schema_map_schema_types_callback($id) {
   $schema_types = open_data_schema_map_schema_types();
@@ -549,6 +606,18 @@ function open_data_schema_map_schema_types() {
 
 /**
  * Creates argument form.
+ *
+ * @param int $num_args
+ *   Number of args
+ * @param array $options
+ *   Options array
+ * @param array $defaults
+ *   Defaults array
+ * @param object $api
+ *   API Object
+ *
+ * @return array
+ *   Form array
  */
 function open_data_schema_map_args_form($num_args, $options, $defaults, $api) {
   $map = $api->mapping;
@@ -611,6 +680,9 @@ function open_data_schema_map_args_form($num_args, $options, $defaults, $api) {
 
 /**
  * Special fields for arguments.
+ *
+ * @return array
+ *   Array of arguments
  */
 function open_data_schema_map_special_arguments() {
   return array(
@@ -626,6 +698,8 @@ function open_data_schema_map_special_arguments() {
  *   Entity machine name.
  * @param string $bundle
  *   Bundle machine name.
+ * @param array $ref_fields
+ *   List of fields
  *
  * @return array
  *   Array of entity reference or similar fields.
@@ -658,6 +732,16 @@ function open_data_schema_map_entity_ref_fields($entity, $bundle, $ref_fields = 
 
 /**
  * Creates form from JSON 4 schema.
+ *
+ * @param array $schema
+ *   Schema array
+ * @param object $api
+ *   API object
+ * @param array $defaults
+ *   Array of defaults
+ *
+ * @return array
+ *   Form array
  */
 function open_data_schema_map_json_4($schema, $api, $defaults) {
   $form = array();
@@ -740,6 +824,15 @@ function open_data_schema_map_json_4($schema, $api, $defaults) {
 
 /**
  * Constructs form for json schema 3.
+ *
+ * @param array $form
+ *   Form array
+ * @param array $schema
+ *   Schema
+ * @param object $api
+ *   API object
+ * @param array $defaults
+ *   Array of defaults
  */
 function open_data_schema_map_json_3_recursion(&$form, $schema, $api, $defaults = NULL) {
   foreach ($schema as $item => $data) {
@@ -786,6 +879,16 @@ function open_data_schema_map_json_3_recursion(&$form, $schema, $api, $defaults 
 
 /**
  * Creates form from JSON 3 schema.
+ *
+ * @param array $schema
+ *   Schema array
+ * @param object $api
+ *   API object
+ * @param array $defaults
+ *   Array of defaults
+ *
+ * @return array
+ *   Form array
  */
 function open_data_schema_map_json_3($schema, $api, $defaults) {
   $form = array();
@@ -799,6 +902,12 @@ function open_data_schema_map_json_3($schema, $api, $defaults) {
 
 /**
  * Creates option list from available arguments.
+ *
+ * @param array $schema
+ *   Schema array
+ *
+ * @return array
+ *   Options array
  */
 function open_data_schema_mapper_args_options_json_4($schema) {
   $options = array();
@@ -810,6 +919,12 @@ function open_data_schema_mapper_args_options_json_4($schema) {
 
 /**
  * Creates option list from available arguments.
+ *
+ * @param array $schema
+ *   Schema array
+ *
+ * @return array
+ *   Options array
  */
 function open_data_schema_mapper_args_options_json_3($schema) {
   $options = array();
@@ -821,8 +936,20 @@ function open_data_schema_mapper_args_options_json_3($schema) {
 
 /**
  * Wrapper around token_replace.
+ *
+ * @param string $token
+ *   Token
+ * @param string $entity_type
+ *   Entity Type
+ * @param object $entity
+ *   Entity object
+ *
+ * @return string
+ *   Token replaced string
  */
 function open_data_schema_mapper_token_replace($token, $entity_type, $entity) {
+  $rend_tokens = array();
+
   // Does the token have an "or".
   $output = '';
   if (preg_match('/\] \|\| \[/', $token)) {
@@ -850,6 +977,16 @@ function open_data_schema_mapper_token_replace($token, $entity_type, $entity) {
 
 /**
  * Provides working arguments by validating fields and queries.
+ *
+ * @param array $map
+ *   Map array
+ * @param array $queries
+ *   Queries array
+ * @param array $args
+ *   Args array
+ *
+ * @return array
+ *   Array of args
  */
 function open_data_schema_map_endpoint_args(&$map, $queries, $args = array()) {
   $output = array();
@@ -874,11 +1011,18 @@ function open_data_schema_map_endpoint_args(&$map, $queries, $args = array()) {
 
 /**
  * Process entities using api.
+ *
+ * @param array $ids
+ *   IDs array
+ * @param object $api
+ *   API Object
+ *
+ * @return array
+ *   Array of processed entities
  */
 function open_data_schema_map_endpoint_process_map($ids, $api) {
   $output = array();
   if ($ids) {
-    $schema = open_data_schema_map_schema_load($api->api_schema);
     foreach ($ids as $key => $id) {
       $result = array();
       $entity = entity_load_single($api->type, $id);
@@ -891,6 +1035,15 @@ function open_data_schema_map_endpoint_process_map($ids, $api) {
 
 /**
  * Walks through map adding to results.
+ *
+ * @param array $result
+ *   Results array
+ * @param array $map
+ *   Map array
+ * @param string $type
+ *   API type
+ * @param object $entity
+ *   Entiy object
  */
 function open_data_schema_map_endpoint_process_map_recursion(&$result, $map, $type, $entity) {
   foreach ($map as $api_field => $token) {
@@ -908,7 +1061,6 @@ function open_data_schema_map_endpoint_process_map_recursion(&$result, $map, $ty
         unset($token['odsm_entity_reference']);
         if ($values) {
           foreach ($values as $num => $item) {
-            $subvalue = array();
             $sub_result = array();
             foreach ($token as $subfield => $subtoken) {
               $subtoken['value'] = str_replace('Nth', $num, $subtoken['value']) ? str_replace('Nth', $num, $subtoken['value']) : $subtoken['value'];
@@ -947,6 +1099,18 @@ function open_data_schema_map_endpoint_process_map_recursion(&$result, $map, $ty
 
 /**
  * Processes individual field.
+ *
+ * @param string $api_field
+ *   API field
+ * @param array $token
+ *   Token array
+ * @param string $type
+ *   API type
+ * @param object $entity
+ *   Entity object
+ *
+ * @return array
+ *   Array of results
  */
 function open_data_schema_map_endpoint_process_field($api_field, $token, $type, $entity) {
   $result = array();
@@ -960,6 +1124,14 @@ function open_data_schema_map_endpoint_process_field($api_field, $token, $type, 
 
 /**
  * Checks output for expected types and adjusts.
+ *
+ * @param string $value
+ *   Value
+ * @param array $token
+ *   Token array
+ *
+ * @return mixed
+ *   Casted value
  */
 function open_data_schema_mapper_field_type_check($value, $token) {
   if ($token['type'] == 'array') {
@@ -973,7 +1145,7 @@ function open_data_schema_mapper_field_type_check($value, $token) {
     }
   }
   elseif ($token['type'] == 'boolean') {
-    $value = (boolean)$value;
+    $value = (boolean) $value;
   }
   elseif ($token['type'] == 'object') {
     // TODO: make object.
@@ -983,12 +1155,19 @@ function open_data_schema_mapper_field_type_check($value, $token) {
 
 /**
  * Grabs special from arguments and removes it.
+ *
+ * @param array $args
+ *   Args array
+ * @param string $type
+ *   API type
+ *
+ * @return string
+ *   Arg
  */
 function open_data_schema_map_endpoint_special_arg(&$args, $type) {
   $value = '';
   foreach ($args as $num => $arg) {
     if ($arg['field'] == $type) {
-      $value = $args[$num];
       unset($args[$num]);
       return $arg['query'];
     }
@@ -1002,14 +1181,14 @@ function open_data_schema_map_endpoint_special_arg(&$args, $type) {
  */
 function open_data_schema_map_open_data_schema_map_args_alter(&$field, &$arg) {
   if ($arg['token']['value'] == '[node:url:arg:last]' || $arg['token']['value'] == '[node:url:args:last]') {
-    // Query against a like statement to reduce forloop 
-    $result = db_select('url_alias', 'url')
+    // Query against a like statement to reduce forloop.
+    $results = db_select('url_alias', 'url')
               ->fields('url', array('source', 'alias'))
               ->condition('alias', '%/' . $arg['query'], 'LIKE')
               ->execute()
-              ->fetchAll(); 
+              ->fetchAll();
     $field[1] = 'nid';
-    foreach ($result as $result) {
+    foreach ($results as $result) {
       $alias = explode('/', $result->alias);
       if ($alias[count($alias) - 1] == $arg['query']) {
         $nid = explode('/', $result->source);
@@ -1022,7 +1201,7 @@ function open_data_schema_map_open_data_schema_map_args_alter(&$field, &$arg) {
       404,
       array(
         '__type' => 'Query Error',
-        'name_or_id' => t('Query \'!query\' doesn\'t return results', array('!query' => $arg['query'])),
+        'name_or_id' => t("Query '!query' doesn't return results", array('!query' => $arg['query'])),
       )
     );
   }
@@ -1045,6 +1224,16 @@ function open_data_schema_map_open_data_schema_map_args_alter(&$field, &$arg) {
 
 /**
  * Function that renders and odsm api for endpoint.
+ *
+ * @param object $api
+ *   API object
+ * @param array $query
+ *   Query array
+ * @param array $queries
+ *   Queries array
+ *
+ * @return array
+ *   Array of results/headers
  */
 function open_data_schema_map_render_api($api, $query = NULL, $queries = NULL) {
   if (!isset($queries)) {
@@ -1109,26 +1298,40 @@ function open_data_schema_map_render_api($api, $query = NULL, $queries = NULL) {
 
 /**
  * Discovers additional fields.
+ *
+ * @param object $api
+ *   API Object
+ *
+ * @return array
+ *   Array of additional fields
  */
 function open_data_schema_map_additional_fields($api) {
   $tokens = array();
+  $additional_fields = array();
   foreach ($api->mapping as $schema_id => $item) {
     if (isset($item['value']) && $item['value'] && !is_array($item['value'])) {
       $tokens[] = $item['value'];
     }
   }
-  $unsused_fields = array();
   $fields = field_info_instances('node', 'dataset');
   foreach ($fields as $field_name => $instance) {
     if (!in_array('[node:' . $field_name . ']', $tokens)) {
-      $addtional_fields[] = $field_name;
+      $additional_fields[] = $field_name;
     }
   }
-  return $addtional_fields;
+  return $additional_fields;
 }
 
 /**
  * Adds additional fields to mapping.
+ *
+ * @param array $fields
+ *   Fields array
+ * @param object $api
+ *   API object
+ *
+ * @return object
+ *   Updated API object
  */
 function open_data_schema_map_additional_fields_add($fields, $api) {
   foreach ($fields as $field_name) {
@@ -1138,8 +1341,14 @@ function open_data_schema_map_additional_fields_add($fields, $api) {
   return $api;
 }
 
- /*
+/**
  * Adds node links to errors.
+ *
+ * @param array $rows
+ *   Array of error rows
+ *
+ * @return array
+ *   Error rows with node links added
  */
 function open_data_schema_validation_process_errors($rows) {
   foreach ($rows as $key => $row) {
@@ -1152,7 +1361,7 @@ function open_data_schema_validation_process_errors($rows) {
     else {
       $node = $ids[$row['id']];
     }
-    $rows[$key]['title'] = l($node->title,'node/' . $node->nid);
+    $rows[$key]['title'] = l($node->title, 'node/' . $node->nid);
   }
   return $rows;
 }
@@ -1179,7 +1388,7 @@ function open_data_schema_map_tokens_alter(array &$replacements, array $context)
     $replacements['[node:field-frequency]'] = open_data_schema_map_accrual_iso_8601_value($replacements['[node:field-frequency]']);
   }
   if (isset($replacements['[node:field-data-dictionary]'])) {
-    //Check if is a url.
+    // Check if is a url.
     $url = check_url($context['data']['node']->field_data_dictionary[LANGUAGE_NONE][0]['value']);
     $output = valid_url($url, TRUE) ? $url : $context['data']['node']->field_data_dictionary[LANGUAGE_NONE][0]['value'];
     $replacements['[node:field-data-dictionary]'] = $output;
@@ -1188,6 +1397,12 @@ function open_data_schema_map_tokens_alter(array &$replacements, array $context)
 
 /**
  * Provides value for human readable name.
+ *
+ * @param string $name
+ *   Name
+ *
+ * @return string
+ *   Human readable name
  */
 function open_data_schema_map_accrual_iso_8601_value($name) {
   if ($name == 'Annually') {
@@ -1204,6 +1419,9 @@ function open_data_schema_map_accrual_iso_8601_value($name) {
 
 /**
  * Provides iso 8601 accrual periodicity.
+ *
+ * @return array
+ *   Array of iso values
  */
 function open_data_schema_map_accrual_iso_8601() {
   return array(
