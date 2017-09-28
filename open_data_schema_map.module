@@ -107,6 +107,15 @@ function open_data_schema_map_menu() {
     'file' => 'open_data_schema_map.pages.inc',
     'type' => MENU_LOCAL_ACTION,
   );
+  $items[$pre . '/settings'] = array(
+    'title' => 'Settings',
+    'description' => 'Open Data Schema Map Settings',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('open_data_schema_map_admin_settings_form'),
+    'access arguments' => array('administer open data schema mapper'),
+    'file' => 'open_data_schema_map.admin.inc',
+    'type' => MENU_LOCAL_ACTION,
+  );
   $items[$pre . '/edit/%open_data_schema_map_api'] = array(
     'title' => 'Edit API',
     'description' => 'Edit an existing API Endpoint',
@@ -1444,4 +1453,170 @@ function open_data_schema_map_accrual_iso_8601() {
     'Three times a year' => 'R/P4M',
     'Weekly' => 'R/P1W',
   );
+}
+
+/**
+ * Implements hook_open_data_schema_map_results_alter().
+ */
+function open_data_schema_map_open_data_schema_map_results_alter(&$result, $api_machine_name, $schema) {
+  $api = open_data_schema_map_api_load($api_machine_name);
+  if ($api->filter_enabled && in_array($api_machine_name, _open_data_schema_map_get_available_filters('machine_name'))) {
+    $ghosts = 0;
+    $itemcount = count($result);
+    $include_datasets_with_no_publishers = variable_get('odsm_settings_no_publishers', 1);
+    watchdog('open_data_schema_map', "Generating data.json: about to iterate over $itemcount datasets.");
+    // Determine whether to filter the data.json feed by publisher.
+    $publishers = array();
+    $included_agency_nids = variable_get('odsm_settings_groups', array());
+    $filter_by_publisher = FALSE;
+    // If none of the groups are selected, don't filter the data.json by
+    // publisher. If any of the groups are checked, only those groups
+    // will be included.
+
+    // NIDs are zero if unchecked, so use sum.
+    if (array_sum($included_agency_nids)) {
+      $filter_by_publisher = TRUE;
+      $publishers = array();
+      $agencies = db_query("SELECT node.title AS node_title, node.nid AS nid
+        FROM {node} node
+        WHERE ((node.status = '1') AND (node.type IN  ('group')) )
+        ORDER BY node_title ASC"
+      );
+      foreach ($agencies as $agency) {
+        if (in_array($agency->nid, $included_agency_nids)) {
+          $publishers[] = htmlentities($agency->node_title);
+        }
+      }
+    }
+    foreach ($result as $key => $dataset) {
+      // Exclude "ghost datasets," i.e., datasets with no title.
+      if (is_array($dataset) && !isset($dataset['title'])) {
+        unset($result[$key]);
+        watchdog('open_data_schema_map', 'Ghost dataset: <pre>@key</pre>', array('@key' => print_r($result[$key])), TRUE);
+        $ghosts++;
+        continue;
+      }
+      // Remove datasets that don't have a publisher.
+      elseif (!$include_datasets_with_no_publishers && !isset($dataset['publisher']['name'])) {
+        unset($result[$key]);
+        continue;
+      }
+      // Remove datasets that are not on the included publishers list.
+      elseif ($filter_by_publisher && isset($dataset['publisher']['name']) && !_open_data_schema_map_settings_contains($dataset['publisher']['name'], $publishers)) {
+        unset($result[$key]);
+        continue;
+      }
+
+      // Do some cleanup to improve data.json validation.
+      if (isset($dataset['@type']) && $dataset['@type'] == 'dcat:Dataset') {
+        // Default hasEmail to site email.
+        if (isset($dataset['contactPoint'])
+          && isset($dataset['contactPoint']['hasEmail'])
+          && $dataset['contactPoint']['hasEmail'] == 'mailto:') {
+          $result[$key]['contactPoint']['hasEmail'] .= variable_get('site_mail');
+        }
+        if (!isset($dataset['keyword'])) {
+          if (isset($dataset['publisher']['name'])) {
+            $result[$key]['keyword'] = array(_open_data_schema_map_keyword_string($dataset['publisher']['name']));
+          }
+          else {
+            $result[$key]['keyword'] = array('health');
+          }
+        }
+        if (!isset($dataset['description'])) {
+          $result[$key]['description'] = t('No description provided');
+        }
+        if (isset($dataset['distribution'])) {
+          foreach ($dataset['distribution'] as $num => $dist) {
+            if (empty($dist['mediaType'])) {
+              $result[$key]['distribution'][$num]['mediaType'] = 'application/unknown';
+            }
+            if (empty($dist['downloadURL']) || $dist['downloadURL'] == 'http://') {
+              unset($result[$key]['distribution'][$num]['downloadURL']);
+            }
+            if (!$dist['format']) {
+              unset($result[$key]['distribution'][$num]['format']);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Get available filters.
+ *
+ * @param string $return_type
+ *   Valid values are 'machine_name', 'api_schema', 'name'
+ *
+ * @return array
+ *   Array of filters values of $return_type
+ */
+function _open_data_schema_map_get_available_filters($return_type = 'machine_name') {
+  $available_filters = array();
+  $available_filters_machine_name = array(
+    'data_json_1_1',
+    'dcat_v1_1',
+    'dcat_v1_1_json',
+  );
+
+  // Validate return_type.
+  if (!in_array($return_type, array('machine_name', 'api_schema', 'name'))) {
+    watchdog('open_data_schema_map',
+      'Invalid return type @return_type specified for _open_data_schema_map_get_available_filters()',
+      array('@return_type' => $return_type)
+    );
+    return NULL;
+  }
+
+  $apis = open_data_schema_map_api_load_all();
+  foreach ($apis as $num => $api) {
+    if (in_array($api->machine_name, $available_filters_machine_name)) {
+      $available_filters[] = $api->$return_type;
+    }
+  }
+
+  return $available_filters;
+}
+
+/**
+ * Utility function to see if an agency is in a list of publishers.
+ *
+ * @param string $agency_string
+ *   A string with the name of the agency or agencies that publish a dataset.
+ * @param array $publishers
+ *   An array with the names of publishers to be included.
+ *
+ * @return bool
+ *   Boolean (true if $agency_string contains one or more of the publishers).
+ */
+function _open_data_schema_map_settings_contains($agency_string, array $publishers) {
+  foreach ($publishers as $publisher) {
+    if (stripos($agency_string, $publisher) !== FALSE) {
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+/**
+ * String utility function.
+ *
+ * @param string $string
+ *   Input string
+ *
+ * @return string
+ *   Keyword alphanumeric string w/only dashes.
+ */
+function _open_data_schema_map_keyword_string($string) {
+  // Lower case everything.
+  $string = strtolower($string);
+  // Make alphanumeric (removes all other characters).
+  $string = preg_replace("/[^a-z0-9_\s-]/", "", $string);
+  // Clean up multiple dashes or whitespaces.
+  $string = preg_replace("/[\s-]+/", " ", $string);
+  // Convert whitespaces and underscore to dash.
+  $string = preg_replace("/[\s_]/", "-", $string);
+  return $string;
 }
