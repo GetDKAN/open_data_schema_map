@@ -30,6 +30,7 @@ if wget -q "$URL"; then
   bash dkan-init.sh dkan --skip-init --deps
   cd ..
   echo -ne 'y\n' | ahoy dkan drupal-rebuild $DATABASE_URL
+  ahoy dkan remake
   echo -ne 'N\n' | ahoy dkan reinstall
 else
   wget -O /tmp/dkan-init.sh https://raw.githubusercontent.com/NuCivic/dkan/$DKAN_VERSION/dkan-init.sh
@@ -46,6 +47,7 @@ else
   bash /tmp/dkan-init.sh $DKAN_MODULE $@ --skip-reinstall --branch=$DKAN_VERSION
 fi
 
+echo "Linking/Building Module..."
 ahoy dkan module-link $DKAN_MODULE
 ahoy dkan module-make $DKAN_MODULE
 
