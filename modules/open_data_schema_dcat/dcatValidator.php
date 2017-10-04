@@ -9,10 +9,6 @@ include implode('/', array($module_path, 'autoload.php'));
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer;
-
-
-use JsonSchema\Uri\UriRetriever;
-use JsonSchema\RefResolver;
 use JsonSchema\Validator;
 
 class validate {
@@ -51,16 +47,10 @@ class validate {
   }
 
   public function process($id) {
-    $retriever = new UriRetriever;
     $schemaFolder = DRUPAL_ROOT . '/' . drupal_get_path('module', 'open_data_schema_dcat') . '/data';
-    $schema = $retriever->retrieve('file://' . $schemaFolder . '/distribution.json');
     $data = $this->getDataset($id);
-
-    RefResolver::$maxDepth = 10;
-    $refResolver = new RefResolver($retriever);
-    $refResolver->resolve($schema, 'file://' . $schemaFolder . '/');
-    $validator = new Validator();
-    $validator->check($data, $schema);
+    $validator = new Validator;
+    $validator->check($data, (object)['$ref' => 'file://' . $schemaFolder . '/distribution.json']);
     return $validator;
   }
 
@@ -72,7 +62,6 @@ class validate {
 
   public function processAll() {
     $this->getDataRDF();
-    $retriever = new UriRetriever;
     $this->getIdentifiers();
     $this->validated = array();
     foreach ($this->identifiers as $id) {

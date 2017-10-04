@@ -3,11 +3,7 @@
 namespace podValidator;
 
 include __DIR__ . '/../../autoload.php';
-
-use JsonSchema\Uri\UriRetriever;
-use JsonSchema\RefResolver;
 use JsonSchema\Validator;
-
 class validate {
 
   function __construct($url) {
@@ -54,7 +50,6 @@ class validate {
   }
 
   public function process($id) {
-    $retriever = new UriRetriever;
     $schemaFolder = DRUPAL_ROOT . '/' . drupal_get_path('module', 'open_data_schema_pod') . '/data/v1.1';
     if (module_exists('open_data_federal_extras')) {
       $schema = $retriever->retrieve('file://' . $schemaFolder . '/dataset.json');
@@ -62,12 +57,8 @@ class validate {
       $schema = $retriever->retrieve('file://' . $schemaFolder . '/dataset-non-federal.json');
     }
     $data = $this->getDataset($id);
-
-    RefResolver::$maxDepth = 10;
-    $refResolver = new RefResolver($retriever);
-    $refResolver->resolve($schema, 'file://' . $schemaFolder . '/');
-    $validator = new Validator();
-    $validator->check($data, $schema);
+    $validator = new Validator;
+    $validator->check($data, (object)['$ref' => 'file://' . $schemaFolder . '/dataset.json']);
     return $validator;
   }
 
