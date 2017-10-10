@@ -105,6 +105,12 @@ When you return to the tags section of the form after saving, you will now see a
 
 ![screen shot 2014-07-16 at 12 22 00 am](https://cloud.githubusercontent.com/assets/512243/5281826/ad5e3eac-7ac6-11e4-8c7d-91076527c84d.png)
 
+### Data Federation Filtering
+
+To exclude specific groups from the API, navigate to `/admin/config/services/odsm/settings` and choose the groups you wish to include.
+
+You must then edit your API and check the **Apply Data Federation Filters** checkbox for the filters to apply to your endpoint.
+
 ## Customizing
 
 ### Adding new schemas
