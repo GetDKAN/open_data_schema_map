@@ -97,6 +97,76 @@ function open_data_schema_map_schema() {
     ),
     'primary key' => array('id'),
   );
+  $schema['odsm_url_validation'] = array(
+    'description' => 'Stores open data schema dataset URL validations',
+    'fields' => array(
+      'id' => array(
+        'description' => 'The primary identifier for a URL validation.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'url' => array(
+        'description' => 'URL to be validated',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'validation_required' => array(
+        'description' => 'Whether validation is required.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'size' => 'tiny',
+        'default' => 0,
+      ),
+      'schema_field' => array(
+        'description' => 'Field the URL was from.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+      ),
+      'date_validated' => array(
+        'description' => 'Unix timestamp of last validation.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'api_endpoint' => array(
+        'description' => 'API Endpoint being validated.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+      ),
+      'response_code' => array(
+        'type' => 'int',
+        'length' => 4,
+        'not null' => FALSE,
+        'description' => 'Response Code on URL Validation.',
+      ),
+      'response_message' => array(
+        'description' => 'Response Message on URL Validation.',
+        'type' => 'text',
+        'not null' => FALSE,
+      ),
+      'resource_nid' => array(
+        'description' => 'The node ID of the resource.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'resource_uuid' => array(
+        'description' => 'The UUID of the resource.',
+        'type' => 'varchar',
+        'not null' => FALSE,
+        'length' => 255,
+      ),
+    ),
+    'primary key' => array('id'),
+    'unique keys' => array(
+      'url_map' => array('url', 'api_endpoint'),
+    ),
+  );
   return $schema;
 }
 
@@ -137,5 +207,15 @@ function open_data_schema_map_update_7002() {
   $data_table_name = 'open_data_schema_map';
   if (!db_field_exists('open_data_schema_map', 'filter_enabled')) {
     db_add_field($data_table_name, 'filter_enabled', $column);
+  }
+}
+
+/**
+ * Create odsm_url_validation table if doesn't exist.
+ */
+function open_data_schema_map_update_7003() {
+  if (!db_table_exists('odsm_url_validation')) {
+    $schema = open_data_schema_map_schema();
+    db_create_table('odsm_url_validation', $schema['odsm_url_validation']);
   }
 }
