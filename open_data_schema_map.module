@@ -7,6 +7,8 @@
 
 $module_path = drupal_get_path('module', 'open_data_schema_map');
 require_once $module_path . '/open_data_schema_map.file_cache.inc';
+require_once $module_path . '/src/OdsmValidatorInterface.php';
+require_once $module_path . '/src/OdsmValidator.php';
 
 define('OPEN_DATA_SCHEMA_MAP_ADMIN_PATH', 'admin/config/services/odsm');
 
@@ -142,18 +144,18 @@ function open_data_schema_map_menu() {
   );
 
   // Read validation implementation and add to menu.
-  foreach (module_implements('open_data_schema_map_validation') as $module) {
-    $data = module_invoke($module, 'open_data_schema_map_validation');
+  foreach (module_implements('open_data_schema_map_info') as $module) {
+    $data = module_invoke($module, 'open_data_schema_map_info');
     $path = OPEN_DATA_SCHEMA_MAP_ADMIN_PATH . '/validate/' . $data['name'];
 
     $items[$path] = array(
       'title' => $data['title'],
-      'page callback' => $data['page callback'],
-      'page arguments' => array(),
+      'page callback' => 'open_data_schema_map_validation_page',
+      'page arguments' => array($data['validation_class'], $data['api_endpoint']),
       'access arguments' => array('administer open data schema mapper'),
       'type' => MENU_NORMAL_ITEM,
-      'file' => $data['file'],
-      'file path' => $data['file path'],
+      'file' => 'open_data_schema_map.pages.inc',
+      'file path' => drupal_get_path('module', 'open_data_schema_map'),
     );
   }
 
@@ -1351,26 +1353,30 @@ function open_data_schema_map_additional_fields_add($fields, $api) {
 }
 
 /**
- * Adds node links to errors.
- *
+  * Adds node links to errors.
+  *
  * @param array $rows
  *   Array of error rows
  *
  * @return array
  *   Error rows with node links added
  */
-function open_data_schema_validation_process_errors($rows) {
+function _open_data_schema_validation_process_errors($rows) {
   foreach ($rows as $key => $row) {
-    if (!isset($ids[$row['id']])) {
-      $nid = entity_get_id_by_uuid('node', array($row['id']));
-      $nid = $nid[$row['id']];
-      $node = node_load($nid);
-      $ids[$row['id']] = $node;
+    if (isset($row['id'])) {
+      if (!isset($ids[$row['id']])) {
+        $nids = entity_get_id_by_uuid('node', array($row['id']));
+        if ($nids) {
+          $nid = $nids[$row['id']];
+          $node = node_load($nid);
+          $ids[$row['id']] = $node;
+        }
+      }
+      else {
+        $node = $ids[$row['id']];
+      }
+      $rows[$key]['title'] = l($node->title, 'node/' . $node->nid);
     }
-    else {
-      $node = $ids[$row['id']];
-    }
-    $rows[$key]['title'] = l($node->title, 'node/' . $node->nid);
   }
   return $rows;
 }
@@ -1619,4 +1625,134 @@ function _open_data_schema_map_keyword_string($string) {
   // Convert whitespaces and underscore to dash.
   $string = preg_replace("/[\s_]/", "-", $string);
   return $string;
+}
+
+/**
+ * Implements hook_entity_info().
+ */
+function open_data_schema_map_entity_info() {
+  $info = array(
+    'odsm_url_validation' => array(
+      'label' => t('Open Data Schema Map URL Validation'),
+      'views controller class' => 'EntityDefaultViewsController',
+      'controller class' => 'EntityAPIController',
+      'base table' => 'odsm_url_validation',
+      'fieldable' => FALSE,
+      'entity keys' => array(
+        'id' => 'id',
+      ),
+      'module' => 'open_data_schema_map',
+      'access arguments' => array('administer open data schema mapper'),
+    ),
+  );
+  return $info;
+}
+
+/**
+ * Implements hook_entity_property_info_alter().
+ */
+function open_data_schema_map_entity_property_info_alter(&$info) {
+  // Connect the validation resource_nid to a node, override types.
+  $info['odsm_url_validation']['properties']['resource_nid']['type'] = 'node';
+  $info['odsm_url_validation']['properties']['date_validated']['type'] = 'date';
+  $info['odsm_url_validation']['properties']['validation_required']['type'] = 'boolean';
+}
+
+/**
+ * Create batch jobs for URL validation.
+ *
+ * @param string $validator_class
+ *   Validator class name
+ */
+function _open_data_schema_batch_url_validation($validator_class) {
+
+  if (!class_exists($validator_class)) {
+    drupal_set_message(t('URL Validation Class Not Found: @class', array('@class' => $validator_class)));
+    return;
+  }
+
+  $validator = new $validator_class();
+  $batch = array(
+    'title' => t('Validate URLs'),
+    'progress_message' => t('Remaining @remaining of @total validation runs.'),
+  );
+
+  $num_batches = ceil($validator->getNumUrlsReqValidation() / $validator->getNumValidationsPerRun());
+
+  for ($i = 0; $i < $num_batches; $i++) {
+    $batch['operations'][] = array('_open_data_schema_run_url_validation', array($validator_class));
+  }
+  batch_set($batch);
+}
+
+/**
+ * Run ODSM URL Validation.
+ *
+ * @param string $validator_class
+ *   Validator class name.
+ * @param mixed $context
+ *   Context
+ */
+function _open_data_schema_run_url_validation($validator_class, &$context) {
+  if (!class_exists($validator_class)) {
+    drupal_set_message(t('URL Validation Class Not Found: @class', array('@class' => $validator_class)));
+    return;
+  }
+
+  $validator = new $validator_class();
+  $validator->processValidations();
+}
+
+/**
+ * Validates individual datasets.
+ *
+ * @param string $validator_class
+ *   Validator class
+ * @param bool $clear_cache
+ *   If TRUE, will clear cached validation results.
+ *
+ * @return array
+ *   Array of errors, count, total_errors, error_datasets
+ */
+function _open_data_schema_map_process_validate($validator_class, $clear_cache = FALSE) {
+  if (!class_exists($validator_class)) {
+    $message = t('URL Validation Class Not Found: @class', array('@class' => $validator_class));
+    drupal_set_message($message);
+    $results = array(
+      'errors' => $message,
+      'total_errors' => 1,
+    );
+    return $results;
+  }
+
+  $cache_key = strtolower($validator_class) . '_validate_result';
+  if (!$clear_cache && $cache = cache_get($cache_key)) {
+    $results = $cache->data;
+    $results['cache_date'] = $cache->created;
+  }
+  else {
+    $validator = new $validator_class();
+    $validator->processAll();
+    $count = $validator->datasetCount();
+    $error_datasets = array();
+    $total_errors = 0;
+    if ($errors = $validator->getErrors()) {
+      $total_errors = count($errors);
+      foreach ($errors as $error) {
+        if (isset($error['id'])) {
+          $error_datasets[$error['id']] = 1;
+        }
+      }
+      $errors = _open_data_schema_validation_process_errors($errors);
+    }
+    $results = array(
+      'errors' => $errors,
+      'count' => $count,
+      'total_errors' => $total_errors,
+      'error_datasets' => $error_datasets,
+    );
+    cache_set($cache_key, $results, 'cache');
+    $results['cache_date'] = time();
+  }
+  return $results;
 }
