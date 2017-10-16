@@ -4,6 +4,7 @@
  * @file
  * Maps entity types to Open Data schemas.
  */
+include_once 'open_data_schema_map.features.inc';
 
 $module_path = drupal_get_path('module', 'open_data_schema_map');
 require_once $module_path . '/open_data_schema_map.file_cache.inc';
