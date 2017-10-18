@@ -527,3 +527,121 @@ function open_data_schema_map_endpoint($api) {
     }
   }
 }
+
+
+/**
+ * Callback for validation page.
+ */
+function open_data_schema_map_validation_page($validator_class, $api_endpoint) {
+  $render = array();
+
+  $results = _open_data_schema_map_process_validate($validator_class);
+  $cache_date = isset($results['cache_date']) ? $results['cache_date'] : '';
+  $cache_form = drupal_get_form('open_data_schema_map_validate_cache_clear', $cache_date, $validator_class, $api_endpoint);
+
+  $total = array(
+    array(
+      $results['count'],
+      count($results['error_datasets']),
+      $results['total_errors'],
+    ),
+  );
+
+  $total_table = theme('table', array(
+    'header' => array(
+      t('Total Datasets'),
+      t('Datasets with Errors'),
+      t('Errors'),
+    ), 'rows' => $total,
+  ));
+
+  $render['total'] = array(
+    '#type' => 'markup',
+    '#markup' => $total_table,
+  );
+
+  if ($results['errors']) {
+    $headers = array('id', 'property', 'error', 'link');
+    $table = theme('table', array('header' => $headers, 'rows' => $results['errors']));
+    $render['fieldset'] = array(
+      '#type' => 'fieldset',
+      '#title' => 'errors',
+      '#attributes' => array('class' => array('collapsible', 'collapsed')),
+      'content' => array(
+        '#markup' => $table,
+      ),
+      '#attached' => array('js' => array('misc/collapse.js', 'misc/form.js')),
+    );
+  }
+
+  $url_validations_view = '<h1>URL Validation</h1>';
+
+  /* @var $validator OdsmValidatorInterface */
+  $validator = new $validator_class();
+  $num_remaining = $validator->getNumUrlsReqValidation();
+  $url_validations_view .= '<div class="url_validations-stats">' . $num_remaining . ' URLs remaining to be validated. Click <strong>"Run URL Validation"</strong> to validate</div><br>';
+  $url_validations_view .= views_embed_view('url_validations', 'default', $api_endpoint);
+
+  return drupal_render($cache_form) . drupal_render($render) . $url_validations_view;
+}
+
+/**
+ * Returns the render array for the form.
+ */
+function open_data_schema_map_validate_cache_clear($form, $form_state, $created, $validator_class, $api_endpoint) {
+  if (!empty($created)) {
+    $form['cache'] = array(
+      '#type' => 'markup',
+      '#markup' => t('Result cached %date.', array('%date' => date('F j, Y, g:i a', $created))),
+    );
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Clear cache'),
+    );
+  }
+
+  $form['requeue_urls'] = array(
+    '#type' => 'submit',
+    '#value' => t('Mark All URLs To Be Validated'),
+  );
+  $form['validate_urls'] = array(
+    '#type' => 'submit',
+    '#value' => t('Run URL Validation'),
+  );
+  $form['validator_class'] = array(
+    '#type' => 'hidden',
+    '#value' => $validator_class,
+  );
+  $form['api_endpoint'] = array(
+    '#type' => 'hidden',
+    '#value' => $api_endpoint,
+  );
+  return $form;
+}
+
+/**
+ * Add a submit handler/function to the form.
+ */
+
+function open_data_schema_map_validate_cache_clear_submit($form, &$form_state) {
+  $validator_class = $form_state['input']['validator_class'];
+  if ($form_state['triggering_element']['#id'] == 'edit-validate-urls') {
+    _open_data_schema_batch_url_validation($validator_class);
+  }
+  else if ($form_state['triggering_element']['#id'] == 'edit-requeue-urls') {
+    /* @var $validator OdsmValidatorInterface */
+    $validator = new $validator_class();
+    $validator->queueUrlsForValidation();
+    drupal_set_message(t('URLs queued for validation.'));
+  }
+  else if ($form_state['triggering_element']['#id'] == 'edit-submit') {
+    $cache_key = strtolower($validator_class) . '_validate_result';
+    cache_clear_all($cache_key, 'cache');
+
+    /* @var $validator OdsmValidatorInterface */
+    $validator = new $validator_class();
+    $validator->clearUrlsForValidation();
+    drupal_set_message(t('The validator cache has been cleared.'));
+  }
+}
+
