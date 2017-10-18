@@ -7,6 +7,8 @@
 
 $module_path = drupal_get_path('module', 'open_data_schema_map');
 require_once $module_path . '/open_data_schema_map.file_cache.inc';
+require_once $module_path . '/src/OdsmValidatorInterface.php';
+require_once $module_path . '/src/OdsmValidator.php';
 
 define('OPEN_DATA_SCHEMA_MAP_ADMIN_PATH', 'admin/config/services/odsm');
 
