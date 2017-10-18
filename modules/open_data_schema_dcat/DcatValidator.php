@@ -1,94 +1,60 @@
 <?php
 
-namespace dcatValidator;
-
 include __DIR__ . '/../../autoload.php';
 $module_path = drupal_get_path('module', 'open_data_schema_map_xml_output');
 include implode('/', array($module_path, 'autoload.php'));
 
-use Symfony\Component\Serializer\Serializer;
-use Symfony\Component\Serializer\Encoder\XmlEncoder;
-use Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer;
-
-
 use JsonSchema\Uri\UriRetriever;
-use JsonSchema\RefResolver;
-use JsonSchema\Validator;
 
-class validate {
+class DcatValidator extends OdsmValidator {
+  private $schemaInfo;
 
-  function __construct($url) {
-    $this->url = $url;
-    $this->errors = array();
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDatasetIdProperty() {
+    return "dct:identifier";
   }
 
-  public function getDataRDF()
-  {
-    if (!isset($this->dataset)) {
-      $this->dataset = array();
-      $data = json_decode(file_get_contents($this->url));
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDatasetURLs($dataset) {
+    $urls = array();
 
-      $this->dataRDF = $data;
-
-      foreach($this->dataRDF as $dataset) {
-        $this->dataset[$dataset->{"dct:identifier"}] = $dataset;
-      }
+    // Determine URL fields.
+    if (!empty($dataset->{'@rdf:about'})) {
+      $urls[$dataset->{'@rdf:about'}][] = '@rdf:about';
     }
-  }
-
-  public function getDataset($id)
-  {
-    return $this->dataset[$id];
-  }
-
-  public function getIdentifiers()
-  {
-    $this->identifers = array();
-    $data = $this->dataRDF;
-    foreach ($data as $dataset) {
-      $this->identifiers[] = $dataset->{"dct:identifier"};
-    }
-  }
-
-  public function process($id) {
-    $retriever = new UriRetriever;
-    $schemaFolder = DRUPAL_ROOT . '/' . drupal_get_path('module', 'open_data_schema_dcat') . '/data';
-    $schema = $retriever->retrieve('file://' . $schemaFolder . '/distribution.json');
-    $data = $this->getDataset($id);
-
-    RefResolver::$maxDepth = 10;
-    $refResolver = new RefResolver($retriever);
-    $refResolver->resolve($schema, 'file://' . $schemaFolder . '/');
-    $validator = new Validator();
-    $validator->check($data, $schema);
-    return $validator;
-  }
-
-  public function datasetCount()
-  {
-    $this->getDataRDF();
-    return count($this->dataset);
-  }
-
-  public function processAll() {
-    $this->getDataRDF();
-    $retriever = new UriRetriever;
-    $this->getIdentifiers();
-    $this->validated = array();
-    foreach ($this->identifiers as $id) {
-      $validator = $this->process($id);
-
-      if ($validator->isValid()) {
-      }
-      else {
-        foreach ($validator->getErrors() as $error) {
-          $this->errors[] = array('id' => $id, 'property' => $error['property'], 'error' => $error['message']);
+    foreach ($dataset->{'dcat:Distribution'} as $distribution) {
+      $distribution_fields = array(
+        'dcat:accessURL',
+        'dcat:downloadURL',
+        'foaf:page',
+      );
+      foreach ($distribution_fields as $distribution_field) {
+        if (!empty($distribution->$distribution_field)) {
+          $urls[trim($distribution->$distribution_field)][] = $distribution_field;
         }
       }
     }
+    return $urls;
   }
 
-  public function getErrors() {
-    return $this->errors;
+  /**
+   * {@inheritdoc}
+   */
+  protected function getSchemaInfo() {
+    if (empty($this->schemaInfo)) {
+      $retriever = new UriRetriever();
+      $schema_folder = DRUPAL_ROOT . '/' . drupal_get_path('module', 'open_data_schema_dcat') . '/data';
+      $schema = $retriever->retrieve('file://' . $schema_folder . '/distribution.json');
+
+      $this->schemaInfo = new \stdClass();
+      $this->schemaInfo->schema = $schema;
+      $this->schemaInfo->schema_folder = $schema_folder;
+      $this->schemaInfo->api_endpoint = 'catalog.json';
+    }
+    return $this->schemaInfo;
   }
 }

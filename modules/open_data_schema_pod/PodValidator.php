@@ -1,100 +1,74 @@
 <?php
 
-namespace podValidator;
-
 include __DIR__ . '/../../autoload.php';
-
 use JsonSchema\Uri\UriRetriever;
-use JsonSchema\RefResolver;
-use JsonSchema\Validator;
 
-class validate {
+/**
+ * Class validate
+ * @package podValidator
+ */
+class PodValidator extends OdsmValidator {
 
-  function __construct($url) {
-    $this->url = $url;
-    $this->errors = array();
+  protected function getDatasetIdProperty() {
+    return "identifier";
   }
 
-  public function getDataJSON()
-  {
-    if (!isset($this->dataset)) {
-      $this->dataset = array();
-      $arrContextOptions = array(
-        "ssl"=>array(
-          "verify_peer"=>false,
-          "verify_peer_name"=>false,
-        ),
-      );
-      $resp = drupal_http_request($this->url, array('context' => stream_context_create($arrContextOptions)));
-      if ($resp->code == 200) {
-        $this->dataJSON = json_decode($resp->data);
-        foreach($this->dataJSON->dataset as $dataset) {
-          $this->dataset[$dataset->identifier] = $dataset;
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDatasetURLs($dataset) {
+    $urls = array();
+
+    // Determine URL fields.
+    $fields = array(
+      'describedBy',
+      'landingPage',
+      'license',
+      'systemOfRecords',
+    );
+    foreach ($fields as $field) {
+      if (!empty($dataset->$field)) {
+        $urls[trim($dataset->$field)][] = $field;
+      }
+    }
+
+    if (!empty($dataset->{'@rdf:about'})) {
+      $urls[$dataset->{'@rdf:about'}][] = '@rdf:about';
+    }
+    if (isset($dataset->distribution)) {
+      foreach ($dataset->distribution as $distribution) {
+        $distribution_fields = array(
+          'accessURL',
+          'downloadURL',
+        );
+        foreach ($distribution_fields as $distribution_field) {
+          if (!empty($distribution->$distribution_field)) {
+            $urls[trim($distribution->$distribution_field)][] = $distribution_field;
+          }
         }
-        $this->dataJSON->dataset = $this->dataset;
-      }
-      else {
-        throw new \Exception(t("POD validator could not access %url", array("%url" => $this->url)));
       }
     }
+    return $urls;
   }
 
-  public function getDataset($id)
-  {
-    return $this->dataset[$id];
-  }
-
-  public function getIdentifiers()
-  {
-    $this->identifers = array();
-    $data = $this->dataJSON;
-    foreach ($data->dataset as $dataset) {
-      $this->identifiers[] = $dataset->identifier;
-    }
-  }
-
-  public function process($id) {
-    $retriever = new UriRetriever;
-    $schemaFolder = DRUPAL_ROOT . '/' . drupal_get_path('module', 'open_data_schema_pod') . '/data/v1.1';
+  /**
+   * {@inheritdoc}
+   */
+  public function getSchemaInfo() {
+    $retriever = new UriRetriever();
+    $schema_folder = DRUPAL_ROOT . '/' . drupal_get_path('module', 'open_data_schema_pod') . '/data/v1.1';
     if (module_exists('open_data_federal_extras')) {
-      $schema = $retriever->retrieve('file://' . $schemaFolder . '/dataset.json');
-    } else {
-      $schema = $retriever->retrieve('file://' . $schemaFolder . '/dataset-non-federal.json');
+      $schema_filename = 'dataset.json';
     }
-    $data = $this->getDataset($id);
-
-    RefResolver::$maxDepth = 10;
-    $refResolver = new RefResolver($retriever);
-    $refResolver->resolve($schema, 'file://' . $schemaFolder . '/');
-    $validator = new Validator();
-    $validator->check($data, $schema);
-    return $validator;
-  }
-
-  public function datasetCount()
-  {
-    $this->getDataJSON();
-    return count($this->dataset);
-  }
-
-  public function processAll() {
-    $this->getDataJSON();
-    $this->getIdentifiers();
-    $this->validated = array();
-    foreach ($this->identifiers as $id) {
-      $validator = $this->process($id);
-
-      if ($validator->isValid()) {
-      }
-      else {
-        foreach ($validator->getErrors() as $error) {
-          $this->errors[] = array('id' => $id, 'property' => $error['property'], 'error' => $error['message']);
-        }
-      }
+    else {
+      $schema_filename = 'dataset-non-federal.json';
     }
-  }
+    $schema = $retriever->retrieve('file://' . $schema_folder . '/' . $schema_filename);
 
-  public function getErrors() {
-    return $this->errors;
+    $schema_obj = new \stdClass();
+    $schema_obj->schema = $schema;
+    $schema_obj->schema_folder = $schema_folder;
+    $schema_obj->api_endpoint = 'data.json';
+    return $schema_obj;
   }
 }
