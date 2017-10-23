@@ -220,7 +220,7 @@ function open_data_schema_map_help($path, $arg) {
   switch ($path) {
     case 'admin/config/services/odsm':
       return t('Create APIs using Drupal entities that map to Open Data specifications. See !docs for more instructions.',
-     array('!docs' => l(t('documentation'), 'https://github.com/NuCivic/open_data_schema_map#open-data-schema-map')));
+     array('!docs' => l(t('documentation'), 'https://github.com/GetDKAN/open_data_schema_map#open-data-schema-map')));
   }
   return NULL;
 }
