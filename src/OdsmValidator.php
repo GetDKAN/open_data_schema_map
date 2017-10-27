@@ -19,6 +19,8 @@ abstract class OdsmValidator implements OdsmValidatorInterface {
 
   abstract protected function getDatasetsFromData($data);
 
+  abstract protected function getDatasetsFromData($data);
+
   private function getUrl() {
     global $base_url;
     $schema_info = $this->getSchemaInfo();
@@ -57,8 +59,9 @@ abstract class OdsmValidator implements OdsmValidatorInterface {
   private function getDatasets() {
     if (empty($this->datasets)) {
       $data = $this->getData();
-      foreach ($data as $dataset) {
-        $this->datasets[] = $dataset;
+      foreach ($this->getDatasetsFromData($data) as $dataset) {
+        $id = $this->getDatasetId($dataset);
+        $this->datasets[$id] = $dataset;
       }
     }
 

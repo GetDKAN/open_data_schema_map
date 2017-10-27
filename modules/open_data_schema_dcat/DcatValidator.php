@@ -32,4 +32,11 @@ class DcatValidator extends OdsmValidator {
     }
     return $this->schemaInfo;
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDatasetsFromData($data) {
+    return $data;
+  }
 }

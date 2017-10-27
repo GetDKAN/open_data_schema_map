@@ -33,4 +33,11 @@ class PodValidator extends OdsmValidator {
     $schema_obj->api_endpoint = 'data.json';
     return $schema_obj;
   }
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDatasetsFromData($data) {
+    return $data->dataset;
+  }
+
 }
