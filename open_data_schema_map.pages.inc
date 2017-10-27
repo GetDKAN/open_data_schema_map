@@ -574,15 +574,7 @@ function open_data_schema_map_validation_page($validator_class, $api_endpoint) {
     );
   }
 
-  $url_validations_view = '<h1>URL Validation</h1>';
-
-  /* @var $validator OdsmValidatorInterface */
-  $validator = new $validator_class();
-  $num_remaining = $validator->getNumUrlsReqValidation();
-  $url_validations_view .= '<div class="url_validations-stats">' . $num_remaining . ' URLs remaining to be validated. Click <strong>"Run URL Validation"</strong> to validate</div><br>';
-  $url_validations_view .= views_embed_view('url_validations', 'default', $api_endpoint);
-
-  return drupal_render($cache_form) . drupal_render($render) . $url_validations_view;
+  return drupal_render($cache_form) . drupal_render($render);
 }
 
 /**
@@ -600,14 +592,6 @@ function open_data_schema_map_validate_cache_clear($form, $form_state, $created,
     );
   }
 
-  $form['requeue_urls'] = array(
-    '#type' => 'submit',
-    '#value' => t('Mark All URLs To Be Validated'),
-  );
-  $form['validate_urls'] = array(
-    '#type' => 'submit',
-    '#value' => t('Run URL Validation'),
-  );
   $form['validator_class'] = array(
     '#type' => 'hidden',
     '#value' => $validator_class,
@@ -622,25 +606,12 @@ function open_data_schema_map_validate_cache_clear($form, $form_state, $created,
 /**
  * Add a submit handler/function to the form.
  */
-
 function open_data_schema_map_validate_cache_clear_submit($form, &$form_state) {
-  $validator_class = $form_state['input']['validator_class'];
-  if ($form_state['triggering_element']['#id'] == 'edit-validate-urls') {
-    _open_data_schema_batch_url_validation($validator_class);
-  }
-  else if ($form_state['triggering_element']['#id'] == 'edit-requeue-urls') {
-    /* @var $validator OdsmValidatorInterface */
-    $validator = new $validator_class();
-    $validator->queueUrlsForValidation();
-    drupal_set_message(t('URLs queued for validation.'));
-  }
-  else if ($form_state['triggering_element']['#id'] == 'edit-submit') {
+  if ($form_state['triggering_element']['#id'] == 'edit-submit') {
+    $validator_class = $form_state['input']['validator_class'];
     $cache_key = strtolower($validator_class) . '_validate_result';
     cache_clear_all($cache_key, 'cache');
 
-    /* @var $validator OdsmValidatorInterface */
-    $validator = new $validator_class();
-    $validator->clearUrlsForValidation();
     drupal_set_message(t('The validator cache has been cleared.'));
   }
 }

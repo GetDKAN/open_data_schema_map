@@ -16,44 +16,6 @@ class PodValidator extends OdsmValidator {
   /**
    * {@inheritdoc}
    */
-  protected function getDatasetURLs($dataset) {
-    $urls = array();
-
-    // Determine URL fields.
-    $fields = array(
-      'describedBy',
-      'landingPage',
-      'license',
-      'systemOfRecords',
-    );
-    foreach ($fields as $field) {
-      if (!empty($dataset->$field)) {
-        $urls[trim($dataset->$field)][] = $field;
-      }
-    }
-
-    if (!empty($dataset->{'@rdf:about'})) {
-      $urls[$dataset->{'@rdf:about'}][] = '@rdf:about';
-    }
-    if (isset($dataset->distribution)) {
-      foreach ($dataset->distribution as $distribution) {
-        $distribution_fields = array(
-          'accessURL',
-          'downloadURL',
-        );
-        foreach ($distribution_fields as $distribution_field) {
-          if (!empty($distribution->$distribution_field)) {
-            $urls[trim($distribution->$distribution_field)][] = $distribution_field;
-          }
-        }
-      }
-    }
-    return $urls;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getSchemaInfo() {
     $retriever = new UriRetriever();
     $schema_folder = DRUPAL_ROOT . '/' . drupal_get_path('module', 'open_data_schema_pod') . '/data/v1.1';

@@ -19,31 +19,6 @@ class DcatValidator extends OdsmValidator {
   /**
    * {@inheritdoc}
    */
-  protected function getDatasetURLs($dataset) {
-    $urls = array();
-
-    // Determine URL fields.
-    if (!empty($dataset->{'@rdf:about'})) {
-      $urls[$dataset->{'@rdf:about'}][] = '@rdf:about';
-    }
-    foreach ($dataset->{'dcat:Distribution'} as $distribution) {
-      $distribution_fields = array(
-        'dcat:accessURL',
-        'dcat:downloadURL',
-        'foaf:page',
-      );
-      foreach ($distribution_fields as $distribution_field) {
-        if (!empty($distribution->$distribution_field)) {
-          $urls[trim($distribution->$distribution_field)][] = $distribution_field;
-        }
-      }
-    }
-    return $urls;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   protected function getSchemaInfo() {
     if (empty($this->schemaInfo)) {
       $retriever = new UriRetriever();

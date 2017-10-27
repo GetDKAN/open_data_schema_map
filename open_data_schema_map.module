@@ -1640,7 +1640,7 @@ function _open_data_schema_map_keyword_string($string) {
  */
 function _open_data_schema_map_process_validate($validator_class, $clear_cache = FALSE) {
   if (!class_exists($validator_class)) {
-    $message = t('URL Validation Class Not Found: @class', array('@class' => $validator_class));
+    $message = t('Validation Class Not Found: @class', array('@class' => $validator_class));
     drupal_set_message($message);
     $results = array(
       'errors' => $message,
