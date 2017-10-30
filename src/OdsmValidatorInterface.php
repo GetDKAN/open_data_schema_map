@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Interface odsmValidatorInterface
+ * Interface OdsmValidatorInterface
  * @package openDataSchemaMap
  */
 interface OdsmValidatorInterface {

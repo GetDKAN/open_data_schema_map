@@ -5,13 +5,11 @@
  * @package DcatValidator
  */
 class DcatValidator extends OdsmValidator {
-  private $schemaInfo;
-
   /**
    * {@inheritdoc}
    */
   protected function getDatasetIdProperty() {
-    return "dct:identifier";
+    return 'dct:identifier';
   }
 
   /**

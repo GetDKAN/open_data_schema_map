@@ -1,13 +1,15 @@
 <?php
 
 /**
- * Class validate
+ * Class PodValidator
  * @package podValidator
  */
 class PodValidator extends OdsmValidator {
-
+  /**
+   * {@inheritdoc}
+   */
   protected function getDatasetIdProperty() {
-    return "identifier";
+    return 'identifier';
   }
 
   /**
@@ -36,5 +38,4 @@ class PodValidator extends OdsmValidator {
   protected function getDatasetsFromData($data) {
     return $data->dataset;
   }
-
 }
