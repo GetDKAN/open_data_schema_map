@@ -1,8 +1,5 @@
 <?php
 
-include __DIR__ . '/../../autoload.php';
-use JsonSchema\Uri\UriRetriever;
-
 /**
  * Class validate
  * @package podValidator
@@ -16,8 +13,8 @@ class PodValidator extends OdsmValidator {
   /**
    * {@inheritdoc}
    */
-  public function getSchemaInfo() {
-    $retriever = new UriRetriever();
+  protected function getSchemaInfo() {
+    $retriever = new JsonSchema\Uri\UriRetriever();
     $schema_folder = DRUPAL_ROOT . '/' . drupal_get_path('module', 'open_data_schema_pod') . '/data/v1.1';
     if (module_exists('open_data_federal_extras')) {
       $schema_filename = 'dataset.json';
