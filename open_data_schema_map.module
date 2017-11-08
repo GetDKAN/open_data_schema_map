@@ -7,9 +7,6 @@
 
 $module_path = drupal_get_path('module', 'open_data_schema_map');
 require_once $module_path . '/open_data_schema_map.file_cache.inc';
-include __DIR__ . '/autoload.php';
-require_once $module_path . '/src/OdsmValidatorInterface.php';
-require_once $module_path . '/src/OdsmValidator.php';
 
 define('OPEN_DATA_SCHEMA_MAP_ADMIN_PATH', 'admin/config/services/odsm');
 
@@ -145,18 +142,18 @@ function open_data_schema_map_menu() {
   );
 
   // Read validation implementation and add to menu.
-  foreach (module_implements('open_data_schema_map_info') as $module) {
-    $data = module_invoke($module, 'open_data_schema_map_info');
+  foreach (module_implements('open_data_schema_map_validation') as $module) {
+    $data = module_invoke($module, 'open_data_schema_map_validation');
     $path = OPEN_DATA_SCHEMA_MAP_ADMIN_PATH . '/validate/' . $data['name'];
 
     $items[$path] = array(
       'title' => $data['title'],
-      'page callback' => 'open_data_schema_map_validation_page',
-      'page arguments' => array($data['validation_class'], $data['api_endpoint']),
+      'page callback' => $data['page callback'],
+      'page arguments' => array(),
       'access arguments' => array('administer open data schema mapper'),
       'type' => MENU_NORMAL_ITEM,
-      'file' => 'open_data_schema_map.pages.inc',
-      'file path' => drupal_get_path('module', 'open_data_schema_map'),
+      'file' => $data['file'],
+      'file path' => $data['file path'],
     );
   }
 
@@ -1354,30 +1351,26 @@ function open_data_schema_map_additional_fields_add($fields, $api) {
 }
 
 /**
-  * Adds node links to errors.
-  *
+ * Adds node links to errors.
+ *
  * @param array $rows
  *   Array of error rows
  *
  * @return array
  *   Error rows with node links added
  */
-function _open_data_schema_validation_process_errors($rows) {
+function open_data_schema_validation_process_errors($rows) {
   foreach ($rows as $key => $row) {
-    if (isset($row['id'])) {
-      if (!isset($ids[$row['id']])) {
-        $nids = entity_get_id_by_uuid('node', array($row['id']));
-        if ($nids) {
-          $nid = $nids[$row['id']];
-          $node = node_load($nid);
-          $ids[$row['id']] = $node;
-        }
-      }
-      else {
-        $node = $ids[$row['id']];
-      }
-      $rows[$key]['title'] = l($node->title, 'node/' . $node->nid);
+    if (!isset($ids[$row['id']])) {
+      $nid = entity_get_id_by_uuid('node', array($row['id']));
+      $nid = $nid[$row['id']];
+      $node = node_load($nid);
+      $ids[$row['id']] = $node;
     }
+    else {
+      $node = $ids[$row['id']];
+    }
+    $rows[$key]['title'] = l($node->title, 'node/' . $node->nid);
   }
   return $rows;
 }
@@ -1626,59 +1619,4 @@ function _open_data_schema_map_keyword_string($string) {
   // Convert whitespaces and underscore to dash.
   $string = preg_replace("/[\s_]/", "-", $string);
   return $string;
-}
-
-/**
- * Validates individual datasets.
- *
- * @param string $validator_class
- *   Validator class
- * @param bool $clear_cache
- *   If TRUE, will clear cached validation results.
- *
- * @return array
- *   Array of errors, count, total_errors, error_datasets
- */
-function _open_data_schema_map_process_validate($validator_class, $clear_cache = FALSE) {
-  if (!class_exists($validator_class)) {
-    $message = t('Validation Class Not Found: @class', array('@class' => $validator_class));
-    drupal_set_message($message);
-    $results = array(
-      'errors' => $message,
-      'total_errors' => 1,
-    );
-    return $results;
-  }
-
-  $cache_key = strtolower($validator_class) . '_validate_result';
-  if (!$clear_cache && $cache = cache_get($cache_key)) {
-    $results = $cache->data;
-    $results['cache_date'] = $cache->created;
-  }
-  else {
-    /* @var $validator OdsmValidatorInterface */
-    $validator = new $validator_class();
-    $validator->validate();
-    $count = $validator->datasetCount();
-    $error_datasets = array();
-    $total_errors = 0;
-    if ($errors = $validator->getErrors()) {
-      $total_errors = count($errors);
-      foreach ($errors as $error) {
-        if (isset($error['id'])) {
-          $error_datasets[$error['id']] = 1;
-        }
-      }
-      $errors = _open_data_schema_validation_process_errors($errors);
-    }
-    $results = array(
-      'errors' => $errors,
-      'count' => $count,
-      'total_errors' => $total_errors,
-      'error_datasets' => $error_datasets,
-    );
-    cache_set($cache_key, $results, 'cache');
-    $results['cache_date'] = time();
-  }
-  return $results;
 }
