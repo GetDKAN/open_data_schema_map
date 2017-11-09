@@ -161,7 +161,7 @@ abstract class OdsmValidator implements OdsmValidatorInterface {
         $this->data = json_decode($resp->data);
       }
       else {
-        $message = t("Validator timeout or could not access %url: %error", array("%url" => $this->url, "%error" => $resp->error));
+        $message = t("Validator timeout or could not access %url: %error", array("%url" => $this->getUrl(), "%error" => $resp->error));
         $this->errors[] = array(
           'error' => $message,
         );
