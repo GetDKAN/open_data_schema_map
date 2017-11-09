@@ -1129,6 +1129,13 @@ function open_data_schema_map_endpoint_process_field($api_field, $token, $type, 
   if ($token && isset($token['value']) && isset($token['type'])) {
     $result = open_data_schema_mapper_token_replace($token['value'], $type, $entity);
     $result = open_data_schema_mapper_field_type_check($result, $token);
+    // node_tokens() encodes all but body or summary fields, uses safe_.
+    // Decode HTML entities since it's allowed in JSON and XML.
+    // Only using on [*:title] and [node:og_group_ref].
+    // New token [node:body_raw] is available.
+    if (strpos($token['value'], ':title') !== FALSE || $token['value'] == '[node:og_group_ref]') {
+      $result = htmlspecialchars_decode($result, ENT_QUOTES);
+    }
   }
   drupal_alter('open_data_schema_map_process_field', $result, $api_field, $token);
   return $result;
@@ -1354,8 +1361,8 @@ function open_data_schema_map_additional_fields_add($fields, $api) {
 }
 
 /**
-  * Adds node links to errors.
-  *
+ * Adds node links to errors.
+ *
  * @param array $rows
  *   Array of error rows
  *
@@ -1681,4 +1688,51 @@ function _open_data_schema_map_process_validate($validator_class, $clear_cache =
     $results['cache_date'] = time();
   }
   return $results;
+}
+
+/**
+ * Implements hook_token_info().
+ */
+function open_data_schema_map_token_info() {
+  $info['tokens']['node']['body_raw'] = array(
+    'name' => t('Body Raw Value'),
+    'description' => t('The raw value of the body node field. This is not checked for any injected code/escaped.'),
+  );
+
+  return $info;
+}
+
+/**
+ * Implements hook_tokens().
+ */
+function open_data_schema_map_tokens($type, $tokens, array $data = array(), array $options = array()) {
+  // Provide [node:body_raw] token replacement. This is not a safe value.
+  $replacements = array();
+  if (isset($options['language'])) {
+    $url_options['language'] = $options['language'];
+    $language_code = $options['language']->language;
+  }
+  else {
+    $language_code = NULL;
+  }
+
+  if ($type == 'node' && !empty($data['node'])) {
+    $node = $data['node'];
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+        case 'body_raw':
+          if ($items = field_get_items('node', $node, 'body', $language_code)) {
+            $output = $items[0]['value'];
+            // Basic UTF8 checking for security. body_raw is not a safe value.
+            if (drupal_validate_utf8($output)) {
+              $replacements[$original] = $output;
+            }
+          }
+          break;
+
+      }
+    }
+  }
+
+  return $replacements;
 }
