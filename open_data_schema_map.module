@@ -346,7 +346,8 @@ function open_data_schema_map_token_rows(&$rows, $token_info) {
 function open_data_schema_map_token_tree($token) {
   module_load_include('inc', 'token', 'token.pages');
 
-  $tree = token_build_tree('node');
+  $options = array('depth' => 3);
+  $tree = token_build_tree('node',$options);
   if (!isset($tree[$token])) {
     $token = substr($token, 0, -1) . ":?]";
   }

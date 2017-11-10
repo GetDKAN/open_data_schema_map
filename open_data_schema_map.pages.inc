@@ -309,6 +309,7 @@ function open_data_schema_map_manage(array $form, array &$form_state, $api = NUL
       $form['mapping']['token_help']['tokens'] = array(
         '#theme' => 'token_tree',
         '#token_types' => array('node'),
+        '#recursion_limit' => 3
       );
       $form['mapping']['token_help']['help'] = array(
         '#type' => 'item',
