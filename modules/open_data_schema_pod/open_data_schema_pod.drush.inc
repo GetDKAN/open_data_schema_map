@@ -21,5 +21,5 @@ function open_data_schema_pod_drush_command() {
  * Runs data.json validation for drush.
  */
 function open_data_schema_pod_drush_validate() {
-  _open_data_schema_map_process_validate('pod');
+  _open_data_schema_map_drush_validate('pod');
 }

@@ -20,7 +20,7 @@ function open_data_schema_map_drush_command() {
   $items['odsm-validate'] = array(
     'aliases' => array('odsmv'),
     'description' => 'Validate Open Data Schema Map',
-    'callback' => '_open_data_schema_drush_validate',
+    'callback' => '_open_data_schema_map_drush_validate',
     'arguments' => array(
       'schema' => 'Schema to validate (eg. dcat, pod)',
     ),
@@ -32,7 +32,7 @@ function open_data_schema_map_drush_command() {
 /**
  * Runs validation for drush.
  */
-function _open_data_schema_drush_validate($schema) {
+function _open_data_schema_map_drush_validate($schema) {
   // @todo Assumes class name is based on schema name.
   $validator_class = ucfirst($schema) . 'Validator';
 
