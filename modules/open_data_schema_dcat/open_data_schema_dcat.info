@@ -8,6 +8,3 @@ dependencies[] = open_data_schema_map_xml_output
 dependencies[] = pathauto
 files[] = DcatValidator.php
 
-; Information added by DKAN release script on 1/8/2018
-version = 7.x-1.14.1
-project = dkan

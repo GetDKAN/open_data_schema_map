@@ -9,6 +9,3 @@ dependencies[] = token
 files[] = open_data_schema_map.features.inc
 files[] = test/open_data_schema_map_api.test
 
-; Information added by DKAN release script on 1/8/2018
-version = 7.x-1.14.1
-project = dkan
