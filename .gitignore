@@ -1,6 +1,5 @@
 vendor
 bin
 vendor/*
-composer.lock
 lib
 lib/*
