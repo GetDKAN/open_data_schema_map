@@ -11,7 +11,7 @@
         "bin-dir": "bin"
     },
     "require": {
-        "symfony/serializer": "^4.0",
-        "justinrainbow/json-schema": "^5.2"
+        "symfony/serializer": "3.4.15",
+        "justinrainbow/json-schema": "5.2.7"
     }
 }
