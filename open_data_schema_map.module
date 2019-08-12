@@ -1046,7 +1046,7 @@ function open_data_schema_map_endpoint_process_map($ids, $api) {
       $count++;
       $index++;
       if ($count == 100 || $index == $total) {
-        if (function_exists(drush_log)) {
+        if (function_exists('drush_log')) {
           drush_log("Processed $index out of $total items", "ok");
         }
         $count = 0;
