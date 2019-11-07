@@ -999,7 +999,15 @@ function open_data_schema_map_endpoint_process_map_recursion(&$result, $map, $ty
         }
         unset($token['odsm_entity_reference']);
         if ($values) {
+          $ref_field_info = field_info_field($ref_field);
+          $target_type = $ref_field_info['settings']['target_type'];
           foreach ($values as $num => $item) {
+            if ($target_type === 'node') {
+              $target_node = entity_load_single('node', $item['target_id']);
+              if ($target_node->status === "0") {
+                continue;
+              }
+            }
             $sub_result = array();
             foreach ($token as $subfield => $subtoken) {
               $subtoken['value'] = str_replace('Nth', $num, $subtoken['value']) ? str_replace('Nth', $num, $subtoken['value']) : $subtoken['value'];
