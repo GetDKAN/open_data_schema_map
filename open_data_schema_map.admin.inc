@@ -15,6 +15,14 @@
  */
 function open_data_schema_map_admin_settings_form($form_state) {
   $available_filters = _open_data_schema_map_get_available_filters('name');
+  $form['datasets_per_page'] = array(
+    '#type' => 'textfield',
+    '#size' => 5,
+    '#maxlength' => 5,
+    '#default_value' => variable_get('datasets_per_page', ''),
+    '#title' => t('Amount of datasets per page'),
+    '#description' => t('This will be used as the amount of datasets printed per page in catalog.xml. If not set, all the datasets will be shown in the page.'),
+  );
   $form['data_json'] = array(
     '#type' => 'fieldset',
     '#title' => t('Data Federation Filters'),
@@ -46,4 +54,26 @@ function open_data_schema_map_admin_settings_form($form_state) {
   );
 
   return system_settings_form($form);
+}
+
+/**
+ * Validate function.
+ */
+function open_data_schema_map_admin_settings_form_validate($form, &$form_state) {
+  $max_num = $form_state['values']['datasets_per_page'];
+
+  if (empty($max_num)) {
+    if ($max_num == "0") {
+      form_set_error('datasets_per_page', t('Amount of datasets per page cannot be 0.'));
+    }
+  } else {
+    if (!is_numeric($max_num)) {
+      form_set_error('datasets_per_page', t('You must enter a number for the amount of datasets per page.'));
+    }
+    else {
+      if ($max_num < 0) {
+        form_set_error('datasets_per_page', t('Amount of datasets per page must be positive.'));
+      }
+    }
+  }
 }
