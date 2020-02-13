@@ -1182,6 +1182,7 @@ function open_data_schema_map_open_data_schema_map_args_alter(&$field, &$arg) {
  *   Array of results/headers
  */
 function open_data_schema_map_render_api($api, $query = NULL, $queries = NULL) {
+  $current_page = 0;
   if (!isset($queries)) {
     $queries = drupal_get_query_parameters();
   }
@@ -1208,6 +1209,24 @@ function open_data_schema_map_render_api($api, $query = NULL, $queries = NULL) {
       $offset = open_data_schema_map_endpoint_special_arg($args, 'offset');
       $limit = open_data_schema_map_endpoint_special_arg($args, 'limit');
       $ids = open_data_schema_map_endpoint_query($api, $limit, $offset, $args);
+      $total = count($ids);
+      // Handle paging.
+      if (isset($queries['page'])) {
+        $current_page = $queries['page'];
+      }
+      $datasets_limit = variable_get('datasets_per_page', '');
+      if (!empty($datasets_limit)) {
+        if ($total > $datasets_limit) {
+          $pages = floor($total / $datasets_limit);
+          if ($current_page > $pages) {
+            drupal_goto($api->endpoint, ['query' => ['page' => $pages]]);
+          }
+          else {
+            $datasets_offset = $current_page * $datasets_limit;
+            $ids = array_slice($ids, $datasets_offset, $datasets_limit);
+          }
+        }
+      }
       $result = open_data_schema_map_endpoint_process_map($ids, $api);
     }
   }
