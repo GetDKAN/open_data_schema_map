@@ -1290,7 +1290,7 @@ function open_data_schema_map_render_api($api, $query = NULL, $queries = NULL) {
         $current_page = $queries['page'];
       }
       $datasets_limit = variable_get('datasets_per_page', '');
-      if (!empty($datasets_limit && isset($queries['page']))) {
+      if (!empty($datasets_limit) && isset($queries['page'])) {
         if ($total > $datasets_limit) {
           $pages = floor($total / $datasets_limit);
           if ($current_page > $pages) {
